@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   FileJson,
   CheckCircle2,
+  Copy,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 

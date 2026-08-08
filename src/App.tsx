@@ -26,7 +26,7 @@ export default function App() {
   const [categories, setCategories] = useState<Category[]>(() => loadCategories());
   const [cards, setCards] = useState<CreditCard[]>(() => loadCards());
   const [transactions, setTransactions] = useState<Transaction[]>(() => loadTransactions());
-  const [activeTab, setActiveTab] = useState<ActiveTab>('reports');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('add');
   const [toast, setToast] = useState<ToastState | null>(null);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => loadTheme() === 'dark');
 
@@ -159,8 +159,8 @@ export default function App() {
     showToast('Kredi kartı silindi.', 'info');
   };
 
-  // Export / Import Data
-  const handleExportData = () => {
+  // Export / Import Data (Android & Mobile Web Compatible)
+  const handleExportData = async () => {
     const backupObj = {
       categories,
       cards,
@@ -168,13 +168,49 @@ export default function App() {
       exportedAt: new Date().toISOString(),
     };
     const jsonStr = JSON.stringify(backupObj, null, 2);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `butcem-yedek-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const fileName = `butcem-yedek-${new Date().toISOString().slice(0, 10)}.json`;
+
+    // 1. Try Native Web Share API (Opens Android share sheet: save to files, drive, notes, etc.)
+    try {
+      const file = new File([jsonStr], fileName, { type: 'application/json' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'Bütçem Yedek Dosyası',
+          text: 'Bütçem uygulaması veri yedeği',
+        });
+        showToast('Yedek dosyası paylaşıldı / kaydedildi!', 'success');
+        return;
+      }
+    } catch (err) {
+      console.log('Share canceled or not supported:', err);
+    }
+
+    // 2. Data URI fallback download
+    try {
+      const dataStr = 'data:application/json;charset=utf-8,' + encodeURIComponent(jsonStr);
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', dataStr);
+      downloadAnchor.setAttribute('download', fileName);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    } catch (e) {
+      console.error('Data URI download failed:', e);
+    }
+
+    // 3. Copy JSON string to clipboard as automatic fallback
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(jsonStr);
+        showToast('Yedek JSON indirildi & panoya kopyalandı!', 'success');
+        return;
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    showToast('Yedek JSON dosyası indirildi!', 'success');
   };
 
   const handleImportData = (jsonString: string) => {
