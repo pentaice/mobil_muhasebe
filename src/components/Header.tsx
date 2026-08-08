@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { Transaction } from '../types';
-import { formatTL } from '../utils/storage';
+import { CreditCard, Transaction } from '../types';
+import { calculateCardCycleInfo, formatTL } from '../utils/storage';
 import {
   Wallet,
   Download,
@@ -16,6 +16,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 
 interface HeaderProps {
+  cards: CreditCard[];
   transactions: Transaction[];
   onExportData: () => void;
   onImportData: (jsonString: string) => void;
@@ -24,6 +25,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({
+  cards,
   transactions,
   onExportData,
   onImportData,
@@ -35,18 +37,11 @@ export const Header: React.FC<HeaderProps> = ({
   const [importJsonInput, setImportJsonInput] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Calculate this month's total spending
-  const now = new Date();
-  const currentMonthExpenses = transactions
-    .filter((t) => {
-      const d = new Date(t.date);
-      return (
-        t.type === 'expense' &&
-        d.getMonth() === now.getMonth() &&
-        d.getFullYear() === now.getFullYear()
-      );
-    })
-    .reduce((sum, t) => sum + Number(t.amount), 0);
+  // Calculate total unpaid credit card debt across all cards
+  const totalUnpaidDebt = cards.reduce((sum, card) => {
+    const info = calculateCardCycleInfo(card, transactions);
+    return sum + info.totalUnpaidDebt;
+  }, 0);
 
   const handleExportClick = () => {
     onExportData();
@@ -108,13 +103,13 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* SAĞ KÖŞE - BU AY HARCAMA & YEDEKLEME */}
         <div className="flex items-center gap-2.5">
-          {/* Bu Ay Harcama Kartı */}
-          <div className="bg-gray-50 dark:bg-slate-800 border border-gray-200/90 dark:border-slate-700 rounded-2xl px-3.5 py-1.5 shadow-2xs">
-            <span className="text-[9px] uppercase tracking-widest text-gray-400 dark:text-slate-400 font-bold block text-right">
-              BU AY
+          {/* Kapatılmamış Borç Kartı */}
+          <div className="bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/60 rounded-2xl px-3 py-1.5 shadow-2xs">
+            <span className="text-[8px] uppercase tracking-wider text-rose-600 dark:text-rose-400 font-extrabold block text-right">
+              KAPATILMAMIŞ BORÇ
             </span>
-            <span className="text-xs font-black text-gray-900 dark:text-slate-100 block text-right font-mono">
-              {formatTL(currentMonthExpenses)}
+            <span className="text-xs font-black text-rose-700 dark:text-rose-300 block text-right font-mono">
+              {formatTL(totalUnpaidDebt)}
             </span>
           </div>
 
