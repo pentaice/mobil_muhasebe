@@ -11,6 +11,7 @@ export interface ToastState {
 interface ToastProps {
   toast: ToastState | null;
   onClose: () => void;
+  isDarkMode?: boolean;
 }
 
 export const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
@@ -19,7 +20,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
 
     const timer = setTimeout(() => {
       onClose();
-    }, 1000); // 1 second toast duration
+    }, 1500); // 1.5 second toast duration
 
     return () => clearTimeout(timer);
   }, [toast, onClose]);
@@ -35,7 +36,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
           transition={{ duration: 0.15, ease: 'easeOut' }}
           className="pointer-events-none fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-xs px-4"
         >
-          <div className="pointer-events-auto bg-gray-900/90 text-white backdrop-blur-md px-3.5 py-2.5 rounded-2xl shadow-xl border border-gray-700/50 flex items-center gap-2.5">
+          <div className="pointer-events-auto bg-gray-900/95 dark:bg-slate-800/95 text-white backdrop-blur-md px-3.5 py-2.5 rounded-2xl shadow-xl border border-gray-700/50 dark:border-slate-700 flex items-center gap-2.5">
             {toast.type === 'error' ? (
               <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
             ) : toast.type === 'info' ? (

@@ -8,6 +8,8 @@ import {
   loadTransactions,
   saveTransactions,
   resetAllData,
+  loadTheme,
+  saveTheme,
 } from './utils/storage';
 import { DEFAULT_CATEGORIES, DEFAULT_CREDIT_CARDS, INITIAL_TRANSACTIONS } from './data/initialData';
 import { Header } from './components/Header';
@@ -24,8 +26,28 @@ export default function App() {
   const [categories, setCategories] = useState<Category[]>(() => loadCategories());
   const [cards, setCards] = useState<CreditCard[]>(() => loadCards());
   const [transactions, setTransactions] = useState<Transaction[]>(() => loadTransactions());
-  const [activeTab, setActiveTab] = useState<ActiveTab>('add');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('reports');
   const [toast, setToast] = useState<ToastState | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => loadTheme() === 'dark');
+
+  // Toggle Dark Mode
+  const handleToggleTheme = () => {
+    setIsDarkMode((prev) => {
+      const next = !prev;
+      saveTheme(next ? 'dark' : 'light');
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   // Helper to trigger 2-second toast notifications
   const showToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
@@ -77,12 +99,50 @@ export default function App() {
       isCustom: true,
     };
     setCategories((prev) => [...prev, newCat]);
-    showToast('Yeni kategori oluşturuldu!', 'success');
+    showToast(`"${catData.name}" kategorisi oluşturuldu!`, 'success');
   };
 
-  const handleDeleteCategory = (catId: string) => {
+  const handleUpdateCategory = (updatedCat: Category) => {
+    setCategories((prev) => prev.map((c) => (c.id === updatedCat.id ? updatedCat : c)));
+    showToast(`"${updatedCat.name}" kategorisi güncellendi!`, 'success');
+  };
+
+  const handleReorderCategories = (newCategories: Category[]) => {
+    setCategories(newCategories);
+  };
+
+  const handleDeleteCategoryWithOptions = (
+    catId: string,
+    action: 'reassign_diger' | 'reassign_custom' | 'purge_all',
+    targetCatId?: string
+  ) => {
+    if (catId === 'cat-diger') {
+      showToast('"Diğer" ana kategorisi silinemez.', 'error');
+      return;
+    }
+
+    const catToDelete = categories.find((c) => c.id === catId);
+    const catName = catToDelete ? catToDelete.name : 'Kategori';
+
     setCategories((prev) => prev.filter((c) => c.id !== catId));
-    showToast('Kategori silindi.', 'info');
+
+    if (action === 'purge_all') {
+      setTransactions((prev) => prev.filter((t) => t.categoryId !== catId));
+      showToast(`"${catName}" ve bağlı tüm harcamalar silindi.`, 'info');
+    } else if (action === 'reassign_custom' && targetCatId) {
+      const targetCat = categories.find((c) => c.id === targetCatId);
+      const targetName = targetCat ? targetCat.name : 'seçilen kategori';
+      setTransactions((prev) =>
+        prev.map((t) => (t.categoryId === catId ? { ...t, categoryId: targetCatId } : t))
+      );
+      showToast(`"${catName}" silindi, harcamalar "${targetName}" kategorisine aktarıldı.`, 'success');
+    } else {
+      // reassign_diger
+      setTransactions((prev) =>
+        prev.map((t) => (t.categoryId === catId ? { ...t, categoryId: 'cat-diger' } : t))
+      );
+      showToast(`"${catName}" silindi, harcamalar "Diğer" kategorisine aktarıldı.`, 'info');
+    }
   };
 
   const handleAddCard = (cardData: Omit<CreditCard, 'id'>) => {
@@ -138,12 +198,12 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900 font-sans selection:bg-blue-600 selection:text-white">
+    <div className={`min-h-screen transition-colors duration-200 ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-gray-100 text-gray-900'} font-sans selection:bg-blue-600 selection:text-white`}>
       {/* Floating 2-second Toast Popup Notification */}
-      <Toast toast={toast} onClose={() => setToast(null)} />
+      <Toast toast={toast} onClose={() => setToast(null)} isDarkMode={isDarkMode} />
 
-      {/* Mobile Shell Wrapper - Clean Minimalism design */}
-      <div className="max-w-md mx-auto min-h-screen flex flex-col relative bg-gray-50 border-x border-gray-200/80 shadow-xl">
+      {/* Mobile Shell Wrapper */}
+      <div className="max-w-md mx-auto min-h-screen flex flex-col relative bg-gray-50 dark:bg-slate-900 border-x border-gray-200/80 dark:border-slate-800 shadow-2xl transition-colors">
         {/* Top Header */}
         <Header
           transactions={transactions}
@@ -187,6 +247,7 @@ export default function App() {
                   categories={categories}
                   cards={cards}
                   transactions={transactions}
+                  isDarkMode={isDarkMode}
                 />
               )}
 
@@ -204,7 +265,11 @@ export default function App() {
                   categories={categories}
                   transactions={transactions}
                   onAddCategory={handleAddCategory}
-                  onDeleteCategory={handleDeleteCategory}
+                  onUpdateCategory={handleUpdateCategory}
+                  onReorderCategories={handleReorderCategories}
+                  onDeleteCategoryWithOptions={handleDeleteCategoryWithOptions}
+                  isDarkMode={isDarkMode}
+                  onToggleTheme={handleToggleTheme}
                 />
               )}
             </motion.div>

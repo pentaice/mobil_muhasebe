@@ -14,6 +14,7 @@ import {
   X,
   RotateCcw,
   Check,
+  Info,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -32,7 +33,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
 }) => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(categories[0]?.id || 'cat-yemek');
   const [amountStr, setAmountStr] = useState<string>('');
-  const [sourceType, setSourceType] = useState<'credit_card' | 'cash_bank'>('credit_card');
+  const [sourceType, setSourceType] = useState<'credit_card' | 'cash_bank'>(cards.length > 0 ? 'credit_card' : 'cash_bank');
   const [selectedCardId, setSelectedCardId] = useState<string>(cards[0]?.id || '');
   const [note, setNote] = useState<string>('');
   const [showDetailsDrawer, setShowDetailsDrawer] = useState<boolean>(false);
@@ -93,8 +94,8 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
       type: 'expense',
       amount: amountNumber,
       categoryId: selectedCategoryId,
-      sourceType,
-      creditCardId: sourceType === 'credit_card' ? selectedCardId : undefined,
+      sourceType: cards.length > 0 ? sourceType : 'cash_bank',
+      creditCardId: sourceType === 'credit_card' && cards.length > 0 ? selectedCardId : undefined,
       date: txDate,
       note: note.trim() || undefined,
     });
@@ -108,8 +109,8 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
 
   return (
     <div className="w-full max-w-lg mx-auto">
-      {/* Compact Main Card Container - No Vertical Scroll Needed */}
-      <div className="bg-white border border-gray-100 rounded-3xl p-4 shadow-xs text-gray-900 relative overflow-hidden">
+      {/* Compact Main Card Container */}
+      <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl p-4 shadow-sm text-gray-900 dark:text-slate-100 relative overflow-hidden transition-colors">
         <form onSubmit={handleSubmit} className="space-y-3.5">
           {/* AMOUNT INPUT & QUICK CHIPS */}
           <div className="space-y-1.5">
@@ -122,23 +123,23 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                 value={amountStr}
                 onChange={(e) => setAmountStr(e.target.value)}
                 autoFocus
-                className="w-full bg-gray-50 border-2 border-gray-200 focus:border-blue-600 rounded-2xl py-2.5 pl-3.5 pr-12 text-2xl font-black text-gray-900 tracking-tight focus:outline-none transition-all placeholder:text-gray-300"
+                className="w-full bg-gray-50 dark:bg-slate-800 border-2 border-gray-200 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 rounded-2xl py-2.5 pl-3.5 pr-12 text-2xl font-black text-gray-900 dark:text-slate-100 tracking-tight focus:outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-slate-600"
               />
               <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
                 {amountStr && (
                   <button
                     type="button"
                     onClick={handleClearAmount}
-                    className="text-[10px] text-gray-500 hover:text-gray-800 bg-gray-200/80 px-1.5 py-0.5 rounded cursor-pointer font-semibold"
+                    className="text-[10px] text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200 bg-gray-200/80 dark:bg-slate-700 px-1.5 py-0.5 rounded cursor-pointer font-semibold"
                   >
                     Sil
                   </button>
                 )}
-                <span className="text-lg font-bold text-blue-600">₺</span>
+                <span className="text-lg font-bold text-blue-600 dark:text-blue-400">₺</span>
               </div>
             </div>
 
-            {/* Fast increment chips (No scrollbar visible, customizable presets) */}
+            {/* Fast increment chips */}
             <div className="flex items-center justify-between gap-1">
               <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 no-scrollbar scrollbar-none flex-1">
                 {quickAmounts.map((val) => (
@@ -146,7 +147,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                     key={val}
                     type="button"
                     onClick={() => handleQuickAddAmount(val)}
-                    className="bg-gray-100 hover:bg-gray-200 active:scale-95 text-gray-800 text-[11px] font-bold px-2.5 py-1 rounded-xl border border-gray-200/80 whitespace-nowrap transition-all cursor-pointer shrink-0 shadow-2xs"
+                    className="bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 active:scale-95 text-gray-800 dark:text-slate-200 text-[11px] font-bold px-2.5 py-1 rounded-xl border border-gray-200/80 dark:border-slate-700 whitespace-nowrap transition-all cursor-pointer shrink-0 shadow-2xs"
                   >
                     +{val}₺
                   </button>
@@ -158,23 +159,23 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                 type="button"
                 onClick={() => setShowQuickAmountModal(true)}
                 title="Hızlı Miktarları Düzenle"
-                className="p-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-500 hover:text-blue-600 transition-colors cursor-pointer shrink-0"
+                className="p-1.5 rounded-xl bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-700 text-gray-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer shrink-0"
               >
                 <Settings2 className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
 
-          {/* CATEGORY SELECTION (Ultra-compact, Non-truncated, Multi-line readable Grid) */}
+          {/* CATEGORY SELECTION */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between px-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-400">
                 Kategori
               </span>
               <button
                 type="button"
                 onClick={onOpenAddCategoryModal}
-                className="text-[11px] text-blue-600 hover:text-blue-700 flex items-center gap-0.5 font-bold cursor-pointer"
+                className="text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-0.5 font-bold cursor-pointer"
               >
                 <Plus className="w-3 h-3" />
                 <span>Ekle</span>
@@ -191,8 +192,8 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                     onClick={() => setSelectedCategoryId(cat.id)}
                     className={`relative flex flex-col items-center justify-center p-1.5 min-h-[60px] rounded-xl transition-all duration-150 border text-center cursor-pointer ${
                       isSelected
-                        ? 'bg-blue-50/90 border-blue-600 shadow-2xs scale-[1.02]'
-                        : 'bg-gray-50/70 border-gray-200/80 text-gray-700 hover:border-gray-300'
+                        ? 'bg-blue-50/90 dark:bg-blue-950/40 border-blue-600 dark:border-blue-500 shadow-2xs scale-[1.02]'
+                        : 'bg-gray-50/70 dark:bg-slate-800/60 border-gray-200/80 dark:border-slate-750 text-gray-700 dark:text-slate-300 hover:border-gray-300 dark:hover:border-slate-650'
                     }`}
                   >
                     <div
@@ -201,17 +202,16 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                     >
                       <CategoryIcon name={cat.icon} size={13} />
                     </div>
-                    {/* Readable, non-truncated category name fitting 2 lines nicely */}
                     <span
                       className={`text-[9.5px] leading-[1.15] font-semibold text-center w-full break-words line-clamp-2 px-0.5 ${
-                        isSelected ? 'text-blue-900 font-bold' : 'text-gray-700'
+                        isSelected ? 'text-blue-900 dark:text-blue-200 font-bold' : 'text-gray-700 dark:text-slate-300'
                       }`}
                     >
                       {cat.name}
                     </span>
 
                     {isSelected && (
-                      <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-blue-600" />
+                      <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400" />
                     )}
                   </button>
                 );
@@ -227,11 +227,11 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                 onClick={() => setSourceType('credit_card')}
                 className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                   sourceType === 'credit_card'
-                    ? 'bg-blue-50 border-blue-600 text-blue-900 shadow-2xs'
-                    : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300'
+                    ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-600 dark:border-blue-500 text-blue-900 dark:text-blue-300 shadow-2xs'
+                    : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-400 hover:border-gray-300'
                 }`}
               >
-                <CardIcon className="w-3.5 h-3.5 text-blue-600" />
+                <CardIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 <span>Kredi Kartı</span>
               </button>
 
@@ -240,11 +240,11 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                 onClick={() => setSourceType('cash_bank')}
                 className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                   sourceType === 'cash_bank'
-                    ? 'bg-emerald-50 border-emerald-600 text-emerald-900 shadow-2xs'
-                    : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-600 dark:border-emerald-500 text-emerald-900 dark:text-emerald-300 shadow-2xs'
+                    : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-400 hover:border-gray-300'
                 }`}
               >
-                <Wallet className="w-3.5 h-3.5 text-emerald-600" />
+                <Wallet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>Nakit / Banka</span>
               </button>
             </div>
@@ -254,7 +254,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
               <select
                 value={selectedCardId}
                 onChange={(e) => setSelectedCardId(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl py-1.5 px-2.5 text-xs text-gray-800 font-semibold focus:outline-none focus:border-blue-600"
+                className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-1.5 px-2.5 text-xs text-gray-800 dark:text-slate-200 font-semibold focus:outline-none focus:border-blue-600"
               >
                 {cards.map((card) => (
                   <option key={card.id} value={card.id}>
@@ -263,17 +263,24 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                 ))}
               </select>
             )}
+
+            {sourceType === 'credit_card' && cards.length === 0 && (
+              <div className="flex items-center gap-2 p-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-xl text-[11px] text-amber-800 dark:text-amber-300">
+                <Info className="w-3.5 h-3.5 shrink-0" />
+                <span>Kayıtlı kart yok. Nakit/Banka olarak kaydedilecektir.</span>
+              </div>
+            )}
           </div>
 
-          {/* ACCORDION/DRAWER FOR OPTIONAL DETAILS (Note & Custom Date) */}
-          <div className="border-t border-gray-100 pt-1.5">
+          {/* ACCORDION/DRAWER FOR OPTIONAL DETAILS */}
+          <div className="border-t border-gray-100 dark:border-slate-800 pt-1.5">
             <button
               type="button"
               onClick={() => setShowDetailsDrawer(!showDetailsDrawer)}
-              className="w-full flex items-center justify-between text-xs text-gray-500 hover:text-blue-600 font-semibold py-1 px-1 transition-colors cursor-pointer"
+              className="w-full flex items-center justify-between text-xs text-gray-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-semibold py-1 px-1 transition-colors cursor-pointer"
             >
               <span className="flex items-center gap-1">
-                <Plus className={`w-3.5 h-3.5 text-blue-600 transition-transform ${showDetailsDrawer ? 'rotate-45' : ''}`} />
+                <Plus className={`w-3.5 h-3.5 text-blue-600 dark:text-blue-400 transition-transform ${showDetailsDrawer ? 'rotate-45' : ''}`} />
                 <span>{showDetailsDrawer ? 'Detayları Gizle' : 'Not veya Tarih Ekle'}</span>
               </span>
               {showDetailsDrawer ? (
@@ -297,14 +304,14 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                     placeholder="Açıklama / Not..."
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-1.5 px-2.5 text-xs text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-blue-600"
+                    className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-1.5 px-2.5 text-xs text-gray-800 dark:text-slate-200 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-blue-600"
                   />
 
-                  <div className="flex items-center justify-between text-[11px] text-gray-500 pt-0.5">
+                  <div className="flex items-center justify-between text-[11px] text-gray-500 dark:text-slate-400 pt-0.5">
                     <button
                       type="button"
                       onClick={() => setIsCustomDate(!isCustomDate)}
-                      className="flex items-center gap-1 text-blue-600 font-semibold cursor-pointer"
+                      className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-semibold cursor-pointer"
                     >
                       <Calendar className="w-3 h-3" />
                       <span>{isCustomDate ? 'Anlık Tarihe Dön' : 'Farklı Tarih Seç'}</span>
@@ -316,7 +323,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                       type="datetime-local"
                       value={customDateTime}
                       onChange={(e) => setCustomDateTime(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl py-1.5 px-2.5 text-xs text-gray-800 focus:outline-none focus:border-blue-600"
+                      className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-1.5 px-2.5 text-xs text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600"
                     />
                   )}
                 </motion.div>
@@ -330,8 +337,8 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
             disabled={!amountNumber || amountNumber <= 0}
             className={`w-full py-3 px-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] ${
               amountNumber > 0
-                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-200 cursor-pointer'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-200 dark:shadow-none cursor-pointer'
+                : 'bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-600 cursor-not-allowed'
             }`}
           >
             <Zap className="w-4 h-4 fill-current" />
@@ -343,24 +350,24 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
       {/* QUICK AMOUNT CUSTOMIZATION MODAL */}
       <AnimatePresence>
         {showQuickAmountModal && (
-          <div className="fixed inset-0 z-50 bg-gray-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 bg-gray-900/40 dark:bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white border border-gray-100 rounded-3xl w-full max-w-sm p-5 shadow-2xl space-y-4"
+              className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750 rounded-3xl w-full max-w-sm p-5 shadow-2xl space-y-4"
             >
-              <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
+              <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-2.5">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                     <Settings2 className="w-4 h-4" />
                   </div>
-                  <h3 className="font-bold text-sm text-gray-900">Hızlı Miktarları Düzenle</h3>
+                  <h3 className="font-bold text-sm text-gray-900 dark:text-slate-100">Hızlı Miktarları Düzenle</h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowQuickAmountModal(false)}
-                  className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900 flex items-center justify-center transition-colors cursor-pointer"
+                  className="w-7 h-7 rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 flex items-center justify-center transition-colors cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -368,14 +375,14 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
 
               {/* Existing preset chips with delete badge */}
               <div className="space-y-2">
-                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
+                <label className="text-[11px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider block">
                   Mevcut Butonlar
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {quickAmounts.map((val) => (
                     <div
                       key={val}
-                      className="bg-gray-100 border border-gray-200 text-gray-800 text-xs font-bold py-1 px-2.5 rounded-xl flex items-center gap-1.5"
+                      className="bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-slate-200 text-xs font-bold py-1 px-2.5 rounded-xl flex items-center gap-1.5"
                     >
                       <span>+{val}₺</span>
                       <button
@@ -392,8 +399,8 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
               </div>
 
               {/* Add New Preset Form */}
-              <form onSubmit={handleAddPreset} className="space-y-2 pt-2 border-t border-gray-100">
-                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
+              <form onSubmit={handleAddPreset} className="space-y-2 pt-2 border-t border-gray-100 dark:border-slate-800">
+                <label className="text-[11px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider block">
                   Yeni Miktar Ekle
                 </label>
                 <div className="flex gap-2">
@@ -402,7 +409,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                     placeholder="Örn: 20 veya 150"
                     value={newQuickAmountInput}
                     onChange={(e) => setNewQuickAmountInput(e.target.value)}
-                    className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-gray-800 focus:outline-none focus:border-blue-600"
+                    className="flex-1 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600"
                   />
                   <button
                     type="submit"
@@ -415,11 +422,11 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
               </form>
 
               {/* Reset to Defaults / Done */}
-              <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={handleResetPresets}
-                  className="text-xs text-rose-600 hover:text-rose-700 font-semibold flex items-center gap-1 cursor-pointer"
+                  className="text-xs text-rose-600 dark:text-rose-400 hover:text-rose-700 font-semibold flex items-center gap-1 cursor-pointer"
                 >
                   <RotateCcw className="w-3 h-3" />
                   <span>Varsayılana Dön</span>
@@ -428,7 +435,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowQuickAmountModal(false)}
-                  className="bg-gray-900 hover:bg-black text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1 cursor-pointer transition-all"
+                  className="bg-gray-900 dark:bg-blue-600 hover:bg-black dark:hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1 cursor-pointer transition-all"
                 >
                   <Check className="w-3.5 h-3.5" />
                   <span>Tamam</span>

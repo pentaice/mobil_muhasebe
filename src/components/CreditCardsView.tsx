@@ -3,7 +3,7 @@ import { CreditCard, Transaction } from '../types';
 import { calculateCardCycleInfo, formatTL } from '../utils/storage';
 import { CreditCardPaymentModal } from './CreditCardPaymentModal';
 import { AddCreditCardModal } from './AddCreditCardModal';
-import { CreditCard as CardIcon, Plus, Calendar, ShieldCheck, Trash2, ChevronRight, Zap } from 'lucide-react';
+import { CreditCard as CardIcon, Plus, ShieldCheck, Trash2 } from 'lucide-react';
 
 interface CreditCardsViewProps {
   cards: CreditCard[];
@@ -32,24 +32,24 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
   const totalAllCardsLimit = cards.reduce((sum, card) => sum + card.limit, 0);
 
   return (
-    <div className="w-full max-w-lg mx-auto space-y-5 pb-8">
+    <div className="w-full max-w-lg mx-auto space-y-4 pb-8">
       {/* Top Total Debt Overview */}
-      <div className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm text-gray-900 flex items-center justify-between">
+      <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl p-5 shadow-sm text-gray-900 dark:text-slate-100 flex items-center justify-between transition-colors">
         <div className="space-y-1">
-          <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
+          <p className="text-xs uppercase tracking-wider text-gray-400 dark:text-slate-400 font-semibold">
             Toplam Kart Borçları
           </p>
-          <p className="text-2xl font-extrabold text-blue-600">
+          <p className="text-2xl font-extrabold text-blue-600 dark:text-blue-400">
             {formatTL(totalAllCardsDebt)}
           </p>
-          <p className="text-[11px] text-gray-500">
-            Kullanılabilir Toplam Limit: {formatTL(totalAllCardsLimit - totalAllCardsDebt)}
+          <p className="text-[11px] text-gray-500 dark:text-slate-400">
+            Kullanılabilir Toplam Limit: {formatTL(Math.max(0, totalAllCardsLimit - totalAllCardsDebt))}
           </p>
         </div>
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2.5 px-3.5 rounded-2xl flex items-center gap-1.5 shadow-md shadow-blue-200 transition-all active:scale-95 cursor-pointer"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2.5 px-3.5 rounded-2xl flex items-center gap-1.5 shadow-md shadow-blue-200 dark:shadow-none transition-all active:scale-95 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Kart Ekle</span>
@@ -59,15 +59,15 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
       {/* Credit Cards List */}
       <div className="space-y-4">
         {cards.length === 0 ? (
-          <div className="bg-white border border-gray-100 rounded-3xl p-8 text-center space-y-3 shadow-sm">
-            <CardIcon className="w-10 h-10 text-gray-300 mx-auto" />
-            <p className="text-gray-800 font-bold text-sm">Kayıtlı Kredi Kartınız Bulunmuyor</p>
-            <p className="text-gray-500 text-xs">
-              Hesap kesim döngülerini ve borçlarınızı takip etmek için ilk kartınızı ekleyin.
+          <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl p-8 text-center space-y-3 shadow-sm transition-colors">
+            <CardIcon className="w-10 h-10 text-gray-300 dark:text-slate-600 mx-auto" />
+            <p className="text-gray-800 dark:text-slate-200 font-bold text-sm">Kayıtlı Kredi Kartınız Bulunmuyor</p>
+            <p className="text-gray-500 dark:text-slate-400 text-xs">
+              Hesap kesim döngülerini ve borçlarınızı takip etmek için ilk kartınızı ekleyebilirsiniz.
             </p>
             <button
               onClick={() => setShowAddModal(true)}
-              className="bg-blue-600 text-white font-semibold text-xs py-2 px-4 rounded-xl inline-flex items-center gap-1.5 cursor-pointer shadow-sm shadow-blue-200"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2 px-4 rounded-xl inline-flex items-center gap-1.5 cursor-pointer shadow-sm shadow-blue-200 dark:shadow-none"
             >
               <Plus className="w-4 h-4" /> Kart Ekle
             </button>
@@ -80,7 +80,7 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
             return (
               <div
                 key={card.id}
-                className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm space-y-4"
+                className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl overflow-hidden shadow-sm space-y-4 transition-colors"
               >
                 {/* Physical Card Graphic */}
                 <div
@@ -149,23 +149,23 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
 
                 {/* Card Cycle Info & Action */}
                 <div className="px-5 pb-5 space-y-3">
-                  <div className="grid grid-cols-2 gap-3 text-xs bg-gray-50 p-3 rounded-2xl border border-gray-200/80">
+                  <div className="grid grid-cols-2 gap-3 text-xs bg-gray-50 dark:bg-slate-800/80 p-3 rounded-2xl border border-gray-200/80 dark:border-slate-700">
                     <div>
-                      <span className="text-gray-400 block text-[10px] uppercase font-semibold">Hesap Kesim Günü</span>
-                      <span className="font-bold text-gray-800">
+                      <span className="text-gray-400 dark:text-slate-400 block text-[10px] uppercase font-semibold">Hesap Kesim Günü</span>
+                      <span className="font-bold text-gray-800 dark:text-slate-200">
                         Her Ayın {card.cutoffDay}. Günü
                       </span>
-                      <span className="text-[10px] text-blue-600 font-semibold block mt-0.5">
+                      <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold block mt-0.5">
                         ({cycle.daysUntilCutoff} gün kaldı)
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-gray-400 block text-[10px] uppercase font-semibold">Dönem İçi Harcama</span>
-                      <span className="font-bold text-gray-800">
+                      <span className="text-gray-400 dark:text-slate-400 block text-[10px] uppercase font-semibold">Dönem İçi Harcama</span>
+                      <span className="font-bold text-gray-800 dark:text-slate-200">
                         {formatTL(cycle.currentCycleExpenses)}
                       </span>
-                      <span className="text-[10px] text-emerald-600 font-semibold block mt-0.5">
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block mt-0.5">
                         Ödenen: {formatTL(cycle.currentCyclePayments)}
                       </span>
                     </div>
@@ -174,7 +174,7 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
                   {/* Payment Button */}
                   <button
                     onClick={() => setSelectedCardForPayment(card)}
-                    className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-200 transition-all cursor-pointer"
+                    className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-200 dark:shadow-none transition-all cursor-pointer"
                   >
                     <ShieldCheck className="w-4 h-4 text-white/90" />
                     <span>Ödeme Gir / Dönem Borcu Kapat</span>

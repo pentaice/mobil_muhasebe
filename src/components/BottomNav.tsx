@@ -19,7 +19,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-100 px-2 py-2 max-w-lg mx-auto shadow-sm">
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-gray-100 dark:border-slate-800 px-2 py-2 max-w-md mx-auto shadow-sm transition-colors">
       <div className="flex items-center justify-around">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -37,13 +37,13 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center shadow-md transition-all ${
                     isActive
-                      ? 'bg-blue-600 text-white ring-4 ring-blue-500/20 shadow-blue-300'
-                      : 'bg-blue-600 text-white shadow-blue-200'
+                      ? 'bg-blue-600 text-white ring-4 ring-blue-500/20 shadow-blue-400 dark:shadow-blue-900'
+                      : 'bg-blue-600 text-white shadow-blue-200 dark:shadow-blue-950'
                   }`}
                 >
                   <Icon className="w-6 h-6 fill-current" />
                 </div>
-                <span className="text-[10px] font-bold text-blue-600 mt-1">
+                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 mt-1">
                   {tab.label}
                 </span>
               </button>
@@ -55,7 +55,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
               key={tab.id}
               onClick={() => setActiveTab(tab.id as ActiveTab)}
               className={`relative flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl transition-all cursor-pointer ${
-                isActive ? 'text-blue-600 font-bold' : 'text-gray-400 hover:text-gray-700'
+                isActive ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-gray-400 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'
               }`}
             >
               <Icon className="w-5 h-5 mb-0.5" />
@@ -64,7 +64,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
               {isActive && (
                 <motion.span
                   layoutId="activeTabIndicator"
-                  className="absolute bottom-0 w-1 h-1 rounded-full bg-blue-600"
+                  className="absolute bottom-0 w-1 h-1 rounded-full bg-blue-600 dark:bg-blue-400"
                 />
               )}
             </button>

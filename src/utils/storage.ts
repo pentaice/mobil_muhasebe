@@ -2,13 +2,36 @@ import { Category, CreditCard, Transaction } from '../types';
 import { DEFAULT_CATEGORIES, DEFAULT_CREDIT_CARDS, INITIAL_TRANSACTIONS } from '../data/initialData';
 
 const STORAGE_KEYS = {
-  CATEGORIES: 'cebim_categories_v1',
-  CARDS: 'cebim_cards_v1',
-  TRANSACTIONS: 'cebim_transactions_v1',
-  QUICK_AMOUNTS: 'cebim_quick_amounts_v1',
+  CATEGORIES: 'cebim_categories_v2',
+  CARDS: 'cebim_cards_v2',
+  TRANSACTIONS: 'cebim_transactions_v2',
+  QUICK_AMOUNTS: 'cebim_quick_amounts_v2',
+  THEME: 'cebim_theme_mode_v2',
 };
 
 export const DEFAULT_QUICK_AMOUNTS = [10, 50, 100, 250, 500, 1000];
+
+export function loadTheme(): 'light' | 'dark' {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.THEME);
+    if (saved === 'dark' || saved === 'light') return saved;
+    // Default to dark or system preference
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
+  } catch (e) {
+    return 'light';
+  }
+}
+
+export function saveTheme(theme: 'light' | 'dark') {
+  try {
+    localStorage.setItem(STORAGE_KEYS.THEME, theme);
+  } catch (e) {
+    console.error('Error saving theme:', e);
+  }
+}
 
 export function loadQuickAmounts(): number[] {
   try {
@@ -122,23 +145,19 @@ export function calculateCardCycleInfo(card: CreditCard, transactions: Transacti
   let cycleStartDate: Date;
 
   if (todayDay > card.cutoffDay) {
-    // We are past this month's cutoff, cycle ends next month on cutoffDay
     cutoffDate = new Date(currentYear, currentMonth + 1, card.cutoffDay, 23, 59, 59);
     cycleStartDate = new Date(currentYear, currentMonth, card.cutoffDay + 1, 0, 0, 0);
   } else {
-    // We are before or on this month's cutoff, cycle ends this month on cutoffDay
     cutoffDate = new Date(currentYear, currentMonth, card.cutoffDay, 23, 59, 59);
     cycleStartDate = new Date(currentYear, currentMonth - 1, card.cutoffDay + 1, 0, 0, 0);
   }
 
-  // Due date is cutoffDate + dueDayOffsetDays
   const dueDate = new Date(cutoffDate);
   dueDate.setDate(dueDate.getDate() + card.dueDayOffsetDays);
 
   const diffTime = cutoffDate.getTime() - now.getTime();
   const daysUntilCutoff = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
 
-  // Filter card transactions
   const cardTx = transactions.filter(
     (t) => t.creditCardId === card.id || (t.type === 'expense' && t.sourceType === 'credit_card' && t.creditCardId === card.id)
   );
