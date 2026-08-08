@@ -1,24 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- Clean App Background Squircle -->
-  <rect width="512" height="512" rx="112" fill="#F8FAFC" />
+  <!-- Brand Royal Blue Background Squircle -->
+  <rect width="512" height="512" rx="112" fill="#2563EB" />
 
-  <g transform="translate(0, 16)">
-    <!-- Back Banknote 1 (Top Blue Note) -->
-    <path d="M 150,155 L 305,92 C 314,88 324,93 328,102 L 358,145 C 362,152 358,160 350,163 L 225,200 Z" fill="#3B82F6" />
+  <!-- Minimalist Vector Wallet Icon matching user reference -->
+  <g stroke="#FFFFFF" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Main Wallet Body -->
+    <rect x="96" y="136" width="260" height="240" rx="46" stroke-width="28" />
 
-    <!-- Front Banknote 2 (Secondary Blue Note) -->
-    <path d="M 180,170 L 342,130 C 352,127 362,133 365,142 L 388,182 C 392,189 387,196 379,198 L 260,215 Z" fill="#2563EB" />
+    <!-- Top Horizontal Pocket Line -->
+    <line x1="156" y1="200" x2="276" y2="200" stroke-width="26" />
 
-    <!-- Main Wallet Body (Dark Navy Solid) -->
-    <rect x="96" y="185" width="320" height="215" rx="38" fill="#1E293B" />
+    <!-- Outer Right Clasp / Strap -->
+    <path d="M 330 200 H 385 C 416 200 440 224 440 256 C 440 288 416 312 385 312 H 330 Z" stroke-width="28" fill="#2563EB" />
 
-    <!-- Clasp Cutout / White Ring Outline -->
-    <path d="M 326,268 L 384,268 C 404,268 418,282 418,302 C 418,322 404,336 384,336 L 326,336 Z" fill="#FFFFFF" />
-    
-    <!-- Clasp Inner Tab (Dark Navy) -->
-    <path d="M 338,278 L 382,278 C 396,278 406,288 406,302 C 406,316 396,326 382,326 L 338,326 Z" fill="#1E293B" />
-
-    <!-- Snap Button (White Dot) -->
-    <circle cx="372" cy="302" r="10.5" fill="#FFFFFF" />
+    <!-- Clasp Inner Hole / Button -->
+    <rect x="366" y="238" width="36" height="36" rx="10" stroke-width="22" fill="none" />
   </g>
 </svg>
