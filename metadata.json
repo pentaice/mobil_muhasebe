@@ -1,0 +1,6 @@
+{
+  "name": "Mobil Muhasebe & Kart Takibi",
+  "description": "Mobil odaklı hızlı harcama girişi, kredi kartı döngü takibi ve detaylı raporlama uygulaması.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
