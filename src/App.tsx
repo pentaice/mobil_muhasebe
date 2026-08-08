@@ -29,6 +29,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('add');
   const [toast, setToast] = useState<ToastState | null>(null);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => loadTheme() === 'dark');
+  const [quickAddFocusTrigger, setQuickAddFocusTrigger] = useState<number>(0);
 
   // Toggle Dark Mode
   const handleToggleTheme = () => {
@@ -154,9 +155,20 @@ export default function App() {
     showToast('Yeni kredi kartı eklendi!', 'success');
   };
 
-  const handleDeleteCard = (cardId: string) => {
+  const handleDeleteCard = (cardId: string, action: 'keep_records' | 'delete_all') => {
     setCards((prev) => prev.filter((c) => c.id !== cardId));
-    showToast('Kredi kartı silindi.', 'info');
+    if (action === 'delete_all') {
+      setTransactions((prev) => prev.filter((t) => t.cardId !== cardId));
+      showToast('Kart ve tüm kayıtlar silindi.', 'info');
+    } else {
+      showToast('Kart silindi, kayıtlar korundu.', 'info');
+    }
+  };
+
+  // Update an existing credit card
+  const handleUpdateCard = (updatedCard: CreditCard) => {
+    setCards((prev) => prev.map((c) => (c.id === updatedCard.id ? updatedCard : c)));
+    showToast('Kredi kartı güncellendi.', 'success');
   };
 
   // Export / Import Data (Android & Mobile Web Compatible)
@@ -265,6 +277,7 @@ export default function App() {
                   cards={cards}
                   onAddTransaction={handleAddTransaction}
                   onOpenAddCategoryModal={() => setActiveTab('categories')}
+                  focusTrigger={quickAddFocusTrigger}
                 />
               )}
 
@@ -275,6 +288,7 @@ export default function App() {
                   onAddCard={handleAddCard}
                   onDeleteCard={handleDeleteCard}
                   onAddPayment={handleAddTransaction}
+                  onUpdateCard={handleUpdateCard}
                 />
               )}
 
@@ -313,7 +327,13 @@ export default function App() {
         </main>
 
         {/* Bottom Tab Bar */}
-        <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
+        <BottomNav
+          activeTab={activeTab}
+          setActiveTab={(tab) => {
+            setActiveTab(tab);
+            if (tab === 'add') setQuickAddFocusTrigger((n) => n + 1);
+          }}
+        />
       </div>
     </div>
   );

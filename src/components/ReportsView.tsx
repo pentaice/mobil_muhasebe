@@ -171,8 +171,8 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
           color: card.color.includes('emerald')
             ? '#14b8a6'
             : card.color.includes('blue')
-            ? '#3b82f6'
-            : '#8b5cf6',
+              ? '#3b82f6'
+              : '#8b5cf6',
         });
       }
     });
@@ -194,8 +194,8 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
         {[
           { id: 'this_month', label: 'Bu Ay' },
           { id: 'last_month', label: 'Geçen Ay' },
-          { id: 'last_30_days', label: 'Son 30 Gün' },
-          { id: 'custom', label: 'Tarih Seç', icon: CalendarRange },
+          { id: 'last_30_days', label: '30 Gün' },
+          { id: 'custom', label: 'Özel', icon: CalendarRange },
           { id: 'all', label: 'Tümü' },
         ].map((p) => {
           const Icon = p.icon;
@@ -212,11 +212,10 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                   setPeriod(p.id as PeriodType);
                 }
               }}
-              className={`flex-1 py-2 px-1 text-[11px] font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                isSelected
-                  ? 'bg-blue-600 text-white shadow-sm font-bold scale-[1.02]'
-                  : 'text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-800'
-              }`}
+              className={`flex-1 py-2 px-1 text-[11px] font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 ${isSelected
+                ? 'bg-blue-600 text-white shadow-sm font-bold scale-[1.02]'
+                : 'text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-800'
+                }`}
             >
               {Icon && <Icon className="w-3.5 h-3.5" />}
               <span>{p.label}</span>

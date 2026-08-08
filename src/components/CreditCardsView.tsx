@@ -3,14 +3,17 @@ import { CreditCard, Transaction } from '../types';
 import { calculateCardCycleInfo, formatTL } from '../utils/storage';
 import { CreditCardPaymentModal } from './CreditCardPaymentModal';
 import { AddCreditCardModal } from './AddCreditCardModal';
-import { CreditCard as CardIcon, Plus, ShieldCheck, Trash2 } from 'lucide-react';
+import { EditCreditCardModal } from './EditCreditCardModal';
+import { DeleteCardConfirmModal } from './DeleteCardConfirmModal';
+import { CreditCard as CardIcon, Plus, ShieldCheck, Trash2, Pencil } from 'lucide-react';
 
 interface CreditCardsViewProps {
   cards: CreditCard[];
   transactions: Transaction[];
   onAddCard: (card: Omit<CreditCard, 'id'>) => void;
-  onDeleteCard: (cardId: string) => void;
+  onDeleteCard: (cardId: string, action: 'keep_records' | 'delete_all') => void;
   onAddPayment: (transaction: Omit<Transaction, 'id' | 'createdAt'>) => void;
+  onUpdateCard: (card: CreditCard) => void;
 }
 
 export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
@@ -19,9 +22,13 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
   onAddCard,
   onDeleteCard,
   onAddPayment,
+  onUpdateCard,
 }) => {
   const [selectedCardForPayment, setSelectedCardForPayment] = useState<CreditCard | null>(null);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
+  const [selectedCardForEdit, setSelectedCardForEdit] = useState<CreditCard | null>(null);
+  const [showEditModal, setShowEditModal] = useState<boolean>(false);
+  const [cardToDelete, setCardToDelete] = useState<CreditCard | null>(null);
 
   // Total credit cards debt across all cards
   const totalAllCardsDebt = cards.reduce((sum, card) => {
@@ -96,11 +103,18 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
 
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => onDeleteCard(card.id)}
+                        onClick={() => setCardToDelete(card)}
                         title="Kartı Sil"
                         className="text-white/80 hover:text-rose-200 bg-black/20 hover:bg-black/30 p-1.5 rounded-lg transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => { setSelectedCardForEdit(card); setShowEditModal(true); }}
+                        title="Kartı Düzenle"
+                        className="text-white/80 hover:text-blue-200 bg-black/20 hover:bg-black/30 p-1.5 rounded-lg transition-colors cursor-pointer ml-1"
+                      >
+                        <Pencil className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -201,6 +215,28 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
         <AddCreditCardModal
           onClose={() => setShowAddModal(false)}
           onAddCard={onAddCard}
+        />
+      )}
+
+      {/* Edit Card Modal */}
+      {showEditModal && selectedCardForEdit && (
+        <EditCreditCardModal
+          card={selectedCardForEdit}
+          onClose={() => { setShowEditModal(false); setSelectedCardForEdit(null); }}
+          onUpdateCard={onUpdateCard}
+        />
+      )}
+
+      {/* Delete Card Confirm Modal */}
+      {cardToDelete && (
+        <DeleteCardConfirmModal
+          card={cardToDelete}
+          transactionCount={transactions.filter(t => t.cardId === cardToDelete.id).length}
+          onClose={() => setCardToDelete(null)}
+          onConfirm={(action) => {
+            onDeleteCard(cardToDelete.id, action);
+            setCardToDelete(null);
+          }}
         />
       )}
     </div>

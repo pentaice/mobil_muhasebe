@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Category, CreditCard, Transaction } from '../types';
 import { CategoryIcon } from './CategoryIcon';
 import { formatTL, loadQuickAmounts, saveQuickAmounts, DEFAULT_QUICK_AMOUNTS } from '../utils/storage';
@@ -23,6 +23,7 @@ interface QuickAddExpenseProps {
   cards: CreditCard[];
   onAddTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt'>) => void;
   onOpenAddCategoryModal: () => void;
+  focusTrigger?: number;
 }
 
 export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
@@ -30,6 +31,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
   cards,
   onAddTransaction,
   onOpenAddCategoryModal,
+  focusTrigger,
 }) => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(categories[0]?.id || 'cat-yemek');
   const [amountStr, setAmountStr] = useState<string>('');
@@ -47,7 +49,25 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
   const [showQuickAmountModal, setShowQuickAmountModal] = useState<boolean>(false);
   const [newQuickAmountInput, setNewQuickAmountInput] = useState<string>('');
 
+  const amountInputRef = useRef<HTMLInputElement>(null);
   const amountNumber = parseFloat(amountStr) || 0;
+
+  // Android klavyesi için mount'ta input'a focus
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      amountInputRef.current?.focus();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 'Hızlı Ekle' butonuna her basıldığında (zaten açık olsa bile) klavyeyi aç
+  useEffect(() => {
+    if (focusTrigger === undefined || focusTrigger === 0) return;
+    const timer = setTimeout(() => {
+      amountInputRef.current?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [focusTrigger]);
 
   const handleQuickAddAmount = (addValue: number) => {
     const current = parseFloat(amountStr) || 0;
@@ -116,13 +136,13 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
           <div className="space-y-1.5">
             <div className="relative">
               <input
+                ref={amountInputRef}
                 type="number"
                 step="any"
                 inputMode="decimal"
-                placeholder="0.00"
+                placeholder="0"
                 value={amountStr}
                 onChange={(e) => setAmountStr(e.target.value)}
-                autoFocus
                 className="w-full bg-gray-50 dark:bg-slate-800 border-2 border-gray-200 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 rounded-2xl py-2.5 pl-3.5 pr-12 text-2xl font-black text-gray-900 dark:text-slate-100 tracking-tight focus:outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-slate-600"
               />
               <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
@@ -342,7 +362,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
             }`}
           >
             <Zap className="w-4 h-4 fill-current" />
-            <span>Harcamayı Kaydet ({amountNumber > 0 ? formatTL(amountNumber) : '0.00 ₺'})</span>
+            <span>Harcamayı Kaydet ({amountNumber > 0 ? formatTL(amountNumber) : '₺0'})</span>
           </button>
         </form>
       </div>

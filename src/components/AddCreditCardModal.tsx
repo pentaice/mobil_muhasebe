@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { CreditCard } from '../types';
-import { CreditCard as CardIcon, X, Plus, Save } from 'lucide-react';
+import { CreditCard as CardIcon, X, Plus } from 'lucide-react';
 
 interface AddCreditCardModalProps {
-  initialCard?: CreditCard | null;
   onClose: () => void;
   onAddCard: (card: Omit<CreditCard, 'id'>) => void;
-  onUpdateCard?: (card: CreditCard) => void;
 }
 
 const GRADIENT_PRESETS = [
@@ -18,30 +16,22 @@ const GRADIENT_PRESETS = [
 ];
 
 export const AddCreditCardModal: React.FC<AddCreditCardModalProps> = ({
-  initialCard,
   onClose,
   onAddCard,
-  onUpdateCard,
 }) => {
-  const isEditing = Boolean(initialCard);
-
-  const [name, setName] = useState(initialCard ? initialCard.name : '');
-  const [cardNetwork, setCardNetwork] = useState<'visa' | 'mastercard' | 'troy' | 'amex'>(
-    initialCard ? initialCard.cardNetwork : 'mastercard'
-  );
-  const [last4, setLast4] = useState(initialCard ? initialCard.last4 : '');
-  const [limit, setLimit] = useState<string>(initialCard ? String(initialCard.limit) : '50000');
-  const [cutoffDay, setCutoffDay] = useState<number>(initialCard ? initialCard.cutoffDay : 15);
-  const [dueDayOffsetDays, setDueDayOffsetDays] = useState<number>(
-    initialCard ? initialCard.dueDayOffsetDays : 10
-  );
-  const [color, setColor] = useState(initialCard ? initialCard.color : GRADIENT_PRESETS[0].value);
+  const [name, setName] = useState('');
+  const [cardNetwork, setCardNetwork] = useState<'visa' | 'mastercard' | 'troy' | 'amex'>('mastercard');
+  const [last4, setLast4] = useState('');
+  const [limit, setLimit] = useState<string>('50000');
+  const [cutoffDay, setCutoffDay] = useState<number>(15);
+  const [dueDayOffsetDays, setDueDayOffsetDays] = useState<number>(10);
+  const [color, setColor] = useState(GRADIENT_PRESETS[0].value);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
-    const cardData = {
+    onAddCard({
       name: name.trim(),
       cardNetwork,
       last4: last4.trim() || '1234',
@@ -49,16 +39,7 @@ export const AddCreditCardModal: React.FC<AddCreditCardModalProps> = ({
       cutoffDay: Number(cutoffDay),
       dueDayOffsetDays: Number(dueDayOffsetDays),
       color,
-    };
-
-    if (isEditing && initialCard && onUpdateCard) {
-      onUpdateCard({
-        ...initialCard,
-        ...cardData,
-      });
-    } else {
-      onAddCard(cardData);
-    }
+    });
 
     onClose();
   };
@@ -73,12 +54,8 @@ export const AddCreditCardModal: React.FC<AddCreditCardModalProps> = ({
               <CardIcon className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-gray-900 dark:text-slate-100 leading-tight">
-                {isEditing ? 'Kredi Kartını Düzenle' : 'Yeni Kredi Kartı Ekle'}
-              </h3>
-              <p className="text-xs text-gray-500 dark:text-slate-400">
-                {isEditing ? 'Kart özelliklerini ve limitini güncelleyin' : 'Kart ve döngü bilgilerini girin'}
-              </p>
+              <h3 className="font-bold text-lg text-gray-900 dark:text-slate-100 leading-tight">Yeni Kredi Kartı Ekle</h3>
+              <p className="text-xs text-gray-500 dark:text-slate-400">Kart ve döngü bilgilerini girin</p>
             </div>
           </div>
           <button
@@ -216,8 +193,8 @@ export const AddCreditCardModal: React.FC<AddCreditCardModalProps> = ({
             type="submit"
             className="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-blue-200 dark:shadow-none transition-all cursor-pointer"
           >
-            {isEditing ? <Save className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-            <span>{isEditing ? 'Değişiklikleri Kaydet' : 'Kartı Kaydet'}</span>
+            <Plus className="w-4 h-4" />
+            <span>Kartı Kaydet</span>
           </button>
         </form>
       </div>

@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- Brand Royal Blue Background Squircle (Exact match with Bütçem Header Logo) -->
-  <rect width="512" height="512" rx="140" fill="#2563EB" />
+  <!-- Brand Royal Blue Background Squircle -->
+  <rect width="512" height="512" rx="112" fill="#2563EB" />
 
-  <!-- Bütçem Header Wallet Icon (Scaled down slightly as requested) -->
-  <g transform="translate(92, 92) scale(0.64)" stroke="#FFFFFF" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Minimalist Vector Wallet Icon matching user reference -->
+  <g stroke="#FFFFFF" fill="none" stroke-linecap="round" stroke-linejoin="round">
     <!-- Main Wallet Body -->
     <rect x="96" y="136" width="260" height="240" rx="46" stroke-width="28" />
 
