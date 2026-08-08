@@ -2,11 +2,11 @@ import { Category, CreditCard, Transaction } from '../types';
 import { DEFAULT_CATEGORIES, DEFAULT_CREDIT_CARDS, INITIAL_TRANSACTIONS } from '../data/initialData';
 
 const STORAGE_KEYS = {
-  CATEGORIES: 'cebim_categories_v2',
-  CARDS: 'cebim_cards_v2',
-  TRANSACTIONS: 'cebim_transactions_v2',
-  QUICK_AMOUNTS: 'cebim_quick_amounts_v2',
-  THEME: 'cebim_theme_mode_v2',
+  CATEGORIES: 'cebim_categories_v3',
+  CARDS: 'cebim_cards_v3',
+  TRANSACTIONS: 'cebim_transactions_v3',
+  QUICK_AMOUNTS: 'cebim_quick_amounts_v3',
+  THEME: 'cebim_theme_mode_v3',
 };
 
 export const DEFAULT_QUICK_AMOUNTS = [10, 50, 100, 250, 500, 1000];

@@ -1,8 +1,56 @@
+# Dependencies
 node_modules/
-build/
+.pnp
+.pnp.js
+
+# Production & Build outputs
 dist/
+dist-ssr/
+build/
 coverage/
-.DS_Store
-*.log
-.env*
+
+# App packages & binaries (APK, AAB, JAR, etc.)
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+Cebim-Muhasebe.apk
+
+# Local JDK / SDK / Tools (never commit local SDK/JDK folders)
+jdk*/
+tools/
+cmdline-tools/
+
+# Android Specific (Local config & builds)
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/**/build/
+android/.cxx/
+android/captures/
+android/.idea/
+android/*.iml
+android/app/*.iml
+
+# Environment variables & secrets
+.env
+.env.*
 !.env.example
+*.keystore
+*.jks
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS & System files
+.DS_Store
+Thumbs.db
+*.log

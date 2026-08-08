@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Clean App Background Squircle -->
+  <rect width="512" height="512" rx="112" fill="#F8FAFC" />
+
+  <g transform="translate(0, 16)">
+    <!-- Back Banknote 1 (Top Blue Note) -->
+    <path d="M 150,155 L 305,92 C 314,88 324,93 328,102 L 358,145 C 362,152 358,160 350,163 L 225,200 Z" fill="#3B82F6" />
+
+    <!-- Front Banknote 2 (Secondary Blue Note) -->
+    <path d="M 180,170 L 342,130 C 352,127 362,133 365,142 L 388,182 C 392,189 387,196 379,198 L 260,215 Z" fill="#2563EB" />
+
+    <!-- Main Wallet Body (Dark Navy Solid) -->
+    <rect x="96" y="185" width="320" height="215" rx="38" fill="#1E293B" />
+
+    <!-- Clasp Cutout / White Ring Outline -->
+    <path d="M 326,268 L 384,268 C 404,268 418,282 418,302 C 418,322 404,336 384,336 L 326,336 Z" fill="#FFFFFF" />
+    
+    <!-- Clasp Inner Tab (Dark Navy) -->
+    <path d="M 338,278 L 382,278 C 396,278 406,288 406,302 C 406,316 396,326 382,326 L 338,326 Z" fill="#1E293B" />
+
+    <!-- Snap Button (White Dot) -->
+    <circle cx="372" cy="302" r="10.5" fill="#FFFFFF" />
+  </g>
+</svg>
