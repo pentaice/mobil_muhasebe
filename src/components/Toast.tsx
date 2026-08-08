@@ -34,7 +34,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.95 }}
           transition={{ duration: 0.15, ease: 'easeOut' }}
-          className="pointer-events-none fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-xs px-4"
+          className="pointer-events-none fixed top-6 left-1/2 -translate-x-1/2 z-[9999] w-full max-w-xs px-4"
         >
           <div className="pointer-events-auto bg-gray-900/95 dark:bg-slate-800/95 text-white backdrop-blur-md px-3.5 py-2.5 rounded-2xl shadow-xl border border-gray-700/50 dark:border-slate-700 flex items-center gap-2.5">
             {toast.type === 'error' ? (

@@ -49,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   const handleExportClick = () => {
     onExportData();
-    onShowToast('Yedek JSON dosyası indirildi!', 'success');
+    onShowToast('Yedek JSON indirildi! ("İndirilenler" klasöründe)', 'success');
   };
 
   const handleImportTextSubmit = (e: React.FormEvent) => {
