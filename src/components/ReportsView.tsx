@@ -23,7 +23,6 @@ import {
   X,
   Check,
   Filter,
-  Sparkles,
 } from 'lucide-react';
 
 interface ReportsViewProps {
@@ -506,50 +505,6 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
               </div>
             </div>
 
-            {/* Fast Presets from User Timeline */}
-            <div className="space-y-2 pt-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-amber-500" />
-                Hızlı Dönemler
-              </span>
-              <div className="grid grid-cols-2 gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => handleSetQuickCustomRange('2026-04-08', '2026-05-10')}
-                  className="p-2 text-left bg-gray-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 border border-gray-200 dark:border-slate-700 rounded-xl transition-all cursor-pointer text-xs"
-                >
-                  <p className="font-bold text-gray-800 dark:text-slate-200">1. Dönem (Nisan - 10 Mayıs)</p>
-                  <p className="text-[10px] text-gray-400">8 Nis 2026 - 10 May 2026</p>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleSetQuickCustomRange('2026-05-11', '2026-06-18')}
-                  className="p-2 text-left bg-gray-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 border border-gray-200 dark:border-slate-700 rounded-xl transition-all cursor-pointer text-xs"
-                >
-                  <p className="font-bold text-gray-800 dark:text-slate-200">2. Dönem (Mayıs - Haziran)</p>
-                  <p className="text-[10px] text-gray-400">11 May 2026 - 18 Haz 2026</p>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleSetQuickCustomRange('2026-06-19', '2026-07-07')}
-                  className="p-2 text-left bg-gray-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 border border-gray-200 dark:border-slate-700 rounded-xl transition-all cursor-pointer text-xs"
-                >
-                  <p className="font-bold text-gray-800 dark:text-slate-200">3. Dönem (Haziran - 7 Temmuz)</p>
-                  <p className="text-[10px] text-gray-400">19 Haz 2026 - 7 Tem 2026</p>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleSetQuickCustomRange('2026-07-08', '2026-08-08')}
-                  className="p-2 text-left bg-gray-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 border border-gray-200 dark:border-slate-700 rounded-xl transition-all cursor-pointer text-xs"
-                >
-                  <p className="font-bold text-gray-800 dark:text-slate-200">4. Dönem (Temmuz - Ağustos)</p>
-                  <p className="text-[10px] text-gray-400">8 Tem 2026 - 8 Ağu 2026</p>
-                </button>
-              </div>
-            </div>
 
             {/* Action Buttons */}
             <div className="flex items-center gap-2 pt-3 border-t border-gray-100 dark:border-slate-800">
