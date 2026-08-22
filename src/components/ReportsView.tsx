@@ -42,6 +42,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
 }) => {
   const [period, setPeriod] = useState<PeriodType>('this_month');
   const [showCustomDateModal, setShowCustomDateModal] = useState<boolean>(false);
+  const [showHistory, setShowHistory] = useState<boolean>(false);
 
   // Custom date range state (Defaults to earliest and latest transaction date or current month)
   const [customStartDate, setCustomStartDate] = useState<string>('2026-04-08');
@@ -124,20 +125,20 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
     filteredTransactions.forEach((t) => {
       if (t.type === 'expense') {
         const d = new Date(t.date);
-        const dStr = d.toLocaleDateString('tr-TR', {
-          day: '2-digit',
-          month: '2-digit',
-        });
-        dayMap[dStr] = (dayMap[dStr] || 0) + Number(t.amount);
+        const isoDate = d.toISOString().split('T')[0];
+        dayMap[isoDate] = (dayMap[isoDate] || 0) + Number(t.amount);
       }
     });
 
     return Object.entries(dayMap)
-      .map(([date, amount]) => ({ date, amount }))
-      .sort((a, b) => {
-        const [d1, m1] = a.date.split('.').map(Number);
-        const [d2, m2] = b.date.split('.').map(Number);
-        return m1 === m2 ? d1 - d2 : m1 - m2;
+      .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+      .map(([date, amount]) => {
+        const d = new Date(date);
+        const dStr = d.toLocaleDateString('tr-TR', {
+          day: '2-digit',
+          month: '2-digit',
+        });
+        return { date: dStr, amount };
       });
   }, [filteredTransactions]);
 
@@ -337,7 +338,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(val: number) => [formatTL(val), 'Harcama']}
+                    formatter={(val: number, name: string, props: any) => [formatTL(val), props.payload.name]}
                     contentStyle={{
                       backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
                       borderColor: isDarkMode ? '#334155' : '#f3f4f6',
@@ -421,6 +422,53 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* 2.5 HISTORY BUTTON & LIST */}
+      <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl p-5 shadow-sm space-y-4 transition-colors">
+        <button
+          onClick={() => setShowHistory(!showHistory)}
+          className="w-full flex items-center justify-between text-sm font-bold text-gray-900 dark:text-slate-100 cursor-pointer"
+        >
+          <div className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <span>Geçmişi Göster</span>
+          </div>
+          <span className="text-gray-400 dark:text-slate-500">{showHistory ? 'Gizle' : 'Göster'}</span>
+        </button>
+        
+        {showHistory && (
+          <div className="space-y-3 pt-3 border-t border-gray-100 dark:border-slate-800">
+            {filteredTransactions.length === 0 ? (
+              <p className="text-center text-xs text-gray-400 dark:text-slate-500 py-4">İşlem bulunamadı.</p>
+            ) : (
+              [...filteredTransactions]
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                .map((t) => {
+                  const cat = categories.find(c => c.id === t.categoryId) || { name: 'Bilinmiyor', color: '#9ca3af', icon: 'HelpCircle' };
+                  return (
+                    <div key={t.id} className="flex items-center justify-between bg-gray-50 dark:bg-slate-800/70 p-3 rounded-2xl border border-gray-100 dark:border-slate-750">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white" style={{ backgroundColor: cat.color }}>
+                          <CategoryIcon name={cat.icon} size={16} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-900 dark:text-slate-100">{cat.name}</p>
+                          <p className="text-[10px] text-gray-500 dark:text-slate-400">{formatShortDate(t.date)}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-xs font-bold ${t.type === 'expense' ? 'text-gray-900 dark:text-slate-100' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                          {t.type === 'expense' ? '-' : '+'}{formatTL(t.amount)}
+                        </p>
+                        {t.description && <p className="text-[10px] text-gray-400 dark:text-slate-500 truncate w-20">{t.description}</p>}
+                      </div>
+                    </div>
+                  );
+                })
+            )}
+          </div>
+        )}
+      </div>
 
       {/* 3. PAYMENT METHOD BREAKDOWN */}
       {sourceData.length > 0 && (
