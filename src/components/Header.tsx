@@ -12,9 +12,10 @@ import {
   FileJson,
   CheckCircle2,
   Copy,
+  Cloud,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { loadCards, loadTransactions, calculateCardCycleInfo } from '../utils/storage';
+import { loadCards, loadTransactions, calculateCardCycleInfo, loadCategories, loadAppsScriptUrl, saveAppsScriptUrl } from '../utils/storage';
 
 interface HeaderProps {
   transactions: Transaction[];
@@ -34,6 +35,9 @@ export const Header: React.FC<HeaderProps> = ({
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
   const [showResetConfirm, setShowResetConfirm] = useState<boolean>(false);
   const [importJsonInput, setImportJsonInput] = useState<string>('');
+  const [appsScriptUrl, setAppsScriptUrl] = useState<string>(() => loadAppsScriptUrl());
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [showSheetsHelpModal, setShowSheetsHelpModal] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Calculate this month's total spending
@@ -99,6 +103,75 @@ export const Header: React.FC<HeaderProps> = ({
     setShowResetConfirm(false);
     setShowSettingsModal(false);
     onShowToast('Tüm veriler sıfırlandı!', 'info');
+  };
+
+  const handleSyncToSheets = async () => {
+    const url = appsScriptUrl.trim();
+    if (!url) return;
+    
+    if (!url.startsWith('https://script.google.com/')) {
+      onShowToast("Hata: Geçersiz URL! Lütfen 'https://script.google.com/...' ile başlayan tam linki yapıştırın.", 'error');
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const backupObj = {
+        categories: loadCategories(),
+        cards: loadCards(),
+        transactions: loadTransactions(),
+        exportedAt: new Date().toISOString(),
+      };
+
+      await fetch(url, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'text/plain',
+        },
+        body: JSON.stringify(backupObj),
+      });
+
+      onShowToast('Google E-Tablolara başarıyla senkronize edildi!', 'success');
+    } catch (err) {
+      console.error(err);
+      onShowToast('Senkronizasyon hatası! URL yi ve bağlantınızı kontrol edin.', 'error');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleRestoreFromSheets = async () => {
+    const url = appsScriptUrl.trim();
+    if (!url) return;
+    
+    if (!url.startsWith('https://script.google.com/')) {
+      onShowToast("Hata: Geçersiz URL! Lütfen 'https://script.google.com/...' ile başlayan tam linki yapıştırın.", 'error');
+      return;
+    }
+    
+    if (!window.confirm('Buluttaki veriler telefondaki mevcut verilerin üzerine yazılacak. Emin misiniz?')) {
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data && data.transactions) {
+        onImportData(JSON.stringify(data));
+        onShowToast('Veriler buluttan başarıyla geri yüklendi!', 'success');
+        setShowSettingsModal(false);
+      } else {
+        throw new Error('Geçersiz veri');
+      }
+    } catch (err) {
+      console.error(err);
+      onShowToast('Bağlantı hatası veya henüz yedek yok.', 'error');
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   return (
@@ -245,6 +318,55 @@ export const Header: React.FC<HeaderProps> = ({
                   </form>
                 </div>
 
+                {/* Google Sheets Apps Script Sync */}
+                <div className="pt-3 border-t border-gray-100 dark:border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <Cloud className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                      <span>Google E-Tablolara Yedekle</span>
+                    </label>
+                    <button
+                      onClick={() => setShowSheetsHelpModal(true)}
+                      className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline font-semibold cursor-pointer"
+                    >
+                      Nasıl Kurulur?
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    <input
+                      type="url"
+                      placeholder="Apps Script URL'sini buraya yapıştırın"
+                      value={appsScriptUrl}
+                      onChange={(e) => {
+                        setAppsScriptUrl(e.target.value);
+                        saveAppsScriptUrl(e.target.value);
+                      }}
+                      className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-2.5 text-xs text-gray-800 dark:text-slate-200 focus:outline-none focus:border-indigo-600 transition-colors"
+                    />
+                    
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSyncToSheets}
+                        disabled={!appsScriptUrl.trim() || isSyncing}
+                        className="flex-1 py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-2xl font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-indigo-200 dark:shadow-none active:scale-95"
+                      >
+                        <Cloud className="w-3.5 h-3.5" />
+                        <span>{isSyncing ? 'İşleniyor...' : 'Yedekle'}</span>
+                      </button>
+
+                      <button
+                        onClick={handleRestoreFromSheets}
+                        disabled={!appsScriptUrl.trim() || isSyncing}
+                        className="flex-1 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-2xl font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-emerald-200 dark:shadow-none active:scale-95"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>{isSyncing ? 'İşleniyor...' : 'Geri Yükle'}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Reset Data Option with Confirmation */}
                 <div className="pt-3 border-t border-gray-100 dark:border-slate-800">
                   {!showResetConfirm ? (
@@ -285,6 +407,113 @@ export const Header: React.FC<HeaderProps> = ({
                     </div>
                   )}
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* GOOGLE SHEETS HELP MODAL */}
+      <AnimatePresence>
+        {showSheetsHelpModal && (
+          <div className="fixed inset-0 z-[60] bg-gray-900/60 dark:bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750 rounded-3xl w-full max-w-md p-6 shadow-2xl text-gray-900 dark:text-slate-100 space-y-5"
+            >
+              <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-xs">
+                    <Cloud className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-base text-gray-900 dark:text-slate-100">Nasıl Kurulur?</h3>
+                    <p className="text-[11px] text-gray-500 dark:text-slate-400">Google E-Tablolar Entegrasyonu</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowSheetsHelpModal(false)}
+                  className="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                  <div className="bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/50 rounded-2xl p-5 space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                    
+                    <div className="space-y-3">
+                      <div className="flex gap-3">
+                        <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 flex items-center justify-center shrink-0 font-bold text-xs">1</div>
+                        <p className="text-xs text-gray-700 dark:text-slate-300 leading-relaxed font-medium pt-1">
+                          Tarayıcınızda boş bir <strong className="text-indigo-600 dark:text-indigo-400">Google E-Tablo</strong> (Google Sheets) oluşturun.
+                        </p>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 flex items-center justify-center shrink-0 font-bold text-xs">2</div>
+                        <p className="text-xs text-gray-700 dark:text-slate-300 leading-relaxed font-medium pt-1">
+                          Tablonun üst menüsünden <strong className="text-indigo-600 dark:text-indigo-400">Uzantılar &gt; Apps Script</strong> seçeneğine tıklayın.
+                        </p>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 flex items-center justify-center shrink-0 font-bold text-xs">3</div>
+                        <div className="space-y-2 pt-1">
+                          <p className="text-xs text-gray-700 dark:text-slate-300 leading-relaxed font-medium">
+                            Açılan ekrandaki mevcut kodları tamamen silin. Aşağıdaki butona tıklayarak Akıllı Kodu kopyalayın ve boş alana yapıştırıp kaydedin.
+                          </p>
+                          <button 
+                            onClick={() => {
+                              const code = `function doPost(e) {\n  var d = JSON.parse(e.postData.contents);\n  var ss = SpreadsheetApp.getActiveSpreadsheet();\n  \n  var s1 = ss.getSheetByName("Yedek");\n  if (!s1) { s1 = ss.insertSheet("Yedek"); }\n  s1.clear();\n  s1.getRange(1, 1).setValue(JSON.stringify(d));\n  \n  var s2 = ss.getSheetByName("Harcamalar");\n  if (!s2) { s2 = ss.insertSheet("Harcamalar"); }\n  s2.clear();\n  s2.appendRow(["Tarih", "Tutar", "Açıklama"]);\n  s2.getRange("A1:C1").setFontWeight("bold").setBackground("#d0e0e3");\n  \n  if (d.transactions && d.transactions.length > 0) {\n    var rows = d.transactions.map(function(t) {\n      return [t.date, t.amount, t.description || ""];\n    });\n    s2.getRange(2, 1, rows.length, 3).setValues(rows);\n  }\n  return ContentService.createTextOutput("OK");\n}\n\nfunction doGet(e) {\n  var ss = SpreadsheetApp.getActiveSpreadsheet();\n  var s1 = ss.getSheetByName("Yedek");\n  var data = s1 ? s1.getRange(1, 1).getValue() : "{}";\n  return ContentService.createTextOutput(data).setMimeType(ContentService.MimeType.JSON);\n}`;
+                              navigator.clipboard.writeText(code);
+                              onShowToast('Kod başarıyla kopyalandı!', 'success');
+                            }}
+                            className="w-full py-2.5 px-3 bg-gray-900 hover:bg-black text-green-400 rounded-xl font-mono text-[11px] font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-inner active:scale-[0.98]"
+                          >
+                            <Copy className="w-4 h-4" />
+                            <span>{"// Akıllı Kodu Kopyalamak İçin Tıklayın"}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 flex items-center justify-center shrink-0 font-bold text-xs">4</div>
+                        <p className="text-xs text-gray-700 dark:text-slate-300 leading-relaxed font-medium pt-1">
+                          Sağ üst köşeden <strong className="text-indigo-600 dark:text-indigo-400">Dağıt &gt; Yeni Dağıtım</strong> (Deploy &gt; New Deployment) butonuna tıklayın.
+                        </p>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 flex items-center justify-center shrink-0 font-bold text-xs">5</div>
+                        <div className="space-y-1.5 pt-1">
+                          <p className="text-xs text-gray-700 dark:text-slate-300 leading-relaxed font-medium">
+                            Tür olarak <strong className="text-indigo-600 dark:text-indigo-400">Web Uygulaması</strong>'nı seçin ve şu çok önemli iki ayarı yapın:
+                          </p>
+                          <ul className="text-[11px] text-gray-600 dark:text-slate-400 list-disc pl-4 space-y-1">
+                            <li>Uygulamayı çalıştıracak kişi: <strong>Ben (Me)</strong></li>
+                            <li>Kimlerin erişimi var: <strong>Herkes (Anyone)</strong></li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 flex items-center justify-center shrink-0 font-bold text-xs">6</div>
+                        <p className="text-xs text-gray-700 dark:text-slate-300 leading-relaxed font-medium pt-1">
+                          <strong>Dağıt</strong> butonuna basın. (Google uyarı verirse <i>Erişim Yetkisi Ver &gt; Gelişmiş &gt; Sayfaya Git</i> adımlarını izleyin).
+                        </p>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 flex items-center justify-center shrink-0 font-bold text-xs">7</div>
+                        <p className="text-xs text-gray-700 dark:text-slate-300 leading-relaxed font-medium pt-1">
+                          Son ekranda verilen uzun <strong className="text-indigo-600 dark:text-indigo-400">Web Uygulaması URL'sini</strong> kopyalayın ve uygulamanızdaki kutucuğa yapıştırın!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
               </div>
             </motion.div>
           </div>

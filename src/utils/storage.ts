@@ -7,6 +7,7 @@ const STORAGE_KEYS = {
   TRANSACTIONS: 'cebim_transactions_v3',
   QUICK_AMOUNTS: 'cebim_quick_amounts_v3',
   THEME: 'cebim_theme_mode_v3',
+  APPS_SCRIPT_URL: 'cebim_apps_script_url_v3',
 };
 
 export const DEFAULT_QUICK_AMOUNTS = [10, 50, 100, 250, 500, 1000];
@@ -30,6 +31,22 @@ export function saveTheme(theme: 'light' | 'dark') {
     localStorage.setItem(STORAGE_KEYS.THEME, theme);
   } catch (e) {
     console.error('Error saving theme:', e);
+  }
+}
+
+export function loadAppsScriptUrl(): string {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.APPS_SCRIPT_URL) || '';
+  } catch (e) {
+    return '';
+  }
+}
+
+export function saveAppsScriptUrl(url: string) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.APPS_SCRIPT_URL, url);
+  } catch (e) {
+    console.error('Error saving apps script url:', e);
   }
 }
 
