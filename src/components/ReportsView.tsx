@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Category, CreditCard, Transaction } from '../types';
-import { formatTL, formatShortDate } from '../utils/storage';
+import { formatShortDate } from '../utils/storage';
 import { CategoryIcon } from './CategoryIcon';
+import { useI18n } from '../i18n/I18nContext';
 import {
   ResponsiveContainer,
   PieChart,
@@ -40,6 +41,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
   transactions,
   isDarkMode = false,
 }) => {
+  const { t: i18n, formatCurrency } = useI18n();
   const [period, setPeriod] = useState<PeriodType>('this_month');
   const [showCustomDateModal, setShowCustomDateModal] = useState<boolean>(false);
   const [showHistory, setShowHistory] = useState<boolean>(false);
@@ -134,7 +136,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
       .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
       .map(([date, amount]) => {
         const d = new Date(date);
-        const dStr = d.toLocaleDateString('tr-TR', {
+        const dStr = d.toLocaleDateString(undefined, {
           day: '2-digit',
           month: '2-digit',
         });
@@ -160,7 +162,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
     });
 
     const result = [
-      { name: 'Nakit / Banka', value: cashTotal, color: '#10b981' },
+      { name: i18n.cashBank, value: cashTotal, color: '#10b981' },
     ];
 
     cards.forEach((card) => {
@@ -192,11 +194,11 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
       {/* Period Selection Tabs */}
       <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-2xl p-1.5 flex items-center gap-1 shadow-xs transition-colors">
         {[
-          { id: 'this_month', label: 'Bu Ay' },
-          { id: 'last_month', label: 'Geçen Ay' },
-          { id: 'last_30_days', label: '30 Gün' },
-          { id: 'custom', label: 'Özel', icon: CalendarRange },
-          { id: 'all', label: 'Tümü' },
+          { id: 'this_month', label: i18n.thisMonth },
+          { id: 'last_month', label: i18n.lastMonth },
+          { id: 'last_30_days', label: i18n.last30Days },
+          { id: 'custom', label: i18n.custom, icon: CalendarRange },
+          { id: 'all', label: i18n.allTime },
         ].map((p) => {
           const Icon = p.icon;
           const isSelected = period === p.id;
@@ -233,12 +235,12 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
             </div>
             <div>
               <p className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">
-                Özel Tarih Aralığı Analizi
+                {i18n.customDateAnalysis}
               </p>
               <p className="text-xs font-bold text-gray-900 dark:text-slate-100">
-                {customStartDate ? new Date(customStartDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Başlangıç'}
+                {customStartDate ? new Date(customStartDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : i18n.startDate}
                 {' → '}
-                {customEndDate ? new Date(customEndDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Bitiş'}
+                {customEndDate ? new Date(customEndDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : i18n.endDate}
               </p>
             </div>
           </div>
@@ -247,7 +249,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
             onClick={() => setShowCustomDateModal(true)}
             className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-slate-700 transition-colors cursor-pointer shadow-2xs"
           >
-            Değiştir
+            {i18n.change}
           </button>
         </div>
       )}
@@ -257,21 +259,21 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
         <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl p-4 space-y-1 shadow-sm transition-colors">
           <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-slate-400 font-medium">
             <TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <span>Toplam Harcama</span>
+            <span>{i18n.totalExpense}</span>
           </div>
-          <p className="text-xl font-extrabold text-gray-900 dark:text-slate-100">{formatTL(totalExpenses)}</p>
-          <p className="text-[10px] text-gray-400 dark:text-slate-500">{filteredTransactions.length} işlem kaydı</p>
+          <p className="text-xl font-extrabold text-gray-900 dark:text-slate-100">{formatCurrency(totalExpenses)}</p>
+          <p className="text-[10px] text-gray-400 dark:text-slate-500">{filteredTransactions.length} {i18n.transactionsCount}</p>
         </div>
 
         <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl p-4 space-y-1 shadow-sm transition-colors">
           <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-slate-400 font-medium">
             <CardIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Ödenen Kart Borcu</span>
+            <span>{i18n.paidCardDebt}</span>
           </div>
           <p className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400">
-            {formatTL(totalCardPayments)}
+            {formatCurrency(totalCardPayments)}
           </p>
-          <p className="text-[10px] text-gray-400 dark:text-slate-500">Kart kapatma ödemeleri</p>
+          <p className="text-[10px] text-gray-400 dark:text-slate-500">{i18n.cardClosingPayments}</p>
         </div>
       </div>
 
@@ -287,17 +289,17 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
             </div>
             <div>
               <p className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">
-                Lider Harcama Kategorisi
+                {i18n.topCategory}
               </p>
               <p className="text-sm font-bold text-gray-900 dark:text-slate-100">{topCategory.name}</p>
             </div>
           </div>
           <div className="text-right">
             <p className="text-base font-extrabold text-gray-900 dark:text-slate-100">
-              {formatTL(topCategory.value)}
+              {formatCurrency(topCategory.value)}
             </p>
             <p className="text-[10px] text-gray-400 dark:text-slate-400 font-medium">
-              %{totalExpenses > 0 ? ((topCategory.value / totalExpenses) * 100).toFixed(1) : 0} payı
+              %{totalExpenses > 0 ? ((topCategory.value / totalExpenses) * 100).toFixed(1) : 0} {i18n.share}
             </p>
           </div>
         </div>
@@ -308,16 +310,16 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
         <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-3">
           <div className="flex items-center gap-2">
             <ChartIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            <h3 className="font-bold text-sm text-gray-900 dark:text-slate-100">Kategori Dağılımı</h3>
+            <h3 className="font-bold text-sm text-gray-900 dark:text-slate-100">{i18n.categoryDistribution}</h3>
           </div>
           <span className="text-xs text-gray-400 dark:text-slate-400 font-mono">
-            {categoryData.length} Kategori
+            {categoryData.length} {i18n.category}
           </span>
         </div>
 
         {categoryData.length === 0 ? (
           <p className="text-center text-xs text-gray-400 dark:text-slate-500 py-8">
-            Seçilen dönemde harcama bulunmuyor.
+            {i18n.noExpenseInPeriod}
           </p>
         ) : (
           <div className="space-y-4">
@@ -338,7 +340,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(val: number, name: string, props: any) => [formatTL(val), props.payload.name]}
+                    formatter={(val: number, name: string, props: any) => [formatCurrency(val), props.payload.name]}
                     contentStyle={{
                       backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
                       borderColor: isDarkMode ? '#334155' : '#f3f4f6',
@@ -369,7 +371,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-gray-400 dark:text-slate-400 font-mono">%{percent}</span>
-                        <span className="font-bold text-gray-900 dark:text-slate-100">{formatTL(cat.value)}</span>
+                        <span className="font-bold text-gray-900 dark:text-slate-100">{formatCurrency(cat.value)}</span>
                       </div>
                     </div>
 
@@ -396,7 +398,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
           <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-3">
             <div className="flex items-center gap-2">
               <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              <h3 className="font-bold text-sm text-gray-900 dark:text-slate-100">Günlük Harcama Trendi</h3>
+              <h3 className="font-bold text-sm text-gray-900 dark:text-slate-100">{i18n.dailyExpenseTrend}</h3>
             </div>
           </div>
 
@@ -406,7 +408,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                 <XAxis dataKey="date" stroke={isDarkMode ? '#64748b' : '#9ca3af'} fontSize={10} tickLine={false} />
                 <YAxis stroke={isDarkMode ? '#64748b' : '#9ca3af'} fontSize={10} tickLine={false} />
                 <Tooltip
-                  formatter={(val: number) => [formatTL(val), 'Harcama']}
+                  formatter={(val: number) => [formatCurrency(val), i18n.expense]}
                   contentStyle={{
                     backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
                     borderColor: isDarkMode ? '#334155' : '#f3f4f6',
@@ -431,20 +433,20 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
         >
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            <span>Geçmişi Göster</span>
+            <span>{i18n.showHistory}</span>
           </div>
-          <span className="text-gray-400 dark:text-slate-500">{showHistory ? 'Gizle' : 'Göster'}</span>
+          <span className="text-gray-400 dark:text-slate-500">{showHistory ? i18n.hideDetails : i18n.showDetails}</span>
         </button>
         
         {showHistory && (
           <div className="space-y-3 pt-3 border-t border-gray-100 dark:border-slate-800">
             {filteredTransactions.length === 0 ? (
-              <p className="text-center text-xs text-gray-400 dark:text-slate-500 py-4">İşlem bulunamadı.</p>
+              <p className="text-center text-xs text-gray-400 dark:text-slate-500 py-4">{i18n.noTransactionFound}</p>
             ) : (
               [...filteredTransactions]
                 .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                 .map((t) => {
-                  const cat = categories.find(c => c.id === t.categoryId) || { name: 'Bilinmiyor', color: '#9ca3af', icon: 'HelpCircle' };
+                  const cat = categories.find(c => c.id === t.categoryId) || { name: i18n.unknown, color: '#9ca3af', icon: 'HelpCircle' };
                   return (
                     <div key={t.id} className="flex items-center justify-between bg-gray-50 dark:bg-slate-800/70 p-3 rounded-2xl border border-gray-100 dark:border-slate-750">
                       <div className="flex items-center gap-3">
@@ -458,7 +460,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                       </div>
                       <div className="text-right">
                         <p className={`text-xs font-bold ${t.type === 'expense' ? 'text-gray-900 dark:text-slate-100' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                          {t.type === 'expense' ? '-' : '+'}{formatTL(t.amount)}
+                          {t.type === 'expense' ? '-' : '+'}{formatCurrency(t.amount)}
                         </p>
                         {t.description && <p className="text-[10px] text-gray-400 dark:text-slate-500 truncate w-20">{t.description}</p>}
                       </div>
@@ -476,7 +478,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
           <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-3">
             <div className="flex items-center gap-2">
               <Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              <h3 className="font-bold text-sm text-gray-900 dark:text-slate-100">Ödeme Kaynağı Dağılımı</h3>
+              <h3 className="font-bold text-sm text-gray-900 dark:text-slate-100">{i18n.paymentSourceDistribution}</h3>
             </div>
           </div>
 
@@ -493,7 +495,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                     <span className="font-semibold text-gray-800 dark:text-slate-200">{item.name}</span>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-gray-900 dark:text-slate-100">{formatTL(item.value)}</p>
+                    <p className="font-bold text-gray-900 dark:text-slate-100">{formatCurrency(item.value)}</p>
                     <p className="text-[10px] text-gray-400 dark:text-slate-400 font-mono">%{percent}</p>
                   </div>
                 </div>
@@ -514,8 +516,8 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                   <CalendarRange className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm text-gray-900 dark:text-slate-100">Özel Tarih Aralığı Seç</h3>
-                  <p className="text-[11px] text-gray-500 dark:text-slate-400">İki tarih arasındaki harcama analizi</p>
+                  <h3 className="font-bold text-sm text-gray-900 dark:text-slate-100">{i18n.selectCustomDateRange}</h3>
+                  <p className="text-[11px] text-gray-500 dark:text-slate-400">{i18n.expenseAnalysisBetweenDates}</p>
                 </div>
               </div>
               <button
@@ -530,7 +532,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                  Başlangıç Tarihi
+                  {i18n.startDate}
                 </label>
                 <input
                   type="date"
@@ -542,7 +544,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
 
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                  Bitiş Tarihi
+                  {i18n.endDate}
                 </label>
                 <input
                   type="date"
@@ -565,7 +567,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                 className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-200 dark:shadow-none transition-all cursor-pointer"
               >
                 <Check className="w-4 h-4" />
-                <span>Analizi Göster</span>
+                <span>{i18n.showAnalysis}</span>
               </button>
 
               <button
@@ -573,7 +575,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                 onClick={() => setShowCustomDateModal(false)}
                 className="py-3 px-4 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 font-semibold text-xs rounded-2xl transition-colors cursor-pointer"
               >
-                Kapat
+                {i18n.close}
               </button>
             </div>
           </div>

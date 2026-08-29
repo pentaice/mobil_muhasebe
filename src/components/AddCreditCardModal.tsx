@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CreditCard } from '../types';
 import { CreditCard as CardIcon, X, Plus } from 'lucide-react';
+import { useI18n } from '../i18n/I18nContext';
 
 interface AddCreditCardModalProps {
   onClose: () => void;
@@ -19,6 +20,7 @@ export const AddCreditCardModal: React.FC<AddCreditCardModalProps> = ({
   onClose,
   onAddCard,
 }) => {
+  const { t: i18n } = useI18n();
   const [name, setName] = useState('');
   const [cardNetwork, setCardNetwork] = useState<'visa' | 'mastercard' | 'troy' | 'amex'>('mastercard');
   const [last4, setLast4] = useState('');
@@ -54,8 +56,8 @@ export const AddCreditCardModal: React.FC<AddCreditCardModalProps> = ({
               <CardIcon className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-gray-900 dark:text-slate-100 leading-tight">Yeni Kredi Kartı Ekle</h3>
-              <p className="text-xs text-gray-500 dark:text-slate-400">Kart ve döngü bilgilerini girin</p>
+              <h3 className="font-bold text-lg text-gray-900 dark:text-slate-100 leading-tight">{i18n.addNewCard}</h3>
+              <p className="text-xs text-gray-500 dark:text-slate-400">{i18n.enterCardInfo}</p>
             </div>
           </div>
           <button
@@ -70,11 +72,11 @@ export const AddCreditCardModal: React.FC<AddCreditCardModalProps> = ({
           {/* Card Name */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
-              Kart Adı / Banka
+              {i18n.cardNameBank}
             </label>
             <input
               type="text"
-              placeholder="Örn: Garanti Bonus, World, Enpara"
+              placeholder={i18n.cardNamePlaceholder}
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -86,7 +88,7 @@ export const AddCreditCardModal: React.FC<AddCreditCardModalProps> = ({
             {/* Card Network */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
-                Kart Tipi
+                {i18n.cardType}
               </label>
               <select
                 value={cardNetwork}
@@ -103,7 +105,7 @@ export const AddCreditCardModal: React.FC<AddCreditCardModalProps> = ({
             {/* Last 4 digits */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
-                Son 4 Hane
+                {i18n.last4Digits}
               </label>
               <input
                 type="text"
@@ -119,7 +121,7 @@ export const AddCreditCardModal: React.FC<AddCreditCardModalProps> = ({
           {/* Limit */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
-              Kart Limiti (₺)
+              {i18n.cardLimit}
             </label>
             <input
               type="number"
@@ -135,7 +137,7 @@ export const AddCreditCardModal: React.FC<AddCreditCardModalProps> = ({
             {/* Cutoff Day */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
-                Hesap Kesim Günü
+                {i18n.cutoffDayLabel}
               </label>
               <select
                 value={cutoffDay}
@@ -144,7 +146,7 @@ export const AddCreditCardModal: React.FC<AddCreditCardModalProps> = ({
               >
                 {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
                   <option key={day} value={day}>
-                    Her ayın {day}. günü
+                    {i18n.everyMonth} {day}
                   </option>
                 ))}
               </select>
@@ -153,16 +155,16 @@ export const AddCreditCardModal: React.FC<AddCreditCardModalProps> = ({
             {/* Due Offset */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
-                Son Ödeme
+                {i18n.lastPayment}
               </label>
               <select
                 value={dueDayOffsetDays}
                 onChange={(e) => setDueDayOffsetDays(Number(e.target.value))}
                 className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 rounded-2xl py-2.5 px-3 text-xs text-gray-800 dark:text-slate-100 focus:outline-none"
               >
-                <option value={10}>Kesimden 10 gün sonra</option>
-                <option value={12}>Kesimden 12 gün sonra</option>
-                <option value={15}>Kesimden 15 gün sonra</option>
+                <option value={10}>10 {i18n.daysAfterCutoff}</option>
+                <option value={12}>12 {i18n.daysAfterCutoff}</option>
+                <option value={15}>15 {i18n.daysAfterCutoff}</option>
               </select>
             </div>
           </div>
@@ -170,7 +172,7 @@ export const AddCreditCardModal: React.FC<AddCreditCardModalProps> = ({
           {/* Card Theme */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
-              Kart Görünümü / Tema
+              {i18n.cardTheme}
             </label>
             <div className="grid grid-cols-3 gap-2">
               {GRADIENT_PRESETS.map((preset, idx) => (
@@ -194,7 +196,7 @@ export const AddCreditCardModal: React.FC<AddCreditCardModalProps> = ({
             className="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-blue-200 dark:shadow-none transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Kartı Kaydet</span>
+            <span>{i18n.saveCard}</span>
           </button>
         </form>
       </div>

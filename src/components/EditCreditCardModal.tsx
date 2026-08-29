@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CreditCard } from '../types';
 import { CreditCard as CardIcon, X, Pencil } from 'lucide-react';
+import { useI18n } from '../i18n/I18nContext';
 
 interface EditCreditCardModalProps {
   card: CreditCard;
@@ -17,6 +18,7 @@ const GRADIENT_PRESETS = [
 ];
 
 export const EditCreditCardModal: React.FC<EditCreditCardModalProps> = ({ card, onClose, onUpdateCard }) => {
+  const { t: i18n } = useI18n();
   const [name, setName] = useState(card.name);
   const [cardNetwork, setCardNetwork] = useState(card.cardNetwork);
   const [last4, setLast4] = useState(card.last4);
@@ -51,8 +53,8 @@ export const EditCreditCardModal: React.FC<EditCreditCardModalProps> = ({ card, 
               <CardIcon className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-gray-900 dark:text-slate-100 leading-tight">Kredi Kartını Düzenle</h3>
-              <p className="text-xs text-gray-500 dark:text-slate-400">Kart ve döngü bilgilerini güncelleyin</p>
+              <h3 className="font-bold text-lg text-gray-900 dark:text-slate-100 leading-tight">{i18n.editCreditCard}</h3>
+              <p className="text-xs text-gray-500 dark:text-slate-400">{i18n.updateCardInfo}</p>
             </div>
           </div>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 flex items-center justify-center transition-colors cursor-pointer">
@@ -61,12 +63,12 @@ export const EditCreditCardModal: React.FC<EditCreditCardModalProps> = ({ card, 
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">Kart Adı / Banka</label>
+            <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">{i18n.cardNameBank}</label>
             <input type="text" value={name} onChange={e => setName(e.target.value)} required className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 rounded-2xl py-2.5 px-3 text-xs text-gray-800 dark:text-slate-100 focus:outline-none" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">Kart Tipi</label>
+              <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">{i18n.cardType}</label>
               <select value={cardNetwork} onChange={e => setCardNetwork(e.target.value as any)} className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 rounded-2xl py-2.5 px-3 text-xs text-gray-800 dark:text-slate-100 focus:outline-none">
                 <option value="mastercard">Mastercard</option>
                 <option value="visa">Visa</option>
@@ -75,34 +77,34 @@ export const EditCreditCardModal: React.FC<EditCreditCardModalProps> = ({ card, 
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">Son 4 Hane</label>
+              <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">{i18n.last4Digits}</label>
               <input type="text" maxLength={4} value={last4} onChange={e => setLast4(e.target.value)} className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 rounded-2xl py-2.5 px-3 text-xs text-gray-800 dark:text-slate-100 focus:outline-none" />
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">Kart Limiti (₺)</label>
+            <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">{i18n.cardLimit}</label>
             <input type="number" value={limit} onChange={e => setLimit(e.target.value)} required className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 rounded-2xl py-2.5 px-3 text-xs text-gray-800 dark:text-slate-100 focus:outline-none" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">Hesap Kesim Günü</label>
+              <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">{i18n.cutoffDayLabel}</label>
               <select value={cutoffDay} onChange={e => setCutoffDay(Number(e.target.value))} className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 rounded-2xl py-2.5 px-3 text-xs text-gray-800 dark:text-slate-100 focus:outline-none">
                 {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                  <option key={day} value={day}>Her ayın {day}. günü</option>
+                  <option key={day} value={day}>{i18n.everyMonth} {day}</option>
                 ))}
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">Son Ödeme</label>
+              <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">{i18n.lastPayment}</label>
               <select value={dueDayOffsetDays} onChange={e => setDueDayOffsetDays(Number(e.target.value))} className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 rounded-2xl py-2.5 px-3 text-xs text-gray-800 dark:text-slate-100 focus:outline-none">
-                <option value={10}>Kesimden 10 gün sonra</option>
-                <option value={12}>Kesimden 12 gün sonra</option>
-                <option value={15}>Kesimden 15 gün sonra</option>
+                <option value={10}>10 {i18n.daysAfterCutoff}</option>
+                <option value={12}>12 {i18n.daysAfterCutoff}</option>
+                <option value={15}>15 {i18n.daysAfterCutoff}</option>
               </select>
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">Kart Görünümü / Tema</label>
+            <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">{i18n.cardTheme}</label>
             <div className="grid grid-cols-3 gap-2">
               {GRADIENT_PRESETS.map((preset, idx) => (
                 <button key={idx} type="button" onClick={() => setColor(preset.value)} className={`h-10 rounded-xl bg-gradient-to-r ${preset.value} border transition-all cursor-pointer ${color === preset.value ? 'border-blue-600 ring-2 ring-blue-500/50 scale-105' : 'border-gray-200 dark:border-slate-700 opacity-80 hover:opacity-100'}`} />
@@ -111,7 +113,7 @@ export const EditCreditCardModal: React.FC<EditCreditCardModalProps> = ({ card, 
           </div>
           <button type="submit" className="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-blue-200 dark:shadow-none transition-all cursor-pointer">
             <Pencil className="w-4 h-4" />
-            <span>Kartı Güncelle</span>
+            <span>{i18n.updateCard}</span>
           </button>
         </form>
       </div>

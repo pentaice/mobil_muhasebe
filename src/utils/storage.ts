@@ -2,12 +2,13 @@ import { Category, CreditCard, Transaction } from '../types';
 import { DEFAULT_CATEGORIES, DEFAULT_CREDIT_CARDS, INITIAL_TRANSACTIONS } from '../data/initialData';
 
 const STORAGE_KEYS = {
-  CATEGORIES: 'cebim_categories_v3',
-  CARDS: 'cebim_cards_v3',
-  TRANSACTIONS: 'cebim_transactions_v3',
-  QUICK_AMOUNTS: 'cebim_quick_amounts_v3',
-  THEME: 'cebim_theme_mode_v3',
-  APPS_SCRIPT_URL: 'cebim_apps_script_url_v3',
+  CATEGORIES: 'cebim_categories_v5',
+  CARDS: 'cebim_cards_v5',
+  TRANSACTIONS: 'cebim_transactions_v5',
+  QUICK_AMOUNTS: 'cebim_quick_amounts_v5',
+  THEME: 'cebim_theme_mode_v5',
+  APPS_SCRIPT_URL: 'cebim_apps_script_url_v5',
+  NOTIFICATIONS: 'cebim_notifications_v5',
 };
 
 export const DEFAULT_QUICK_AMOUNTS = [10, 50, 100, 250, 500, 1000];
@@ -66,6 +67,37 @@ export function saveQuickAmounts(amounts: number[]) {
     localStorage.setItem(STORAGE_KEYS.QUICK_AMOUNTS, JSON.stringify(amounts));
   } catch (e) {
     console.error('Error saving quick amounts:', e);
+  }
+}
+
+export interface NotificationSettings {
+  enabled: boolean;
+  frequency: 'twice_daily' | 'daily' | 'weekly' | 'monthly';
+  time: string; // HH:mm format
+  lastNotified?: string; // ISO date string of last notification
+}
+
+export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+  enabled: false,
+  frequency: 'daily',
+  time: '14:30',
+};
+
+export function loadNotificationSettings(): NotificationSettings {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
+    if (!raw) return DEFAULT_NOTIFICATION_SETTINGS;
+    return JSON.parse(raw);
+  } catch (e) {
+    return DEFAULT_NOTIFICATION_SETTINGS;
+  }
+}
+
+export function saveNotificationSettings(settings: NotificationSettings) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(settings));
+  } catch (e) {
+    console.error('Error saving notification settings:', e);
   }
 }
 
@@ -136,6 +168,7 @@ export function resetAllData() {
   localStorage.removeItem(STORAGE_KEYS.CARDS);
   localStorage.removeItem(STORAGE_KEYS.TRANSACTIONS);
   localStorage.removeItem(STORAGE_KEYS.QUICK_AMOUNTS);
+  localStorage.removeItem(STORAGE_KEYS.NOTIFICATIONS);
 }
 
 // --- Card Cycle Calculations ---

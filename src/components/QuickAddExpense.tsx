@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Category, CreditCard, Transaction } from '../types';
 import { CategoryIcon } from './CategoryIcon';
 import { formatTL, loadQuickAmounts, saveQuickAmounts, DEFAULT_QUICK_AMOUNTS } from '../utils/storage';
+import { useI18n } from '../i18n/I18nContext';
 import {
   Zap,
   CreditCard as CardIcon,
@@ -33,6 +34,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
   onOpenAddCategoryModal,
   focusTrigger,
 }) => {
+  const { t: i18n, formatCurrency, currency } = useI18n();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(categories[0]?.id || 'cat-yemek');
   const [amountStr, setAmountStr] = useState<string>('');
   const [sourceType, setSourceType] = useState<'credit_card' | 'cash_bank'>(cards.length > 0 ? 'credit_card' : 'cash_bank');
@@ -152,10 +154,10 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                     onClick={handleClearAmount}
                     className="text-[10px] text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200 bg-gray-200/80 dark:bg-slate-700 px-1.5 py-0.5 rounded cursor-pointer font-semibold"
                   >
-                    Sil
+                    {i18n.clear}
                   </button>
                 )}
-                <span className="text-lg font-bold text-blue-600 dark:text-blue-400">₺</span>
+                <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{currency.symbol}</span>
               </div>
             </div>
 
@@ -169,7 +171,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                     onClick={() => handleQuickAddAmount(val)}
                     className="bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 active:scale-95 text-gray-800 dark:text-slate-200 text-[11px] font-bold px-2.5 py-1 rounded-xl border border-gray-200/80 dark:border-slate-700 whitespace-nowrap transition-all cursor-pointer shrink-0 shadow-2xs"
                   >
-                    +{val}₺
+                    +{val}{currency.symbol}
                   </button>
                 ))}
               </div>
@@ -178,7 +180,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
               <button
                 type="button"
                 onClick={() => setShowQuickAmountModal(true)}
-                title="Hızlı Miktarları Düzenle"
+                title={i18n.editQuickAmounts}
                 className="p-1.5 rounded-xl bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-700 text-gray-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer shrink-0"
               >
                 <Settings2 className="w-3.5 h-3.5" />
@@ -190,7 +192,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between px-0.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-400">
-                Kategori
+                {i18n.category}
               </span>
               <button
                 type="button"
@@ -198,7 +200,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                 className="text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-0.5 font-bold cursor-pointer"
               >
                 <Plus className="w-3 h-3" />
-                <span>Ekle</span>
+                <span>{i18n.add}</span>
               </button>
             </div>
 
@@ -252,7 +254,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                 }`}
               >
                 <CardIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                <span>Kredi Kartı</span>
+                <span>{i18n.creditCard}</span>
               </button>
 
               <button
@@ -265,29 +267,32 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                 }`}
               >
                 <Wallet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>Nakit / Banka</span>
+                <span>{i18n.cashBank}</span>
               </button>
             </div>
 
             {/* Select Credit Card if Credit Card selected */}
-            {sourceType === 'credit_card' && cards.length > 0 && (
+            {sourceType === 'credit_card' && (
               <select
                 value={selectedCardId}
                 onChange={(e) => setSelectedCardId(e.target.value)}
                 className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-1.5 px-2.5 text-xs text-gray-800 dark:text-slate-200 font-semibold focus:outline-none focus:border-blue-600"
               >
-                {cards.map((card) => (
-                  <option key={card.id} value={card.id}>
-                    💳 {card.name} (*{card.last4})
-                  </option>
-                ))}
+                {cards.length === 0 ? (
+                  <option value="" disabled>{i18n.noCardsYet}</option>
+                ) : (
+                  cards.map((card) => (
+                    <option key={card.id} value={card.id}>
+                      💳 {card.name} (*{card.last4})
+                    </option>
+                  ))
+                )}
               </select>
             )}
 
             {sourceType === 'credit_card' && cards.length === 0 && (
               <div className="flex items-center gap-2 p-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-xl text-[11px] text-amber-800 dark:text-amber-300">
-                <Info className="w-3.5 h-3.5 shrink-0" />
-                <span>Kayıtlı kart yok. Nakit/Banka olarak kaydedilecektir.</span>
+                <span>{i18n.noCardsYet}</span>
               </div>
             )}
           </div>
@@ -301,7 +306,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
             >
               <span className="flex items-center gap-1">
                 <Plus className={`w-3.5 h-3.5 text-blue-600 dark:text-blue-400 transition-transform ${showDetailsDrawer ? 'rotate-45' : ''}`} />
-                <span>{showDetailsDrawer ? 'Detayları Gizle' : 'Not veya Tarih Ekle'}</span>
+                <span>{showDetailsDrawer ? i18n.hideDetails : i18n.addNoteOrDate}</span>
               </span>
               {showDetailsDrawer ? (
                 <ChevronUp className="w-3.5 h-3.5 text-gray-400" />
@@ -321,7 +326,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                 >
                   <input
                     type="text"
-                    placeholder="Açıklama / Not..."
+                    placeholder={i18n.notePlaceholder}
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-1.5 px-2.5 text-xs text-gray-800 dark:text-slate-200 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-blue-600"
@@ -334,7 +339,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                       className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-semibold cursor-pointer"
                     >
                       <Calendar className="w-3 h-3" />
-                      <span>{isCustomDate ? 'Anlık Tarihe Dön' : 'Farklı Tarih Seç'}</span>
+                      <span>{isCustomDate ? i18n.returnToCurrentDate : i18n.chooseDifferentDate}</span>
                     </button>
                   </div>
 
@@ -362,7 +367,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
             }`}
           >
             <Zap className="w-4 h-4 fill-current" />
-            <span>Harcamayı Kaydet ({amountNumber > 0 ? formatTL(amountNumber) : '₺0'})</span>
+            <span>{i18n.saveExpense} ({amountNumber > 0 ? formatCurrency(amountNumber) : `${currency.symbol}0`})</span>
           </button>
         </form>
       </div>
@@ -382,7 +387,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                   <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                     <Settings2 className="w-4 h-4" />
                   </div>
-                  <h3 className="font-bold text-sm text-gray-900 dark:text-slate-100">Hızlı Miktarları Düzenle</h3>
+                  <h3 className="font-bold text-sm text-gray-900 dark:text-slate-100">{i18n.editQuickAmounts}</h3>
                 </div>
                 <button
                   type="button"
@@ -395,20 +400,18 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
 
               {/* Existing preset chips with delete badge */}
               <div className="space-y-2">
-                <label className="text-[11px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider block">
-                  Mevcut Butonlar
-                </label>
+                <label className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider block mb-2">{i18n.existingButtons}</label>
                 <div className="flex flex-wrap gap-2">
                   {quickAmounts.map((val) => (
                     <div
                       key={val}
                       className="bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-slate-200 text-xs font-bold py-1 px-2.5 rounded-xl flex items-center gap-1.5"
                     >
-                      <span>+{val}₺</span>
+                      <span>+{val}{currency.symbol}</span>
                       <button
                         type="button"
                         onClick={() => handleRemovePreset(val)}
-                        title="Sil"
+                        title={i18n.delete}
                         className="hover:text-rose-600 text-gray-400 cursor-pointer p-0.5"
                       >
                         <X className="w-3 h-3" />
@@ -421,12 +424,12 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
               {/* Add New Preset Form */}
               <form onSubmit={handleAddPreset} className="space-y-2 pt-2 border-t border-gray-100 dark:border-slate-800">
                 <label className="text-[11px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider block">
-                  Yeni Miktar Ekle
+                  {i18n.addNewAmount}
                 </label>
                 <div className="flex gap-2">
                   <input
                     type="number"
-                    placeholder="Örn: 20 veya 150"
+                    placeholder={i18n.amountPlaceholder}
                     value={newQuickAmountInput}
                     onChange={(e) => setNewQuickAmountInput(e.target.value)}
                     className="flex-1 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600"
@@ -436,7 +439,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                     className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>Ekle</span>
+                    <span>{i18n.add}</span>
                   </button>
                 </div>
               </form>
@@ -449,7 +452,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                   className="text-xs text-rose-600 dark:text-rose-400 hover:text-rose-700 font-semibold flex items-center gap-1 cursor-pointer"
                 >
                   <RotateCcw className="w-3 h-3" />
-                  <span>Varsayılana Dön</span>
+                  <span>{i18n.resetToDefaults}</span>
                 </button>
 
                 <button
@@ -458,7 +461,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                   className="bg-gray-900 dark:bg-blue-600 hover:bg-black dark:hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1 cursor-pointer transition-all"
                 >
                   <Check className="w-3.5 h-3.5" />
-                  <span>Tamam</span>
+                  <span>{i18n.done}</span>
                 </button>
               </div>
             </motion.div>

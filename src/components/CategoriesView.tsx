@@ -17,8 +17,15 @@ import {
   AlertTriangle,
   FolderSync,
   Check,
+  Globe,
+  Coins,
+  Bell,
+  BellOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useI18n } from '../i18n/I18nContext';
+import { SUPPORTED_LANGUAGES, SUPPORTED_CURRENCIES, LanguageCode } from '../i18n/translations';
+import { loadNotificationSettings, saveNotificationSettings, NotificationSettings } from '../utils/storage';
 
 interface CategoriesViewProps {
   categories: Category[];
@@ -62,11 +69,18 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
   isDarkMode,
   onToggleTheme,
 }) => {
+  const { t: i18n, formatCurrency, lang, setLang, currency, setCurrency } = useI18n();
   // Add modal state
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [newCatName, setNewCatName] = useState<string>('');
   const [selectedIcon, setSelectedIcon] = useState<string>('Sparkles');
   const [selectedColor, setSelectedColor] = useState<string>(COLOR_PALETTE[0]);
+
+  // Notifications state
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(() => loadNotificationSettings());
+
+  // Localization settings state
+  const [isLocalizationOpen, setIsLocalizationOpen] = useState<boolean>(false);
 
   // Edit modal state
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -187,6 +201,52 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
     setCategoryToDelete(null);
   };
 
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setLang(e.target.value as LanguageCode);
+  };
+
+  const handleCurrencyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = SUPPORTED_CURRENCIES.find(c => c.code === e.target.value);
+    if (selected) {
+      setCurrency(selected);
+    }
+  };
+
+  const handleUpdateNotificationSettings = (updates: Partial<NotificationSettings>) => {
+    const newSettings = { ...notificationSettings, ...updates };
+    
+    // If enabling notifications, request permission
+    if (updates.enabled === true) {
+      if ('Notification' in window) {
+        Notification.requestPermission().then(permission => {
+          if (permission !== 'granted') {
+            alert(i18n.browserPermissionRequired);
+            // Revert to disabled if permission denied
+            const reverted = { ...newSettings, enabled: false };
+            setNotificationSettings(reverted);
+            saveNotificationSettings(reverted);
+          } else {
+            setNotificationSettings(newSettings);
+            saveNotificationSettings(newSettings);
+            
+            // Show a test notification
+            new Notification(i18n.notificationTestTitle, {
+              body: i18n.notificationTestBody,
+              icon: '/icons/icon-192x192.png' // assuming standard PWA icon location, or could be omitted
+            });
+          }
+        });
+        return;
+      } else {
+        alert(i18n.browserPermissionRequired);
+        return;
+      }
+    }
+    
+    setNotificationSettings(newSettings);
+    saveNotificationSettings(newSettings);
+  };
+
   return (
     <div className="w-full max-w-lg mx-auto space-y-4 pb-8">
       {/* THEME & APPEARANCE CARD */}
@@ -202,10 +262,10 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
             </div>
             <div>
               <p className="font-bold text-sm text-gray-900 dark:text-slate-100">
-                Uygulama Teması
+                {i18n.appTheme}
               </p>
               <p className="text-xs text-gray-500 dark:text-slate-400">
-                {isDarkMode ? '🌙 Koyu (Karanlık) Mod Aktif' : '☀️ Açık Mod Aktif'}
+                {isDarkMode ? i18n.darkModeActive : i18n.lightModeActive}
               </p>
             </div>
           </div>
@@ -231,12 +291,164 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
         </div>
       </div>
 
+      {/* LANGUAGE & CURRENCY SETTINGS CARD */}
+      <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl shadow-sm text-gray-900 dark:text-slate-100 transition-colors overflow-hidden">
+        <button 
+          onClick={() => setIsLocalizationOpen(!isLocalizationOpen)}
+          className="w-full flex items-center justify-between p-4 focus:outline-none"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-slate-700 flex items-center justify-center">
+              <Globe className="w-5 h-5" />
+            </div>
+            <div className="text-left">
+              <p className="font-bold text-sm text-gray-900 dark:text-slate-100">{i18n.languageAndCurrency}</p>
+              <p className="text-[11px] text-gray-500 dark:text-slate-400">{i18n.selectLanguage} & {i18n.selectCurrency}</p>
+            </div>
+          </div>
+          <div className="w-8 h-8 rounded-full bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 flex items-center justify-center text-gray-400 dark:text-gray-500 transition-transform duration-300" style={{ transform: isLocalizationOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+            <ChevronDown className="w-4 h-4" />
+          </div>
+        </button>
+        
+        <AnimatePresence>
+          {isLocalizationOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="px-4 pb-4"
+            >
+              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100 dark:border-slate-700/50">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">
+                    {i18n.language}
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={lang}
+                      onChange={handleLanguageChange}
+                      className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-2 pl-3 pr-8 text-xs font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 appearance-none cursor-pointer"
+                    >
+                      {SUPPORTED_LANGUAGES.map((l) => (
+                        <option key={l.code} value={l.code}>
+                          {l.flag} {l.nativeName}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">
+                    {i18n.currency}
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={currency.code}
+                      onChange={handleCurrencyChange}
+                      className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-2 pl-3 pr-8 text-xs font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 appearance-none cursor-pointer"
+                    >
+                      {SUPPORTED_CURRENCIES.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.symbol} {c.code}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* NOTIFICATION SETTINGS CARD */}
+      <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl p-4 shadow-sm text-gray-900 dark:text-slate-100 transition-colors space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${notificationSettings.enabled ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800' : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 border border-gray-200 dark:border-slate-700'}`}>
+              {notificationSettings.enabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+            </div>
+            <div>
+              <p className="font-bold text-sm text-gray-900 dark:text-slate-100">{i18n.notifications}</p>
+              <p className="text-[11px] text-gray-500 dark:text-slate-400">{notificationSettings.enabled ? i18n.notificationsEnabled : i18n.notificationsDisabled}</p>
+            </div>
+          </div>
+          
+          <button
+            type="button"
+            onClick={() => handleUpdateNotificationSettings({ enabled: !notificationSettings.enabled })}
+            className={`relative w-14 h-8 flex items-center rounded-full p-1 transition-colors duration-300 cursor-pointer shadow-inner ${
+              notificationSettings.enabled ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-slate-700'
+            }`}
+          >
+            <motion.div
+              layout
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              className={`w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-[10px] ${
+                notificationSettings.enabled ? 'translate-x-6 text-emerald-600' : 'translate-x-0 text-gray-400'
+              }`}
+            >
+              {notificationSettings.enabled ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : <X className="w-3.5 h-3.5 stroke-[3]" />}
+            </motion.div>
+          </button>
+        </div>
+        
+        <AnimatePresence>
+          {notificationSettings.enabled && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100 dark:border-slate-750">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">
+                    {i18n.notificationFrequency}
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={notificationSettings.frequency}
+                      onChange={(e) => handleUpdateNotificationSettings({ frequency: e.target.value as any })}
+                      className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-2 pl-3 pr-8 text-xs font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-emerald-500 appearance-none cursor-pointer transition-colors"
+                    >
+                      <option value="twice_daily">{i18n.twiceDaily}</option>
+                      <option value="daily">{i18n.daily}</option>
+                      <option value="weekly">{i18n.weekly}</option>
+                      <option value="monthly">{i18n.monthly}</option>
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">
+                    {i18n.notificationTime}
+                  </label>
+                  <input
+                    type="time"
+                    value={notificationSettings.time}
+                    onChange={(e) => handleUpdateNotificationSettings({ time: e.target.value })}
+                    className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-2 px-3 text-xs font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       {/* Header Banner for Categories */}
       <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl p-5 shadow-sm text-gray-900 dark:text-slate-100 flex items-center justify-between transition-colors">
         <div className="space-y-0.5">
-          <h2 className="font-bold text-lg text-gray-900 dark:text-slate-100">Kategoriler</h2>
+          <h2 className="font-bold text-lg text-gray-900 dark:text-slate-100">{i18n.categories}</h2>
           <p className="text-xs text-gray-500 dark:text-slate-400">
-            {categories.length} Kategori tanımlı • Oklarla sırasını değiştirin
+            {categories.length} {i18n.categoriesDefined} • {i18n.reorderArrows}
           </p>
         </div>
 
@@ -245,7 +457,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
           className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-3.5 rounded-2xl flex items-center gap-1.5 shadow-md shadow-blue-200 dark:shadow-none transition-all cursor-pointer active:scale-95"
         >
           <Plus className="w-4 h-4" />
-          <span>Yeni Kategori</span>
+          <span>{i18n.newCategory}</span>
         </button>
       </div>
 
@@ -306,12 +518,12 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                     <p className="font-bold text-sm text-gray-900 dark:text-slate-100 truncate">{cat.name}</p>
                     {cat.isCustom && (
                       <span className="text-[9px] bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-semibold px-1.5 py-0.2 rounded-md border border-blue-200 dark:border-blue-800 shrink-0">
-                        Özel
+                        {i18n.custom}
                       </span>
                     )}
                   </div>
                   <p className="text-xs text-gray-500 dark:text-slate-400 font-medium truncate">
-                    Toplam: {formatTL(catInfo.total)} ({catInfo.count} işlem)
+                    {i18n.total}: {formatCurrency(catInfo.total)} ({catInfo.count} {i18n.transactions})
                   </p>
                 </div>
               </div>
@@ -333,14 +545,14 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                   <button
                     type="button"
                     onClick={() => handleClickDelete(cat)}
-                    title="Kategoriyi Sil"
+                    title={i18n.deletingCategory}
                     className="text-gray-400 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer active:scale-95"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 ) : (
                   <span className="text-[10px] text-gray-400 dark:text-slate-500 px-1 font-medium">
-                    Sabit
+                    {i18n.fixed}
                   </span>
                 )}
               </div>
@@ -368,8 +580,8 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                     <CategoryIcon name={editIcon || 'Tag'} size={20} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-base text-gray-900 dark:text-slate-100">Kategoriyi Düzenle</h3>
-                    <p className="text-[11px] text-gray-500 dark:text-slate-400">İsim, simge ve renk paletini güncelleyin</p>
+                    <h3 className="font-bold text-base text-gray-900 dark:text-slate-100">{i18n.editCategory}</h3>
+                    <p className="text-[11px] text-gray-500 dark:text-slate-400">{i18n.editCategoryDesc}</p>
                   </div>
                 </div>
                 <button
@@ -384,7 +596,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                 {/* Category Name */}
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
-                    Kategori Adı
+                    {i18n.categoryName}
                   </label>
                   <input
                     type="text"
@@ -398,7 +610,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                 {/* Color Picker */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
-                    Renk Seçin
+                    {i18n.selectColor}
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {COLOR_PALETTE.map((color) => (
@@ -420,7 +632,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                 {/* Icon Selection */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
-                    Simge Seçin
+                    {i18n.selectIcon}
                   </label>
                   <div className="grid grid-cols-7 gap-2 bg-gray-50 dark:bg-slate-800 p-3 rounded-2xl border border-gray-200 dark:border-slate-700 max-h-40 overflow-y-auto">
                     {AVAILABLE_ICONS.map((iconName) => (
@@ -451,7 +663,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                   }`}
                 >
                   <Check className="w-4 h-4" />
-                  <span>Değişiklikleri Kaydet</span>
+                  <span>{i18n.saveChanges}</span>
                 </button>
               </form>
             </motion.div>
@@ -478,10 +690,10 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                     </div>
                     <div>
                       <h3 className="font-bold text-base text-gray-900 dark:text-slate-100">
-                        "{categoryToDelete.name}" Siliniyor
+                        "{categoryToDelete.name}" {i18n.deletingCategory}
                       </h3>
                       <p className="text-xs text-gray-500 dark:text-slate-400">
-                        Bu kategoriye ait harcamalar için tercih seçin
+                        {i18n.selectPreference}
                       </p>
                     </div>
                   </div>
@@ -489,15 +701,15 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                   {/* Summary Box */}
                   <div className="bg-amber-50/80 dark:bg-slate-800/80 border border-amber-200/80 dark:border-slate-700 rounded-2xl p-3 text-xs space-y-1">
                     <div className="flex justify-between font-semibold text-gray-800 dark:text-slate-200">
-                      <span>Mevcut Harcama Sayısı:</span>
+                      <span>{i18n.currentExpenseCount}:</span>
                       <span className="font-bold text-blue-600 dark:text-blue-400">
-                        {categoryTotals[categoryToDelete.id]?.count || 0} adet işlem
+                        {categoryTotals[categoryToDelete.id]?.count || 0} {i18n.items}
                       </span>
                     </div>
                     <div className="flex justify-between font-semibold text-gray-800 dark:text-slate-200">
-                      <span>Toplam Harcama Tutarı:</span>
+                      <span>{i18n.totalExpenseAmount}:</span>
                       <span className="font-bold text-gray-900 dark:text-slate-100">
-                        {formatTL(categoryTotals[categoryToDelete.id]?.total || 0)}
+                        {formatCurrency(categoryTotals[categoryToDelete.id]?.total || 0)}
                       </span>
                     </div>
                   </div>
@@ -515,10 +727,10 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-bold text-xs text-blue-900 dark:text-blue-200">
-                          1. Harcamaları "Diğer"e Aktar & Sil
+                          {i18n.moveToOther}
                         </p>
                         <p className="text-[11px] text-blue-700 dark:text-blue-400">
-                          Harcamalarınız kaybolmaz, "Diğer" kategorisine taşınır.
+                          {i18n.moveToOtherDesc}
                         </p>
                       </div>
                     </button>
@@ -534,10 +746,10 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-bold text-xs text-indigo-900 dark:text-indigo-200">
-                          2. Harcamalarımı Başka Kategoriye Aktar ("Seç")
+                          {i18n.moveToCustom}
                         </p>
                         <p className="text-[11px] text-indigo-700 dark:text-indigo-400">
-                          Harcamaları taşımak istediğiniz hedef kategoriyi seçin.
+                          {i18n.moveToCustomDesc}
                         </p>
                       </div>
                     </button>
@@ -553,10 +765,10 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-bold text-xs text-rose-900 dark:text-rose-200">
-                          3. Kategoriyle Birlikte Tüm Harcamalarımı Sil
+                          {i18n.deleteAllRecords}
                         </p>
                         <p className="text-[11px] text-rose-700 dark:text-rose-400">
-                          Bu kategorideki tüm işlemler kalıcı olarak silinir.
+                          {i18n.deleteAllRecordsDesc}
                         </p>
                       </div>
                     </button>
@@ -567,7 +779,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                       onClick={() => setCategoryToDelete(null)}
                       className="w-full p-2.5 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 rounded-2xl font-semibold text-xs transition-colors cursor-pointer mt-1"
                     >
-                      Vazgeç
+                      {i18n.cancel}
                     </button>
                   </div>
                 </>
@@ -582,19 +794,19 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                         <FolderSync className="w-4 h-4" />
                       </div>
                       <h3 className="font-bold text-sm text-gray-900 dark:text-slate-100">
-                        Hedef Kategoriyi Seçin
+                        {i18n.selectTargetCategory}
                       </h3>
                     </div>
                     <button
                       onClick={() => setDeleteMode('menu')}
                       className="text-xs text-gray-400 hover:text-gray-700 dark:hover:text-slate-200"
                     >
-                      Geri
+                      {i18n.goBack}
                     </button>
                   </div>
 
                   <p className="text-xs text-gray-500 dark:text-slate-400">
-                    <strong>"{categoryToDelete.name}"</strong> kategorisindeki {categoryTotals[categoryToDelete.id]?.count || 0} adet harcama hangi kategoriye aktarılsın?
+                    <strong>"{categoryToDelete.name}"</strong> - {categoryTotals[categoryToDelete.id]?.count || 0} {i18n.items}
                   </p>
 
                   {/* Target Category Picker */}
@@ -639,14 +851,14 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                       onClick={handleExecuteReassignCustom}
                       className="flex-1 py-3 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-2xl transition-all cursor-pointer shadow-sm"
                     >
-                      Aktar ve Kategoriyi Sil
+                      {i18n.confirmMove}
                     </button>
                     <button
                       type="button"
                       onClick={() => setDeleteMode('menu')}
                       className="py-3 px-4 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 font-semibold text-xs rounded-2xl transition-colors cursor-pointer"
                     >
-                      Geri
+                      {i18n.goBack}
                     </button>
                   </div>
                 </div>
@@ -661,10 +873,10 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                     </div>
                     <div>
                       <h3 className="font-bold text-base text-rose-900 dark:text-rose-200">
-                        Kesinlikle Emin misiniz?
+                        {i18n.areYouSure}
                       </h3>
                       <p className="text-xs text-rose-700 dark:text-rose-400">
-                        Geri alınamaz silme işlemi
+                        {i18n.confirmDeleteAllWarning}
                       </p>
                     </div>
                   </div>
@@ -675,12 +887,12 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                     </p>
                     <ul className="list-disc list-inside space-y-1 text-rose-800 dark:text-rose-300">
                       <li>
-                        <strong>"{categoryToDelete.name}"</strong> kategorisi silinecek.
+                        <strong>"{categoryToDelete.name}"</strong>
                       </li>
                       <li>
-                        Bu kategoriye bağlı <strong>{categoryTotals[categoryToDelete.id]?.count || 0} adet harcama kaydı ({formatTL(categoryTotals[categoryToDelete.id]?.total || 0)})</strong> kalıcı olarak silinecek.
+                        <strong>{categoryTotals[categoryToDelete.id]?.count || 0} {i18n.items} ({formatCurrency(categoryTotals[categoryToDelete.id]?.total || 0)})</strong>
                       </li>
-                      <li>Toplam harcama tutarınız bu miktar kadar azalacaktır.</li>
+                      <li>{i18n.confirmDeleteAll}</li>
                     </ul>
                   </div>
 
@@ -690,14 +902,14 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                       onClick={handleExecutePurgeAll}
                       className="flex-1 py-3 px-3 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-2xl transition-all cursor-pointer shadow-md shadow-rose-200 dark:shadow-none"
                     >
-                      Evet, Hepsini Kalıcı Olarak Sil
+                      {i18n.yesDeleteAll}
                     </button>
                     <button
                       type="button"
                       onClick={() => setDeleteMode('menu')}
                       className="py-3 px-4 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 font-semibold text-xs rounded-2xl transition-colors cursor-pointer"
                     >
-                      Vazgeç / Geri Dön
+                      {i18n.giveUp}
                     </button>
                   </div>
                 </div>
@@ -716,7 +928,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                 <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
                   <Tag className="w-4 h-4" />
                 </div>
-                <h3 className="font-bold text-base text-gray-900 dark:text-slate-100">Yeni Kategori Ekle</h3>
+                <h3 className="font-bold text-base text-gray-900 dark:text-slate-100">{i18n.addCategoryTitle}</h3>
               </div>
               <button
                 onClick={() => setShowAddModal(false)}
@@ -730,11 +942,11 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
               {/* Category Name */}
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
-                  Kategori Adı
+                  {i18n.categoryName}
                 </label>
                 <input
                   type="text"
-                  placeholder="Örn: Spor & Fitness, Ev Kirası, Evcil Hayvan"
+                  placeholder={i18n.categoryNamePlaceholder}
                   value={newCatName}
                   onChange={(e) => setNewCatName(e.target.value)}
                   required
@@ -745,7 +957,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
               {/* Color Picker */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
-                  Renk Seçin
+                  {i18n.selectColor}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {COLOR_PALETTE.map((color) => (
@@ -767,7 +979,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
               {/* Icon Selection */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
-                  Simge Seçin
+                  {i18n.selectIcon}
                 </label>
                 <div className="grid grid-cols-7 gap-2 bg-gray-50 dark:bg-slate-800 p-3 rounded-2xl border border-gray-200 dark:border-slate-700 max-h-40 overflow-y-auto">
                   {AVAILABLE_ICONS.map((iconName) => (
@@ -798,7 +1010,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                 }`}
               >
                 <Plus className="w-4 h-4" />
-                <span>Kategoriyi Oluştur</span>
+                <span>{i18n.createCategory}</span>
               </button>
             </form>
           </div>

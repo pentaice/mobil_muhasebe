@@ -1,6 +1,7 @@
 import React from 'react';
 import { Zap, CreditCard, PieChart, History, Grid } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useI18n } from '../i18n/I18nContext';
 
 export type ActiveTab = 'add' | 'cards' | 'reports' | 'history' | 'categories';
 
@@ -10,12 +11,14 @@ interface BottomNavProps {
 }
 
 export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab }) => {
+  const { t: i18n } = useI18n();
+
   const tabs = [
-    { id: 'add', label: 'Hızlı Ekle', icon: Zap, isAccent: true },
-    { id: 'cards', label: 'Kartlarım', icon: CreditCard },
-    { id: 'reports', label: 'Raporlar', icon: PieChart },
-    { id: 'history', label: 'Geçmiş', icon: History },
-    { id: 'categories', label: 'Kategoriler', icon: Grid },
+    { id: 'add', label: i18n.navQuickAdd, icon: Zap, isAccent: true },
+    { id: 'cards', label: i18n.navCards, icon: CreditCard },
+    { id: 'reports', label: i18n.navReports, icon: PieChart },
+    { id: 'history', label: i18n.navHistory, icon: History },
+    { id: 'categories', label: i18n.navCategories, icon: Grid },
   ];
 
   return (

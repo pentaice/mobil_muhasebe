@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CreditCard, Transaction } from '../types';
-import { calculateCardCycleInfo, formatTL } from '../utils/storage';
+import { calculateCardCycleInfo } from '../utils/storage';
+import { useI18n } from '../i18n/I18nContext';
 import { CreditCardPaymentModal } from './CreditCardPaymentModal';
 import { AddCreditCardModal } from './AddCreditCardModal';
 import { EditCreditCardModal } from './EditCreditCardModal';
@@ -24,6 +25,7 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
   onAddPayment,
   onUpdateCard,
 }) => {
+  const { t: i18n, formatCurrency } = useI18n();
   const [selectedCardForPayment, setSelectedCardForPayment] = useState<CreditCard | null>(null);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [selectedCardForEdit, setSelectedCardForEdit] = useState<CreditCard | null>(null);
@@ -44,13 +46,13 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
       <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl p-5 shadow-sm text-gray-900 dark:text-slate-100 flex items-center justify-between transition-colors">
         <div className="space-y-1">
           <p className="text-xs uppercase tracking-wider text-gray-400 dark:text-slate-400 font-semibold">
-            Toplam Kart Borçları
+            {i18n.totalCardDebts}
           </p>
           <p className="text-2xl font-extrabold text-blue-600 dark:text-blue-400">
-            {formatTL(totalAllCardsDebt)}
+            {formatCurrency(totalAllCardsDebt)}
           </p>
           <p className="text-[11px] text-gray-500 dark:text-slate-400">
-            Kullanılabilir Toplam Limit: {formatTL(Math.max(0, totalAllCardsLimit - totalAllCardsDebt))}
+            {i18n.totalAvailableLimit}: {formatCurrency(Math.max(0, totalAllCardsLimit - totalAllCardsDebt))}
           </p>
         </div>
 
@@ -59,7 +61,7 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
           className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2.5 px-3.5 rounded-2xl flex items-center gap-1.5 shadow-md shadow-blue-200 dark:shadow-none transition-all active:scale-95 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>Kart Ekle</span>
+          <span>{i18n.addCard}</span>
         </button>
       </div>
 
@@ -68,15 +70,15 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
         {cards.length === 0 ? (
           <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl p-8 text-center space-y-3 shadow-sm transition-colors">
             <CardIcon className="w-10 h-10 text-gray-300 dark:text-slate-600 mx-auto" />
-            <p className="text-gray-800 dark:text-slate-200 font-bold text-sm">Kayıtlı Kredi Kartınız Bulunmuyor</p>
+            <p className="text-gray-800 dark:text-slate-200 font-bold text-sm">{i18n.noSavedCardsDesc}</p>
             <p className="text-gray-500 dark:text-slate-400 text-xs">
-              Hesap kesim döngülerini ve borçlarınızı takip etmek için ilk kartınızı ekleyebilirsiniz.
+              {i18n.addFirstCard}
             </p>
             <button
               onClick={() => setShowAddModal(true)}
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2 px-4 rounded-xl inline-flex items-center gap-1.5 cursor-pointer shadow-sm shadow-blue-200 dark:shadow-none"
             >
-              <Plus className="w-4 h-4" /> Kart Ekle
+              <Plus className="w-4 h-4" /> {i18n.addCard}
             </button>
           </div>
         ) : (
@@ -104,14 +106,14 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setCardToDelete(card)}
-                        title="Kartı Sil"
+                        title={i18n.deleteCard}
                         className="text-white/80 hover:text-rose-200 bg-black/20 hover:bg-black/30 p-1.5 rounded-lg transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => { setSelectedCardForEdit(card); setShowEditModal(true); }}
-                        title="Kartı Düzenle"
+                        title={i18n.editCard}
                         className="text-white/80 hover:text-blue-200 bg-black/20 hover:bg-black/30 p-1.5 rounded-lg transition-colors cursor-pointer ml-1"
                       >
                         <Pencil className="w-4 h-4" />
@@ -123,19 +125,19 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
                   <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/20">
                     <div>
                       <p className="text-[10px] uppercase text-white/80 font-semibold">
-                        Kalan Limit
+                        {i18n.remainingLimit}
                       </p>
                       <p className="text-base font-bold text-white">
-                        {formatTL(cycle.availableLimit)}
+                        {formatCurrency(cycle.availableLimit)}
                       </p>
                     </div>
 
                     <div className="text-right">
                       <p className="text-[10px] uppercase text-white/80 font-semibold">
-                        Mevcut Toplam Borç
+                        {i18n.currentTotalDebt}
                       </p>
                       <p className="text-base font-extrabold text-white">
-                        {formatTL(cycle.totalUnpaidDebt)}
+                        {formatCurrency(cycle.totalUnpaidDebt)}
                       </p>
                     </div>
                   </div>
@@ -143,8 +145,8 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
                   {/* Limit Usage Bar */}
                   <div className="space-y-1">
                     <div className="flex justify-between text-[10px] text-white/80 font-medium">
-                      <span>Limit Kullanımı (%{usagePercent.toFixed(0)})</span>
-                      <span>{formatTL(card.limit)}</span>
+                      <span>{i18n.limitUsage} (%{usagePercent.toFixed(0)})</span>
+                      <span>{formatCurrency(card.limit)}</span>
                     </div>
                     <div className="w-full bg-black/20 rounded-full h-2 overflow-hidden p-0.5">
                       <div
@@ -165,22 +167,22 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
                 <div className="px-5 pb-5 space-y-3">
                   <div className="grid grid-cols-2 gap-3 text-xs bg-gray-50 dark:bg-slate-800/80 p-3 rounded-2xl border border-gray-200/80 dark:border-slate-700">
                     <div>
-                      <span className="text-gray-400 dark:text-slate-400 block text-[10px] uppercase font-semibold">Hesap Kesim Günü</span>
+                      <span className="text-gray-400 dark:text-slate-400 block text-[10px] uppercase font-semibold">{i18n.cutoffDay}</span>
                       <span className="font-bold text-gray-800 dark:text-slate-200">
-                        Her Ayın {card.cutoffDay}. Günü
+                        {i18n.everyMonth} {card.cutoffDay}
                       </span>
                       <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold block mt-0.5">
-                        ({cycle.daysUntilCutoff} gün kaldı)
+                        ({cycle.daysUntilCutoff} {i18n.daysLeft})
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-gray-400 dark:text-slate-400 block text-[10px] uppercase font-semibold">Dönem İçi Harcama</span>
+                      <span className="text-gray-400 dark:text-slate-400 block text-[10px] uppercase font-semibold">{i18n.periodExpenses}</span>
                       <span className="font-bold text-gray-800 dark:text-slate-200">
-                        {formatTL(cycle.currentCycleExpenses)}
+                        {formatCurrency(cycle.currentCycleExpenses)}
                       </span>
                       <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block mt-0.5">
-                        Ödenen: {formatTL(cycle.currentCyclePayments)}
+                        {i18n.paid}: {formatCurrency(cycle.currentCyclePayments)}
                       </span>
                     </div>
                   </div>
@@ -191,7 +193,7 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
                     className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-200 dark:shadow-none transition-all cursor-pointer"
                   >
                     <ShieldCheck className="w-4 h-4 text-white/90" />
-                    <span>Ödeme Gir / Dönem Borcu Kapat</span>
+                    <span>{i18n.payDebt}</span>
                   </button>
                 </div>
               </div>

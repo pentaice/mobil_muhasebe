@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CreditCard } from '../types';
 import { AlertTriangle, Trash2, Archive, X } from 'lucide-react';
+import { useI18n } from '../i18n/I18nContext';
 
 interface DeleteCardConfirmModalProps {
   card: CreditCard;
@@ -15,6 +16,7 @@ export const DeleteCardConfirmModal: React.FC<DeleteCardConfirmModalProps> = ({
   onClose,
   onConfirm,
 }) => {
+  const { t: i18n } = useI18n();
   const [selectedAction, setSelectedAction] = useState<'keep_records' | 'delete_all'>('keep_records');
 
   return (
@@ -28,8 +30,8 @@ export const DeleteCardConfirmModal: React.FC<DeleteCardConfirmModalProps> = ({
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-gray-900 dark:text-slate-100 leading-tight">Kartı Sil</h3>
-              <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">Bu işlem geri alınamaz</p>
+              <h3 className="font-bold text-base text-gray-900 dark:text-slate-100 leading-tight">{i18n.deleteCard}</h3>
+              <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{i18n.irreversibleAction}</p>
             </div>
           </div>
           <button
@@ -48,16 +50,16 @@ export const DeleteCardConfirmModal: React.FC<DeleteCardConfirmModalProps> = ({
 
         {/* Warning */}
         <p className="text-xs text-gray-600 dark:text-slate-300 leading-relaxed">
-          <span className="font-semibold text-rose-600 dark:text-rose-400">{card.name}</span> kartını silmek üzeresiniz.
+          <span className="font-semibold text-rose-600 dark:text-rose-400">{card.name}</span> {i18n.cardDeleteWarning}
           {transactionCount > 0 && (
-            <> Bu karta ait <span className="font-bold">{transactionCount} adet</span> harcama/ödeme kaydı bulunuyor.</>
+            <> {i18n.cardHasTransactionRecords.replace('{count}', transactionCount.toString())}</>
           )}
         </p>
 
         {/* Action Selection */}
         <div className="space-y-2.5">
           <p className="text-[11px] font-bold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
-            Kayıtlara ne yapalım?
+            {i18n.whatToDoWithRecords}
           </p>
 
           {/* Option 1: Keep records */}
@@ -78,10 +80,10 @@ export const DeleteCardConfirmModal: React.FC<DeleteCardConfirmModalProps> = ({
             <div>
               <div className="flex items-center gap-1.5">
                 <Archive className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                <p className="text-xs font-bold text-gray-800 dark:text-slate-100">Kayıtları Koru</p>
+                <p className="text-xs font-bold text-gray-800 dark:text-slate-100">{i18n.keepRecords}</p>
               </div>
               <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                Kart silinir, harcama ve ödeme kayıtları korunur (kart bağlantısı kesilir).
+                {i18n.keepRecordsDesc}
               </p>
             </div>
           </button>
@@ -104,10 +106,10 @@ export const DeleteCardConfirmModal: React.FC<DeleteCardConfirmModalProps> = ({
             <div>
               <div className="flex items-center gap-1.5">
                 <Trash2 className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
-                <p className="text-xs font-bold text-gray-800 dark:text-slate-100">Tümünü Sil</p>
+                <p className="text-xs font-bold text-gray-800 dark:text-slate-100">{i18n.deleteAll}</p>
               </div>
               <p className="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                Kart ve bu karta ait tüm kayıtlar kalıcı olarak silinir.
+                {i18n.deleteAllDesc}
               </p>
             </div>
           </button>
@@ -119,7 +121,7 @@ export const DeleteCardConfirmModal: React.FC<DeleteCardConfirmModalProps> = ({
             onClick={onClose}
             className="flex-1 py-3 rounded-2xl border border-gray-200 dark:border-slate-700 text-xs font-semibold text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
-            Vazgeç
+            {i18n.cancel}
           </button>
           <button
             onClick={() => onConfirm(selectedAction)}
@@ -130,7 +132,7 @@ export const DeleteCardConfirmModal: React.FC<DeleteCardConfirmModalProps> = ({
             }`}
           >
             <Trash2 className="w-3.5 h-3.5" />
-            {selectedAction === 'delete_all' ? 'Tümünü Sil' : 'Kartı Sil'}
+            {selectedAction === 'delete_all' ? i18n.deleteAll : i18n.deleteCard}
           </button>
         </div>
       </div>

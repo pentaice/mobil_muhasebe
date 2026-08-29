@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { CreditCard, Transaction } from '../types';
-import { calculateCardCycleInfo, formatTL } from '../utils/storage';
 import { CreditCard as CardIcon, X, ShieldCheck } from 'lucide-react';
+import { useI18n } from '../i18n/I18nContext';
+import { calculateCardCycleInfo } from '../utils/storage';
 
 interface CreditCardPaymentModalProps {
   card: CreditCard;
@@ -16,13 +17,14 @@ export const CreditCardPaymentModal: React.FC<CreditCardPaymentModalProps> = ({
   onClose,
   onAddPayment,
 }) => {
+  const { t: i18n, formatCurrency, currency } = useI18n();
   const cycleInfo = calculateCardCycleInfo(card, transactions);
   
   // Default payment amount to total current debt, or statement net debt
   const defaultAmount = cycleInfo.totalUnpaidDebt > 0 ? cycleInfo.totalUnpaidDebt : cycleInfo.currentCycleNetDebt;
 
   const [amountStr, setAmountStr] = useState<string>(defaultAmount.toString());
-  const [note, setNote] = useState<string>(`${card.name} Dönem Borcu Ödemesi`);
+  const [note, setNote] = useState<string>(`${card.name} ${i18n.cardPayment}`);
   const [paymentDate, setPaymentDate] = useState<string>(new Date().toISOString().slice(0, 10));
 
   const amountNumber = parseFloat(amountStr) || 0;
@@ -54,7 +56,7 @@ export const CreditCardPaymentModal: React.FC<CreditCardPaymentModalProps> = ({
               <CardIcon className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-gray-900 dark:text-slate-100 leading-tight">Kart Ödemesi Gir</h3>
+              <h3 className="font-bold text-lg text-gray-900 dark:text-slate-100 leading-tight">{i18n.enterCardPayment}</h3>
               <p className="text-xs text-gray-500 dark:text-slate-400">{card.name} (••• {card.last4})</p>
             </div>
           </div>
@@ -69,23 +71,23 @@ export const CreditCardPaymentModal: React.FC<CreditCardPaymentModalProps> = ({
         {/* Card Current Status Box */}
         <div className="bg-gray-50 dark:bg-slate-800/80 rounded-2xl p-4 border border-gray-200/80 dark:border-slate-700 space-y-3">
           <div className="flex justify-between items-center text-xs text-gray-600 dark:text-slate-300">
-            <span>Mevcut Toplam Borç:</span>
+            <span>{i18n.currentTotalDebt}:</span>
             <span className="font-bold text-blue-600 dark:text-blue-400 text-sm">
-              {formatTL(cycleInfo.totalUnpaidDebt)}
+              {formatCurrency(cycleInfo.totalUnpaidDebt)}
             </span>
           </div>
 
           <div className="flex justify-between items-center text-xs text-gray-600 dark:text-slate-300 border-t border-gray-200/60 dark:border-slate-700 pt-2">
-            <span>Dönem İçi Harcama:</span>
+            <span>{i18n.periodExpenses}:</span>
             <span className="font-semibold text-gray-800 dark:text-slate-200">
-              {formatTL(cycleInfo.currentCycleExpenses)}
+              {formatCurrency(cycleInfo.currentCycleExpenses)}
             </span>
           </div>
 
           <div className="flex justify-between items-center text-xs text-gray-600 dark:text-slate-300 border-t border-gray-200/60 dark:border-slate-700 pt-2">
-            <span>Yapılan Ödemeler:</span>
+            <span>{i18n.paymentsMade}:</span>
             <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-              -{formatTL(cycleInfo.currentCyclePayments)}
+              -{formatCurrency(cycleInfo.currentCyclePayments)}
             </span>
           </div>
         </div>
@@ -94,7 +96,7 @@ export const CreditCardPaymentModal: React.FC<CreditCardPaymentModalProps> = ({
           {/* Preset Buttons */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
-              Tutar Kısayolları
+              {i18n.amountShortcuts}
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -102,8 +104,8 @@ export const CreditCardPaymentModal: React.FC<CreditCardPaymentModalProps> = ({
                 onClick={() => setAmountStr(cycleInfo.totalUnpaidDebt.toString())}
                 className="bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-xs font-medium py-2 px-3 rounded-2xl border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-slate-200 text-left transition-colors cursor-pointer"
               >
-                <div className="text-[10px] text-gray-400 dark:text-slate-400 font-semibold">Tüm Borcu Kapat</div>
-                <div className="font-extrabold text-blue-600 dark:text-blue-400">{formatTL(cycleInfo.totalUnpaidDebt)}</div>
+                <div className="text-[10px] text-gray-400 dark:text-slate-400 font-semibold">{i18n.payAllDebt}</div>
+                <div className="font-extrabold text-blue-600 dark:text-blue-400">{formatCurrency(cycleInfo.totalUnpaidDebt)}</div>
               </button>
 
               <button
@@ -111,8 +113,8 @@ export const CreditCardPaymentModal: React.FC<CreditCardPaymentModalProps> = ({
                 onClick={() => setAmountStr(cycleInfo.currentCycleNetDebt.toString())}
                 className="bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-xs font-medium py-2 px-3 rounded-2xl border border-gray-200 dark:border-slate-700 text-gray-800 dark:text-slate-200 text-left transition-colors cursor-pointer"
               >
-                <div className="text-[10px] text-gray-400 dark:text-slate-400 font-semibold">Dönem Net Borç</div>
-                <div className="font-extrabold text-indigo-600 dark:text-indigo-400">{formatTL(cycleInfo.currentCycleNetDebt)}</div>
+                <div className="text-[10px] text-gray-400 dark:text-slate-400 font-semibold">{i18n.periodNetDebt}</div>
+                <div className="font-extrabold text-indigo-600 dark:text-indigo-400">{formatCurrency(cycleInfo.currentCycleNetDebt)}</div>
               </button>
             </div>
           </div>
@@ -120,7 +122,7 @@ export const CreditCardPaymentModal: React.FC<CreditCardPaymentModalProps> = ({
           {/* Amount Input */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
-              Ödenen Tutar (₺)
+              {i18n.paidAmount} ({currency.symbol})
             </label>
             <div className="relative">
               <input
@@ -134,7 +136,7 @@ export const CreditCardPaymentModal: React.FC<CreditCardPaymentModalProps> = ({
                 className="w-full bg-gray-50 dark:bg-slate-800 border-2 border-blue-600/80 focus:border-blue-600 rounded-2xl py-3 px-4 text-2xl font-extrabold text-gray-900 dark:text-slate-100 tracking-tight focus:outline-none"
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-blue-600 dark:text-blue-400 text-lg">
-                ₺
+                {currency.symbol}
               </span>
             </div>
           </div>
@@ -142,7 +144,7 @@ export const CreditCardPaymentModal: React.FC<CreditCardPaymentModalProps> = ({
           {/* Payment Date */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
-              Ödeme Tarihi
+              {i18n.paymentDate}
             </label>
             <input
               type="date"
@@ -155,7 +157,7 @@ export const CreditCardPaymentModal: React.FC<CreditCardPaymentModalProps> = ({
           {/* Note */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
-              Açıklama / Not
+              {i18n.note}
             </label>
             <input
               type="text"
@@ -176,7 +178,7 @@ export const CreditCardPaymentModal: React.FC<CreditCardPaymentModalProps> = ({
             }`}
           >
             <ShieldCheck className="w-4 h-4" />
-            <span>Ödemeyi Kaydet & Döngüyü Güncelle</span>
+            <span>{i18n.savePayment}</span>
           </button>
         </form>
       </div>

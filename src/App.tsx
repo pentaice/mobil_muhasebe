@@ -10,6 +10,8 @@ import {
   resetAllData,
   loadTheme,
   saveTheme,
+  loadNotificationSettings,
+  saveNotificationSettings,
 } from './utils/storage';
 import { DEFAULT_CATEGORIES, DEFAULT_CREDIT_CARDS, INITIAL_TRANSACTIONS } from './data/initialData';
 import { Header } from './components/Header';
@@ -21,8 +23,10 @@ import { ReportsView } from './components/ReportsView';
 import { TransactionsView } from './components/TransactionsView';
 import { Toast, ToastState } from './components/Toast';
 import { motion, AnimatePresence } from 'motion/react';
+import { useI18n } from './i18n/I18nContext';
 
 export default function App() {
+  const { t: i18n } = useI18n();
   const [categories, setCategories] = useState<Category[]>(() => loadCategories());
   const [cards, setCards] = useState<CreditCard[]>(() => loadCards());
   const [transactions, setTransactions] = useState<Transaction[]>(() => loadTransactions());
@@ -72,6 +76,63 @@ export default function App() {
     saveTransactions(transactions);
   }, [transactions]);
 
+  // Notifications Scheduler
+  useEffect(() => {
+    const checkNotifications = () => {
+      const settings = loadNotificationSettings();
+      if (!settings.enabled || !('Notification' in window) || Notification.permission !== 'granted') return;
+
+      const now = new Date();
+      const currentHour = now.getHours().toString().padStart(2, '0');
+      const currentMinute = now.getMinutes().toString().padStart(2, '0');
+      const currentTimeStr = `${currentHour}:${currentMinute}`;
+      
+      const [h, m] = settings.time.split(':').map(Number);
+      const time2Hour = (h + 12) % 24;
+      const time2Str = `${time2Hour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+      
+      if (currentTimeStr === settings.time || (settings.frequency === 'twice_daily' && currentTimeStr === time2Str)) {
+        let shouldNotify = false;
+        
+        if (!settings.lastNotified) {
+          shouldNotify = true;
+        } else {
+          const lastDate = new Date(settings.lastNotified);
+          
+          if (settings.frequency === 'twice_daily') {
+             const hoursDiff = (now.getTime() - lastDate.getTime()) / (1000 * 60 * 60);
+             if (hoursDiff >= 11) shouldNotify = true; // Minimum 11 hours apart to avoid double triggers
+          } else if (settings.frequency === 'daily') {
+            if (now.toDateString() !== lastDate.toDateString()) shouldNotify = true;
+          } else if (settings.frequency === 'weekly') {
+            const daysDiff = (now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24);
+            if (daysDiff >= 7) shouldNotify = true;
+          } else if (settings.frequency === 'monthly') {
+            if (now.getMonth() !== lastDate.getMonth() || now.getFullYear() !== lastDate.getFullYear()) {
+              shouldNotify = true;
+            }
+          }
+        }
+        
+        if (shouldNotify) {
+          new Notification('Bütçem', {
+            body: 'Bugünkü harcamalarınızı veya işlemlerinizi kaydettiniz mi?',
+            icon: '/icons/icon-192x192.png'
+          });
+          
+          saveNotificationSettings({
+            ...settings,
+            lastNotified: now.toISOString()
+          });
+        }
+      }
+    };
+
+    checkNotifications();
+    const interval = setInterval(checkNotifications, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, []);
+
   // Handlers
   const handleAddTransaction = (txData: Omit<Transaction, 'id' | 'createdAt'>) => {
     const newTx: Transaction = {
@@ -82,15 +143,22 @@ export default function App() {
     setTransactions((prev) => [newTx, ...prev]);
 
     if (txData.type === 'card_payment') {
-      showToast('Kredi kartı ödemesi başarıyla kaydedildi!', 'success');
+      showToast(i18n.toastCardPaymentAdded, 'success');
     } else {
-      showToast('Harcama kaydı eklendi!', 'success');
+      showToast(i18n.toastExpenseAdded, 'success');
     }
   };
 
   const handleDeleteTransaction = (id: string) => {
     setTransactions((prev) => prev.filter((t) => t.id !== id));
-    showToast('Harcama kaydı silindi.', 'info');
+    showToast(i18n.toastExpenseDeleted, 'info');
+  };
+
+  const handleUpdateTransaction = (updatedTx: Transaction) => {
+    setTransactions((prev) =>
+      prev.map((t) => (t.id === updatedTx.id ? updatedTx : t))
+    );
+    showToast(i18n.toastExpenseUpdated, 'success');
   };
 
   const handleAddCategory = (catData: Omit<Category, 'id' | 'isCustom'>) => {
@@ -100,12 +168,12 @@ export default function App() {
       isCustom: true,
     };
     setCategories((prev) => [...prev, newCat]);
-    showToast(`"${catData.name}" kategorisi oluşturuldu!`, 'success');
+    showToast(`"${catData.name}" ${i18n.toastCategoryCreated}`, 'success');
   };
 
   const handleUpdateCategory = (updatedCat: Category) => {
     setCategories((prev) => prev.map((c) => (c.id === updatedCat.id ? updatedCat : c)));
-    showToast(`"${updatedCat.name}" kategorisi güncellendi!`, 'success');
+    showToast(`"${updatedCat.name}" ${i18n.toastCategoryUpdated}`, 'success');
   };
 
   const handleReorderCategories = (newCategories: Category[]) => {
@@ -118,7 +186,7 @@ export default function App() {
     targetCatId?: string
   ) => {
     if (catId === 'cat-diger') {
-      showToast('"Diğer" ana kategorisi silinemez.', 'error');
+      showToast(i18n.toastCannotDeleteOther, 'error');
       return;
     }
 
@@ -129,20 +197,20 @@ export default function App() {
 
     if (action === 'purge_all') {
       setTransactions((prev) => prev.filter((t) => t.categoryId !== catId));
-      showToast(`"${catName}" ve bağlı tüm harcamalar silindi.`, 'info');
+      showToast(`"${catName}" ${i18n.toastCategoryDeletedPurge}`, 'info');
     } else if (action === 'reassign_custom' && targetCatId) {
       const targetCat = categories.find((c) => c.id === targetCatId);
       const targetName = targetCat ? targetCat.name : 'seçilen kategori';
       setTransactions((prev) =>
         prev.map((t) => (t.categoryId === catId ? { ...t, categoryId: targetCatId } : t))
       );
-      showToast(`"${catName}" silindi, harcamalar "${targetName}" kategorisine aktarıldı.`, 'success');
+      showToast(`"${catName}" ${i18n.toastCategoryDeletedTarget}`, 'success');
     } else {
       // reassign_diger
       setTransactions((prev) =>
         prev.map((t) => (t.categoryId === catId ? { ...t, categoryId: 'cat-diger' } : t))
       );
-      showToast(`"${catName}" silindi, harcamalar "Diğer" kategorisine aktarıldı.`, 'info');
+      showToast(`"${catName}" ${i18n.toastCategoryDeletedOther}`, 'info');
     }
   };
 
@@ -152,23 +220,23 @@ export default function App() {
       id: `card-${Date.now()}`,
     };
     setCards((prev) => [...prev, newCard]);
-    showToast('Yeni kredi kartı eklendi!', 'success');
+    showToast(i18n.toastNewCardAdded, 'success');
   };
 
   const handleDeleteCard = (cardId: string, action: 'keep_records' | 'delete_all') => {
     setCards((prev) => prev.filter((c) => c.id !== cardId));
     if (action === 'delete_all') {
       setTransactions((prev) => prev.filter((t) => t.cardId !== cardId));
-      showToast('Kart ve tüm kayıtlar silindi.', 'info');
+      showToast(i18n.toastCardDeletedAll, 'info');
     } else {
-      showToast('Kart silindi, kayıtlar korundu.', 'info');
+      showToast(i18n.toastCardDeleted, 'info');
     }
   };
 
   // Update an existing credit card
   const handleUpdateCard = (updatedCard: CreditCard) => {
     setCards((prev) => prev.map((c) => (c.id === updatedCard.id ? updatedCard : c)));
-    showToast('Kredi kartı güncellendi.', 'success');
+    showToast(i18n.toastCardUpdated, 'success');
   };
 
   // Export / Import Data (Android & Mobile Web Compatible)
@@ -188,10 +256,10 @@ export default function App() {
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
-          title: 'Bütçem Yedek Dosyası',
-          text: 'Bütçem uygulaması veri yedeği',
+          title: i18n.backupData,
+          text: i18n.backupDataDesc,
         });
-        showToast('Yedek dosyası paylaşıldı / kaydedildi!', 'success');
+        showToast(i18n.toastBackupShared, 'success');
         return;
       }
     } catch (err) {
@@ -215,14 +283,14 @@ export default function App() {
     try {
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(jsonStr);
-        showToast('Yedek JSON indirildi & panoya kopyalandı!', 'success');
+        showToast(i18n.toastBackupClipboard, 'success');
         return;
       }
     } catch (e) {
       // ignore
     }
 
-    showToast('Yedek JSON dosyası indirildi!', 'success');
+    showToast(i18n.toastBackupDownloaded, 'success');
   };
 
   const handleImportData = (jsonString: string) => {
@@ -307,6 +375,7 @@ export default function App() {
                   cards={cards}
                   transactions={transactions}
                   onDeleteTransaction={handleDeleteTransaction}
+                  onUpdateTransaction={handleUpdateTransaction}
                 />
               )}
 
