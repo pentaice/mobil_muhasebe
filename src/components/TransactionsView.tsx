@@ -202,13 +202,13 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                     <p className="text-[11px] text-gray-500 dark:text-slate-400 line-clamp-1">
                       {t.note || (isExpense ? (card ? card.name : i18n.cashBank) : card?.name || i18n.creditCard)}
                     </p>
-                    <div className="flex items-center gap-2 text-[10px] text-gray-400 dark:text-slate-500">
-                      <span className="flex items-center gap-1">
+                    <div className="flex items-center gap-2 text-[10px] text-gray-400 dark:text-slate-500 whitespace-nowrap overflow-hidden">
+                      <span className="flex items-center gap-1 shrink-0">
                         <Calendar className="w-3 h-3 text-gray-400 dark:text-slate-500" />
                         {formatShortDate(t.date)}
                       </span>
                       {card && (
-                        <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.2 rounded font-semibold border border-blue-100 dark:border-blue-800">
+                        <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded font-semibold border border-blue-100 dark:border-blue-800 truncate shrink">
                           💳 {card.name}
                         </span>
                       )}

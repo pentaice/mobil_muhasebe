@@ -26,6 +26,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useI18n } from '../i18n/I18nContext';
 import { SUPPORTED_LANGUAGES, SUPPORTED_CURRENCIES, LanguageCode } from '../i18n/translations';
 import { loadNotificationSettings, saveNotificationSettings, NotificationSettings } from '../utils/storage';
+import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 interface CategoriesViewProps {
   categories: Category[];
@@ -212,12 +214,40 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
     }
   };
 
-  const handleUpdateNotificationSettings = (updates: Partial<NotificationSettings>) => {
+  const handleUpdateNotificationSettings = async (updates: Partial<NotificationSettings>) => {
     const newSettings = { ...notificationSettings, ...updates };
     
     // If enabling notifications, request permission
     if (updates.enabled === true) {
-      if ('Notification' in window) {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const permStatus = await LocalNotifications.requestPermissions();
+          if (permStatus.display === 'granted') {
+            setNotificationSettings(newSettings);
+            saveNotificationSettings(newSettings);
+            
+            await LocalNotifications.schedule({
+              notifications: [
+                {
+                  title: i18n.notificationTestTitle,
+                  body: i18n.notificationTestBody,
+                  id: new Date().getTime(),
+                  schedule: { at: new Date(Date.now() + 1000) },
+                }
+              ]
+            });
+          } else {
+            alert(i18n.browserPermissionRequired);
+            const reverted = { ...newSettings, enabled: false };
+            setNotificationSettings(reverted);
+            saveNotificationSettings(reverted);
+          }
+        } catch (e) {
+          console.error(e);
+          alert(i18n.browserPermissionRequired);
+        }
+        return;
+      } else if ('Notification' in window) {
         Notification.requestPermission().then(permission => {
           if (permission !== 'granted') {
             alert(i18n.browserPermissionRequired);

@@ -8,7 +8,7 @@
   "plugins": {
     "StatusBar": {
       "overlaysWebView": false,
-      "backgroundColor": "#2563eb"
+      "backgroundColor": "#0f172b"
     }
   }
 }

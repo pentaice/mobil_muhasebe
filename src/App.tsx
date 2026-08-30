@@ -13,6 +13,8 @@ import {
   loadNotificationSettings,
   saveNotificationSettings,
 } from './utils/storage';
+import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { DEFAULT_CATEGORIES, DEFAULT_CREDIT_CARDS, INITIAL_TRANSACTIONS } from './data/initialData';
 import { Header } from './components/Header';
 import { BottomNav, ActiveTab } from './components/BottomNav';
@@ -115,10 +117,23 @@ export default function App() {
         }
         
         if (shouldNotify) {
-          new Notification('Bütçem', {
-            body: 'Bugünkü harcamalarınızı veya işlemlerinizi kaydettiniz mi?',
-            icon: '/icons/icon-192x192.png'
-          });
+          if (Capacitor.isNativePlatform()) {
+            LocalNotifications.schedule({
+              notifications: [
+                {
+                  title: 'Bütçem',
+                  body: 'Bugünkü harcamalarınızı veya işlemlerinizi kaydettiniz mi?',
+                  id: new Date().getTime(),
+                  schedule: { at: new Date(Date.now() + 1000) }
+                }
+              ]
+            });
+          } else {
+            new Notification('Bütçem', {
+              body: 'Bugünkü harcamalarınızı veya işlemlerinizi kaydettiniz mi?',
+              icon: '/icons/icon-192x192.png'
+            });
+          }
           
           saveNotificationSettings({
             ...settings,
