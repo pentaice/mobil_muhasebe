@@ -74,6 +74,8 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
   const { t: i18n, formatCurrency, lang, setLang, currency, setCurrency } = useI18n();
   // Add modal state
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState<boolean>(false);
+  const [showTermsModal, setShowTermsModal] = useState<boolean>(false);
   const [newCatName, setNewCatName] = useState<string>('');
   const [selectedIcon, setSelectedIcon] = useState<string>('Sparkles');
   const [selectedColor, setSelectedColor] = useState<string>(COLOR_PALETTE[0]);
@@ -1046,6 +1048,110 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
           </div>
         </div>
       )}
+      {/* Footer Links */}
+      <div className="pt-6 pb-2 text-center space-y-3">
+        <div className="flex items-center justify-center gap-4 text-[11px] font-medium text-gray-500 dark:text-slate-400">
+          <button 
+            type="button" 
+            onClick={() => setShowPrivacyModal(true)}
+            className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+          >
+            {i18n.privacyPolicyBtn}
+          </button>
+          <span>•</span>
+          <button 
+            type="button" 
+            onClick={() => setShowTermsModal(true)}
+            className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+          >
+            {i18n.termsOfUseBtn}
+          </button>
+        </div>
+        <p className="text-[10px] text-gray-400 dark:text-slate-500">
+          <a href="https://emreakisik.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600 dark:hover:text-slate-300 transition-colors">
+            {i18n.madeBy}
+          </a>
+        </p>
+      </div>
+
+      {/* PRIVACY POLICY MODAL */}
+      <AnimatePresence>
+        {showPrivacyModal && (
+          <div className="fixed inset-0 z-50 bg-gray-900/50 dark:bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750 rounded-3xl w-full max-w-md p-6 shadow-2xl flex flex-col max-h-[80vh]"
+            >
+              <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-3 mb-4 shrink-0">
+                <h3 className="font-bold text-base text-gray-900 dark:text-slate-100">{i18n.privacyTitle}</h3>
+                <button
+                  onClick={() => setShowPrivacyModal(false)}
+                  className="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="overflow-y-auto text-xs text-gray-700 dark:text-slate-300 space-y-4 pr-2">
+                <p><strong>{i18n.privacyContent1.split(':')[0]}:</strong> {i18n.privacyContent1.split(':').slice(1).join(':').trim()}</p>
+                <p><strong>{i18n.privacyContent2.split(':')[0]}:</strong> {i18n.privacyContent2.split(':').slice(1).join(':').trim()}</p>
+                <p><strong>{i18n.privacyContent3.split(':')[0]}:</strong> {i18n.privacyContent3.split(':').slice(1).join(':').trim()}</p>
+                <p><strong>{i18n.privacyContent4.split(':')[0]}:</strong> {i18n.privacyContent4.split(':').slice(1).join(':').trim()}</p>
+                <p className="mt-4 text-[10px] text-gray-500"><em>{i18n.privacyFooter}</em></p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-gray-100 dark:border-slate-800 shrink-0">
+                <button
+                  onClick={() => setShowPrivacyModal(false)}
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-2xl transition-colors cursor-pointer"
+                >
+                  {i18n.iUnderstand}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* TERMS OF USE MODAL */}
+      <AnimatePresence>
+        {showTermsModal && (
+          <div className="fixed inset-0 z-50 bg-gray-900/50 dark:bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750 rounded-3xl w-full max-w-md p-6 shadow-2xl flex flex-col max-h-[80vh]"
+            >
+              <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-3 mb-4 shrink-0">
+                <h3 className="font-bold text-base text-gray-900 dark:text-slate-100">{i18n.termsTitle}</h3>
+                <button
+                  onClick={() => setShowTermsModal(false)}
+                  className="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="overflow-y-auto text-xs text-gray-700 dark:text-slate-300 space-y-4 pr-2">
+                <p><strong>{i18n.termsContent1.split(':')[0]}:</strong> {i18n.termsContent1.split(':').slice(1).join(':').trim()}</p>
+                <p><strong>{i18n.termsContent2.split(':')[0]}:</strong> {i18n.termsContent2.split(':').slice(1).join(':').trim()}</p>
+                <p><strong>{i18n.termsContent3.split(':')[0]}:</strong> {i18n.termsContent3.split(':').slice(1).join(':').trim()}</p>
+                <p><strong>{i18n.termsContent4.split(':')[0]}:</strong> {i18n.termsContent4.split(':').slice(1).join(':').trim()}</p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-gray-100 dark:border-slate-800 shrink-0">
+                <button
+                  onClick={() => setShowTermsModal(false)}
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-2xl transition-colors cursor-pointer"
+                >
+                  {i18n.iAccept}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
