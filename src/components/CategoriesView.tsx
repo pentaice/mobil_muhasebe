@@ -20,12 +20,14 @@ import {
   Globe,
   Coins,
   Bell,
-  BellOff
+  BellOff,
+  ChevronRight,
+  ChevronLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useI18n } from '../i18n/I18nContext';
 import { SUPPORTED_LANGUAGES, SUPPORTED_CURRENCIES, LanguageCode } from '../i18n/translations';
-import { loadNotificationSettings, saveNotificationSettings, NotificationSettings } from '../utils/storage';
+import { loadNotificationSettings, saveNotificationSettings, NotificationSettings, loadAutoSaveSettings, saveAutoSaveSettings, AutoSaveSettings, loadAppsScriptUrl } from '../utils/storage';
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
@@ -73,6 +75,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
 }) => {
   const { t: i18n, formatCurrency, lang, setLang, currency, setCurrency } = useI18n();
   // Add modal state
+  const [showCategoriesModal, setShowCategoriesModal] = useState<boolean>(false);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState<boolean>(false);
   const [showTermsModal, setShowTermsModal] = useState<boolean>(false);
@@ -82,6 +85,9 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
 
   // Notifications state
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(() => loadNotificationSettings());
+  
+  // Auto Save state
+  const [autoSaveSettings, setAutoSaveSettings] = useState<AutoSaveSettings>(() => loadAutoSaveSettings());
 
   // Localization settings state
   const [isLocalizationOpen, setIsLocalizationOpen] = useState<boolean>(false);
@@ -279,6 +285,20 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
     saveNotificationSettings(newSettings);
   };
 
+  const handleToggleAutoSave = () => {
+    const nextState = !autoSaveSettings.enabled;
+    const url = loadAppsScriptUrl().trim();
+    if (nextState && (!url || !url.startsWith('https://script.google.com/'))) {
+      window.dispatchEvent(new CustomEvent('openSheetsSettings'));
+      // Don't enable if no URL
+      return;
+    }
+    
+    const newSettings = { ...autoSaveSettings, enabled: nextState };
+    setAutoSaveSettings(newSettings);
+    saveAutoSaveSettings(newSettings);
+  };
+
   return (
     <div className="w-full max-w-lg mx-auto space-y-4 pb-8">
       {/* THEME & APPEARANCE CARD */}
@@ -321,81 +341,6 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
             </motion.div>
           </button>
         </div>
-      </div>
-
-      {/* LANGUAGE & CURRENCY SETTINGS CARD */}
-      <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl shadow-sm text-gray-900 dark:text-slate-100 transition-colors overflow-hidden">
-        <button 
-          onClick={() => setIsLocalizationOpen(!isLocalizationOpen)}
-          className="w-full flex items-center justify-between p-4 focus:outline-none"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-slate-700 flex items-center justify-center">
-              <Globe className="w-5 h-5" />
-            </div>
-            <div className="text-left">
-              <p className="font-bold text-sm text-gray-900 dark:text-slate-100">{i18n.languageAndCurrency}</p>
-              <p className="text-[11px] text-gray-500 dark:text-slate-400">{i18n.selectLanguage} & {i18n.selectCurrency}</p>
-            </div>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 flex items-center justify-center text-gray-400 dark:text-gray-500 transition-transform duration-300" style={{ transform: isLocalizationOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-            <ChevronDown className="w-4 h-4" />
-          </div>
-        </button>
-        
-        <AnimatePresence>
-          {isLocalizationOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="px-4 pb-4"
-            >
-              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100 dark:border-slate-700/50">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">
-                    {i18n.language}
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={lang}
-                      onChange={handleLanguageChange}
-                      className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-2 pl-3 pr-8 text-xs font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 appearance-none cursor-pointer"
-                    >
-                      {SUPPORTED_LANGUAGES.map((l) => (
-                        <option key={l.code} value={l.code}>
-                          {l.flag} {l.nativeName}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
-                
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">
-                    {i18n.currency}
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={currency.code}
-                      onChange={handleCurrencyChange}
-                      className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-2 pl-3 pr-8 text-xs font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 appearance-none cursor-pointer"
-                    >
-                      {SUPPORTED_CURRENCIES.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.symbol} {c.code}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
       {/* NOTIFICATION SETTINGS CARD */}
@@ -474,123 +419,135 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
           )}
         </AnimatePresence>
       </div>
-
-      {/* Header Banner for Categories */}
-      <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl p-5 shadow-sm text-gray-900 dark:text-slate-100 flex items-center justify-between transition-colors">
-        <div className="space-y-0.5">
-          <h2 className="font-bold text-lg text-gray-900 dark:text-slate-100">{i18n.categories}</h2>
-          <p className="text-xs text-gray-500 dark:text-slate-400">
-            {categories.length} {i18n.categoriesDefined} • {i18n.reorderArrows}
-          </p>
+      {/* AUTO SAVE SETTINGS CARD */}
+      <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl p-4 shadow-sm text-gray-900 dark:text-slate-100 transition-colors space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${autoSaveSettings.enabled ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800' : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 border border-gray-200 dark:border-slate-700'}`}>
+              <FolderSync className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="font-bold text-sm text-gray-900 dark:text-slate-100">{i18n.autoSaveSheets}</p>
+              <p className="text-[11px] text-gray-500 dark:text-slate-400 max-w-[200px] leading-tight">{i18n.autoSaveSheetsDesc}</p>
+            </div>
+          </div>
+          
+          <button
+            type="button"
+            onClick={handleToggleAutoSave}
+            className={`relative w-14 h-8 flex items-center rounded-full p-1 transition-colors duration-300 cursor-pointer shadow-inner shrink-0 ${
+              autoSaveSettings.enabled ? 'bg-blue-500' : 'bg-gray-200 dark:bg-slate-700'
+            }`}
+          >
+            <motion.div
+              layout
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              className={`w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-[10px] ${
+                autoSaveSettings.enabled ? 'translate-x-6 text-blue-600' : 'translate-x-0 text-gray-400'
+              }`}
+            >
+              {autoSaveSettings.enabled ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : <X className="w-3.5 h-3.5 stroke-[3]" />}
+            </motion.div>
+          </button>
         </div>
-
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-3.5 rounded-2xl flex items-center gap-1.5 shadow-md shadow-blue-200 dark:shadow-none transition-all cursor-pointer active:scale-95"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{i18n.newCategory}</span>
-        </button>
       </div>
 
-      {/* Categories List with Edit & Reorder support */}
-      <div className="space-y-2.5">
-        {categories.map((cat, index) => {
-          const catInfo = categoryTotals[cat.id] || { total: 0, count: 0 };
-          const isDiger = cat.id === 'cat-diger';
-          const isFirst = index === 0;
-          const isLast = index === categories.length - 1;
+      {/* CATEGORIES BUTTON CARD */}
+      <button 
+        onClick={() => setShowCategoriesModal(true)}
+        className="w-full bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl p-4 shadow-sm text-gray-900 dark:text-slate-100 transition-colors flex items-center justify-between cursor-pointer focus:outline-none active:scale-[0.98]"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-slate-700 flex items-center justify-center font-bold">
+            <Tag className="w-5 h-5" />
+          </div>
+          <div className="text-left">
+            <p className="font-bold text-sm text-gray-900 dark:text-slate-100">
+              {i18n.categories}
+            </p>
+            <p className="text-[11px] text-gray-500 dark:text-slate-400">
+              {categories.length} {i18n.categoriesDefined}
+            </p>
+          </div>
+        </div>
+        <div className="w-8 h-8 rounded-full bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 flex items-center justify-center text-gray-400 transition-transform">
+          <ChevronRight className="w-4 h-4" />
+        </div>
+      </button>
 
-          return (
-            <div
-              key={cat.id}
-              className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-2xl p-3.5 flex items-center justify-between shadow-xs hover:border-gray-200 dark:hover:border-slate-700 transition-all gap-2"
-            >
-              {/* Left: Reorder Up/Down buttons */}
-              <div className="flex flex-col gap-0.5 shrink-0">
-                <button
-                  type="button"
-                  disabled={isFirst}
-                  onClick={() => handleMoveUp(index)}
-                  title="Yukarı Taşı"
-                  className={`p-1 rounded-lg transition-colors ${
-                    isFirst
-                      ? 'text-gray-300 dark:text-slate-700 cursor-not-allowed opacity-30'
-                      : 'text-gray-400 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-blue-600 cursor-pointer active:scale-90'
-                  }`}
-                >
-                  <ChevronUp className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  disabled={isLast}
-                  onClick={() => handleMoveDown(index)}
-                  title="Aşağı Taşı"
-                  className={`p-1 rounded-lg transition-colors ${
-                    isLast
-                      ? 'text-gray-300 dark:text-slate-700 cursor-not-allowed opacity-30'
-                      : 'text-gray-400 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-blue-600 cursor-pointer active:scale-90'
-                  }`}
-                >
-                  <ChevronDown className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* Middle: Icon, Name & Spending Info */}
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div
-                  className="w-10 h-10 rounded-2xl flex items-center justify-center text-white shadow-xs shrink-0"
-                  style={{ backgroundColor: cat.color }}
-                >
-                  <CategoryIcon name={cat.icon} size={20} />
-                </div>
-
-                <div className="space-y-0.5 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <p className="font-bold text-sm text-gray-900 dark:text-slate-100 truncate">{cat.name}</p>
-                    {cat.isCustom && (
-                      <span className="text-[9px] bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-semibold px-1.5 py-0.2 rounded-md border border-blue-200 dark:border-blue-800 shrink-0">
-                        {i18n.custom}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-slate-400 font-medium truncate">
-                    {i18n.total}: {formatCurrency(catInfo.total)} ({catInfo.count} {i18n.transactions})
-                  </p>
-                </div>
-              </div>
-
-              {/* Right: Edit & Delete Actions */}
-              <div className="flex items-center gap-1 shrink-0">
-                {/* Edit Button (Available for ALL categories) */}
-                <button
-                  type="button"
-                  onClick={() => handleStartEdit(cat)}
-                  title="Kategoriyi Düzenle (İsim, Renk, Simge)"
-                  className="text-gray-400 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 p-2 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors cursor-pointer active:scale-95"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-
-                {/* Delete Button */}
-                {!isDiger ? (
-                  <button
-                    type="button"
-                    onClick={() => handleClickDelete(cat)}
-                    title={i18n.deletingCategory}
-                    className="text-gray-400 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer active:scale-95"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                ) : (
-                  <span className="text-[10px] text-gray-400 dark:text-slate-500 px-1 font-medium">
-                    {i18n.fixed}
-                  </span>
-                )}
-              </div>
+      {/* LANGUAGE & CURRENCY SETTINGS CARD (Moved here) */}
+      <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl shadow-sm text-gray-900 dark:text-slate-100 transition-colors overflow-hidden">
+        <button 
+          onClick={() => setIsLocalizationOpen(!isLocalizationOpen)}
+          className="w-full flex items-center justify-between p-4 focus:outline-none cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-slate-700 flex items-center justify-center">
+              <Globe className="w-5 h-5" />
             </div>
-          );
-        })}
+            <div className="text-left">
+              <p className="font-bold text-sm text-gray-900 dark:text-slate-100">{i18n.languageAndCurrency}</p>
+              <p className="text-[11px] text-gray-500 dark:text-slate-400">{i18n.selectLanguage} & {i18n.selectCurrency}</p>
+            </div>
+          </div>
+          <div className="w-8 h-8 rounded-full bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 flex items-center justify-center text-gray-400 dark:text-gray-500 transition-transform duration-300" style={{ transform: isLocalizationOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+            <ChevronDown className="w-4 h-4" />
+          </div>
+        </button>
+        
+        <AnimatePresence>
+          {isLocalizationOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="px-4 pb-4"
+            >
+              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100 dark:border-slate-700/50">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">
+                    {i18n.language}
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={lang}
+                      onChange={handleLanguageChange}
+                      className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-2 pl-3 pr-8 text-xs font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-indigo-600 appearance-none cursor-pointer"
+                    >
+                      {SUPPORTED_LANGUAGES.map((l) => (
+                        <option key={l.code} value={l.code}>
+                          {l.flag} {l.nativeName}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">
+                    {i18n.currency}
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={currency.code}
+                      onChange={handleCurrencyChange}
+                      className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-2 pl-3 pr-8 text-xs font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-indigo-600 appearance-none cursor-pointer"
+                    >
+                      {SUPPORTED_CURRENCIES.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.symbol} {c.code}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* EDIT CATEGORY MODAL (Name, Color, Icon) */}
@@ -1149,6 +1106,129 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                 </button>
               </div>
             </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* FULL SCREEN CATEGORIES MODAL */}
+      <AnimatePresence>
+        {showCategoriesModal && (
+          <div className="fixed inset-0 z-40 bg-gray-50 dark:bg-slate-900 flex flex-col pt-safe pb-safe">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-850">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowCategoriesModal(false)}
+                  className="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-600 dark:text-slate-300 flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <h2 className="font-bold text-lg text-gray-900 dark:text-slate-100">{i18n.categories}</h2>
+              </div>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2 px-3 rounded-xl flex items-center gap-1.5 shadow-md shadow-blue-200 dark:shadow-none transition-all cursor-pointer active:scale-95"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{i18n.newCategory}</span>
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+              {categories.map((cat, index) => {
+                const catInfo = categoryTotals[cat.id] || { total: 0, count: 0 };
+                const isDiger = cat.id === 'cat-diger';
+                const isFirst = index === 0;
+                const isLast = index === categories.length - 1;
+
+                return (
+                  <div
+                    key={cat.id}
+                    className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-2xl p-3.5 flex items-center justify-between shadow-xs hover:border-gray-200 dark:hover:border-slate-700 transition-all gap-2"
+                  >
+                    {/* Left: Reorder Up/Down buttons */}
+                    <div className="flex flex-col gap-0.5 shrink-0">
+                      <button
+                        type="button"
+                        disabled={isFirst}
+                        onClick={() => handleMoveUp(index)}
+                        title="Yukarı Taşı"
+                        className={`p-1 rounded-lg transition-colors ${
+                          isFirst
+                            ? 'text-gray-300 dark:text-slate-700 cursor-not-allowed opacity-30'
+                            : 'text-gray-400 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-blue-600 cursor-pointer active:scale-90'
+                        }`}
+                      >
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isLast}
+                        onClick={() => handleMoveDown(index)}
+                        title="Aşağı Taşı"
+                        className={`p-1 rounded-lg transition-colors ${
+                          isLast
+                            ? 'text-gray-300 dark:text-slate-700 cursor-not-allowed opacity-30'
+                            : 'text-gray-400 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-blue-600 cursor-pointer active:scale-90'
+                        }`}
+                      >
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Middle: Icon, Name & Spending Info */}
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div
+                        className="w-10 h-10 rounded-2xl flex items-center justify-center text-white shadow-xs shrink-0"
+                        style={{ backgroundColor: cat.color }}
+                      >
+                        <CategoryIcon name={cat.icon} size={20} />
+                      </div>
+
+                      <div className="space-y-0.5 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-bold text-sm text-gray-900 dark:text-slate-100 truncate">{cat.name}</p>
+                          {cat.isCustom && (
+                            <span className="text-[9px] bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-semibold px-1.5 py-0.2 rounded-md border border-blue-200 dark:border-blue-800 shrink-0">
+                              {i18n.custom}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-slate-400 font-medium truncate">
+                          {i18n.total}: {formatCurrency(catInfo.total)} ({catInfo.count} {i18n.transactions})
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Right: Edit & Delete Actions */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleStartEdit(cat)}
+                        title="Kategoriyi Düzenle (İsim, Renk, Simge)"
+                        className="text-gray-400 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 p-2 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors cursor-pointer active:scale-95"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+
+                      {!isDiger ? (
+                        <button
+                          type="button"
+                          onClick={() => handleClickDelete(cat)}
+                          title={i18n.deletingCategory}
+                          className="text-gray-400 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer active:scale-95"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <span className="text-[10px] text-gray-400 dark:text-slate-500 px-1 font-medium">
+                          {i18n.fixed}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </AnimatePresence>

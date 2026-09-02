@@ -13,6 +13,9 @@ import {
   CheckCircle2,
   Copy,
   Cloud,
+  HelpCircle,
+  ChevronLeft,
+  Settings,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { loadCards, loadTransactions, calculateCardCycleInfo, loadCategories, loadAppsScriptUrl, saveAppsScriptUrl } from '../utils/storage';
@@ -38,7 +41,19 @@ export const Header: React.FC<HeaderProps> = ({
   const [appsScriptUrl, setAppsScriptUrl] = useState<string>(() => loadAppsScriptUrl());
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [showSheetsHelpModal, setShowSheetsHelpModal] = useState<boolean>(false);
+  const [activeSettingsPanel, setActiveSettingsPanel] = useState<'main' | 'restore' | 'sheets_settings'>('main');
+  const [showJsonInfo, setShowJsonInfo] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    const handleOpenSheetsSettings = () => {
+      setShowSettingsModal(true);
+      setActiveSettingsPanel('sheets_settings');
+    };
+
+    window.addEventListener('openSheetsSettings', handleOpenSheetsSettings);
+    return () => window.removeEventListener('openSheetsSettings', handleOpenSheetsSettings);
+  }, []);
 
   // Calculate this month's total spending
   const now = new Date();
@@ -107,7 +122,10 @@ export const Header: React.FC<HeaderProps> = ({
 
   const handleSyncToSheets = async () => {
     const url = appsScriptUrl.trim();
-    if (!url) return;
+    if (!url) {
+      setActiveSettingsPanel('sheets_settings');
+      return;
+    }
     
     if (!url.startsWith('https://script.google.com/')) {
       onShowToast("Hata: Geçersiz URL! Lütfen 'https://script.google.com/...' ile başlayan tam linki yapıştırın.", 'error');
@@ -238,16 +256,30 @@ export const Header: React.FC<HeaderProps> = ({
               {/* Header */}
               <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs">
-                    <ShieldCheck className="w-5 h-5" />
-                  </div>
+                  {activeSettingsPanel !== 'main' ? (
+                    <button onClick={() => setActiveSettingsPanel('main')} className="w-9 h-9 rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-600 dark:text-slate-300 flex items-center justify-center transition-colors cursor-pointer">
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                  ) : (
+                    <div className="w-9 h-9 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                  )}
                   <div>
-                    <h3 className="font-bold text-base text-gray-900 dark:text-slate-100">Veri Yönetimi & Yedekleme</h3>
-                    <p className="text-[11px] text-gray-500 dark:text-slate-400">Verilerinizi indirin veya geri yükleyin</p>
+                    <h3 className="font-bold text-base text-gray-900 dark:text-slate-100">
+                      {activeSettingsPanel === 'main' && 'Veri Yönetimi & Yedekleme'}
+                      {activeSettingsPanel === 'restore' && 'Yedekten Geri Yükle'}
+                      {activeSettingsPanel === 'sheets_settings' && 'E-Tablolar Ayarları'}
+                    </h3>
+                    <p className="text-[11px] text-gray-500 dark:text-slate-400">
+                      {activeSettingsPanel === 'main' && 'Verilerinizi indirin veya geri yükleyin'}
+                      {activeSettingsPanel === 'restore' && 'JSON dosyası veya metni ile geri yükleyin'}
+                      {activeSettingsPanel === 'sheets_settings' && 'Bulut senkronizasyon ayarları'}
+                    </p>
                   </div>
                 </div>
                 <button
-                  onClick={() => setShowSettingsModal(false)}
+                  onClick={() => { setShowSettingsModal(false); setTimeout(() => setActiveSettingsPanel('main'), 200); setShowJsonInfo(false); }}
                   className="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-slate-400 flex items-center justify-center transition-colors cursor-pointer"
                 >
                   <X className="w-4 h-4" />
@@ -255,158 +287,231 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
 
               <div className="space-y-4">
-                {/* Export JSON Button */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <FileJson className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                    <span>Verileri Yedekle (JSON İndir)</span>
-                  </label>
-                  <p className="text-[11px] text-gray-500 dark:text-slate-400 leading-relaxed">
-                    Tüm harcamalarınızı, kartlarınızı ve kategorilerinizi JSON formatında cihazınıza indirin.
-                  </p>
-                  <button
-                    onClick={handleExportClick}
-                    className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-blue-500/20 active:scale-98"
+                {activeSettingsPanel === 'main' && (
+                  <motion.div 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    className="space-y-4"
                   >
-                    <Download className="w-4 h-4" />
-                    <span>JSON Veri Yedeğini İndir</span>
-                  </button>
-                </div>
+                    {/* Export JSON Button */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                          <FileJson className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                          <span>Verileri Yedekle (JSON İndir)</span>
+                        </label>
+                        <button onClick={() => setShowJsonInfo(!showJsonInfo)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer">
+                          <HelpCircle className="w-4 h-4" />
+                        </button>
+                      </div>
+                      
+                      <AnimatePresence>
+                        {showJsonInfo && (
+                          <motion.p 
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="text-[11px] text-gray-500 dark:text-slate-400 leading-relaxed bg-gray-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-gray-100 dark:border-slate-700/50 overflow-hidden"
+                          >
+                            Tüm harcamalarınızı, kartlarınızı ve kategorilerinizi JSON formatında cihazınıza indirin.
+                          </motion.p>
+                        )}
+                      </AnimatePresence>
 
-                {/* Import JSON Form */}
-                <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-slate-800">
-                  <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <Upload className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    <span>Yedekten Geri Yükle</span>
-                  </label>
+                      <button
+                        onClick={handleExportClick}
+                        className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-blue-500/20 active:scale-98"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>JSON Veri Yedeğini İndir</span>
+                      </button>
+                    </div>
 
-                  {/* File input trigger */}
-                  <input
-                    type="file"
-                    accept=".json"
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
+                    {/* Go to Restore Panel Button */}
+                    <div className="pt-3 border-t border-gray-100 dark:border-slate-800 space-y-3">
+                      <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Upload className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <span>Yedekten Geri Yükle</span>
+                      </label>
+                      <button
+                        onClick={() => setActiveSettingsPanel('restore')}
+                        className="w-full py-3 px-4 bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-750 border border-gray-200/90 dark:border-slate-700 text-gray-800 dark:text-slate-200 rounded-2xl font-bold text-xs flex items-center justify-between transition-all cursor-pointer shadow-sm active:scale-98"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Upload className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                          <span>Yedekten Geri Yükle</span>
+                        </div>
+                        <ChevronLeft className="w-4 h-4 rotate-180 opacity-50" />
+                      </button>
+                    </div>
 
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full py-2.5 px-3 bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-700 rounded-2xl font-semibold text-xs text-gray-800 dark:text-slate-200 flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                    {/* Google Sheets Backup Main */}
+                    <div className="pt-3 border-t border-gray-100 dark:border-slate-800 space-y-3">
+                      <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Cloud className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                        <span>Google E-Tablolara Yedekle</span>
+                      </label>
+                      
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleSyncToSheets}
+                          disabled={isSyncing}
+                          className="flex-1 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-indigo-500/20 active:scale-98"
+                        >
+                          <Cloud className="w-4 h-4" />
+                          <span>{isSyncing ? 'İşleniyor...' : 'Yedekle'}</span>
+                        </button>
+
+                        <button
+                          onClick={() => setActiveSettingsPanel('sheets_settings')}
+                          className="w-12 py-3 bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-750 border border-gray-200/90 dark:border-slate-700 text-gray-600 dark:text-slate-300 rounded-2xl flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-98"
+                        >
+                          <Settings className="w-4.5 h-4.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Reset Data Option with Confirmation */}
+                    <div className="pt-3 border-t border-gray-100 dark:border-slate-800">
+                      {!showResetConfirm ? (
+                        <button
+                          onClick={() => setShowResetConfirm(true)}
+                          className="w-full py-3 px-3 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-950/60 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                          <span>Varsayılan Verilere Sıfırla</span>
+                        </button>
+                      ) : (
+                        <div className="bg-rose-50/90 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 rounded-2xl p-4 space-y-3 animate-in fade-in zoom-in-95">
+                          <div className="flex items-start gap-2.5">
+                            <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                            <div className="space-y-1">
+                              <p className="font-bold text-xs text-rose-900 dark:text-rose-200">Emin misiniz?</p>
+                              <p className="text-[11px] text-rose-800 dark:text-rose-300 leading-relaxed">
+                                Mevcut tüm harcamalarınız ve ayarlarınız sıfırlanacaktır.
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 pt-1">
+                            <button
+                              type="button"
+                              onClick={handleConfirmReset}
+                              className="flex-1 py-2 px-3 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-200 dark:shadow-none"
+                            >
+                              Evet, Sıfırla
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setShowResetConfirm(false)}
+                              className="py-2 px-3 bg-white dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 border border-gray-200 dark:border-slate-700 font-semibold text-xs rounded-xl transition-all cursor-pointer"
+                            >
+                              Vazgeç
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+
+                {activeSettingsPanel === 'restore' && (
+                  <motion.div 
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-4"
                   >
-                    <Upload className="w-3.5 h-3.5 text-gray-600 dark:text-slate-400" />
-                    <span>JSON Dosyası Seç</span>
-                  </button>
-
-                  <form onSubmit={handleImportTextSubmit} className="space-y-2 pt-1">
-                    <textarea
-                      rows={2}
-                      placeholder="Veya yedek JSON metnini buraya yapıştırın..."
-                      value={importJsonInput}
-                      onChange={(e) => setImportJsonInput(e.target.value)}
-                      className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-2.5 text-xs font-mono text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600"
+                    {/* File input trigger */}
+                    <input
+                      type="file"
+                      accept=".json"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      className="hidden"
                     />
-                    {importJsonInput.trim() && (
+
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full py-3.5 px-3 bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-700 rounded-2xl font-bold text-sm text-gray-800 dark:text-slate-200 flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-sm"
+                    >
+                      <Upload className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <span>JSON Dosyası Seç</span>
+                    </button>
+
+                    <div className="relative flex items-center py-2">
+                      <div className="flex-grow border-t border-gray-100 dark:border-slate-800"></div>
+                      <span className="shrink-0 px-3 text-[10px] text-gray-400 uppercase font-semibold">veya</span>
+                      <div className="flex-grow border-t border-gray-100 dark:border-slate-800"></div>
+                    </div>
+
+                    <form onSubmit={handleImportTextSubmit} className="space-y-3">
+                      <textarea
+                        rows={4}
+                        placeholder="Yedek JSON metnini buraya yapıştırın..."
+                        value={importJsonInput}
+                        onChange={(e) => setImportJsonInput(e.target.value)}
+                        className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-3 text-xs font-mono text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600"
+                      />
                       <button
                         type="submit"
-                        className="w-full py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-blue-200 dark:shadow-none"
+                        disabled={!importJsonInput.trim()}
+                        className="w-full py-3.5 px-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-blue-200 dark:shadow-none"
                       >
-                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <CheckCircle2 className="w-4 h-4" />
                         <span>Metinden Yükle</span>
                       </button>
-                    )}
-                  </form>
-                </div>
+                    </form>
+                  </motion.div>
+                )}
 
-                {/* Google Sheets Apps Script Sync */}
-                <div className="pt-3 border-t border-gray-100 dark:border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <Cloud className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                      <span>Google E-Tablolara Yedekle</span>
-                    </label>
-                    <button
-                      onClick={() => setShowSheetsHelpModal(true)}
-                      className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline font-semibold cursor-pointer"
-                    >
-                      Nasıl Kurulur?
-                    </button>
-                  </div>
-
-                  <div className="space-y-2">
-                    <input
-                      type="url"
-                      placeholder="Apps Script URL'sini buraya yapıştırın"
-                      value={appsScriptUrl}
-                      onChange={(e) => {
-                        setAppsScriptUrl(e.target.value);
-                        saveAppsScriptUrl(e.target.value);
-                      }}
-                      className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-2.5 text-xs text-gray-800 dark:text-slate-200 focus:outline-none focus:border-indigo-600 transition-colors"
-                    />
-                    
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleSyncToSheets}
-                        disabled={!appsScriptUrl.trim() || isSyncing}
-                        className="flex-1 py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-2xl font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-indigo-200 dark:shadow-none active:scale-95"
-                      >
-                        <Cloud className="w-3.5 h-3.5" />
-                        <span>{isSyncing ? 'İşleniyor...' : 'Yedekle'}</span>
-                      </button>
-
-                      <button
-                        onClick={handleRestoreFromSheets}
-                        disabled={!appsScriptUrl.trim() || isSyncing}
-                        className="flex-1 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-2xl font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-emerald-200 dark:shadow-none active:scale-95"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        <span>{isSyncing ? 'İşleniyor...' : 'Geri Yükle'}</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Reset Data Option with Confirmation */}
-                <div className="pt-3 border-t border-gray-100 dark:border-slate-800">
-                  {!showResetConfirm ? (
-                    <button
-                      onClick={() => setShowResetConfirm(true)}
-                      className="w-full py-3 px-3 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-950/60 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
-                      <span>Varsayılan Verilere Sıfırla</span>
-                    </button>
-                  ) : (
-                    <div className="bg-rose-50/90 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 rounded-2xl p-4 space-y-3 animate-in fade-in zoom-in-95">
-                      <div className="flex items-start gap-2.5">
-                        <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
-                        <div className="space-y-1">
-                          <p className="font-bold text-xs text-rose-900 dark:text-rose-200">Emin misiniz?</p>
-                          <p className="text-[11px] text-rose-800 dark:text-rose-300 leading-relaxed">
-                            Mevcut tüm harcamalarınız ve ayarlarınız sıfırlanacaktır.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 pt-1">
+                {activeSettingsPanel === 'sheets_settings' && (
+                  <motion.div 
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-4"
+                  >
+                    <div className="bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/50 rounded-2xl p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase tracking-wider">
+                          Apps Script URL
+                        </label>
                         <button
-                          type="button"
-                          onClick={handleConfirmReset}
-                          className="flex-1 py-2 px-3 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-200 dark:shadow-none"
+                          onClick={() => setShowSheetsHelpModal(true)}
+                          className="text-[10px] bg-indigo-100 dark:bg-indigo-800/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-800 py-1 px-2.5 rounded-full font-semibold cursor-pointer transition-colors"
                         >
-                          Evet, Sıfırla
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setShowResetConfirm(false)}
-                          className="py-2 px-3 bg-white dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 border border-gray-200 dark:border-slate-700 font-semibold text-xs rounded-xl transition-all cursor-pointer"
-                        >
-                          Vazgeç
+                          Nasıl Kurulur?
                         </button>
                       </div>
+                      
+                      <p className="text-[11px] text-indigo-700/80 dark:text-indigo-300/80 leading-relaxed">
+                        Google E-Tablolar entegrasyonu için oluşturduğunuz web uygulamasının bağlantısını aşağıya yapıştırın.
+                      </p>
+                      
+                      <input
+                        type="url"
+                        placeholder="https://script.google.com/..."
+                        value={appsScriptUrl}
+                        onChange={(e) => {
+                          setAppsScriptUrl(e.target.value);
+                          saveAppsScriptUrl(e.target.value);
+                        }}
+                        className="w-full bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 rounded-xl p-3 text-xs font-mono text-gray-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all shadow-inner"
+                      />
                     </div>
-                  )}
-                </div>
+
+                    <button
+                      onClick={handleRestoreFromSheets}
+                      disabled={!appsScriptUrl.trim() || isSyncing}
+                      className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-emerald-500/20 active:scale-98"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>{isSyncing ? 'İşleniyor...' : 'Buluttan Geri Yükle'}</span>
+                    </button>
+                  </motion.div>
+                )}
               </div>
             </motion.div>
           </div>

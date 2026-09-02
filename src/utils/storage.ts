@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   THEME: 'cebim_theme_mode_v5',
   APPS_SCRIPT_URL: 'cebim_apps_script_url_v5',
   NOTIFICATIONS: 'cebim_notifications_v5',
+  AUTO_SAVE: 'cebim_auto_save_v5',
 };
 
 export const DEFAULT_QUICK_AMOUNTS = [10, 50, 100, 250, 500, 1000];
@@ -98,6 +99,33 @@ export function saveNotificationSettings(settings: NotificationSettings) {
     localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(settings));
   } catch (e) {
     console.error('Error saving notification settings:', e);
+  }
+}
+
+export interface AutoSaveSettings {
+  enabled: boolean;
+  lastAutoSaveDate?: string;
+}
+
+export const DEFAULT_AUTO_SAVE_SETTINGS: AutoSaveSettings = {
+  enabled: false,
+};
+
+export function loadAutoSaveSettings(): AutoSaveSettings {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.AUTO_SAVE);
+    if (!raw) return DEFAULT_AUTO_SAVE_SETTINGS;
+    return JSON.parse(raw);
+  } catch (e) {
+    return DEFAULT_AUTO_SAVE_SETTINGS;
+  }
+}
+
+export function saveAutoSaveSettings(settings: AutoSaveSettings) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.AUTO_SAVE, JSON.stringify(settings));
+  } catch (e) {
+    console.error('Error saving auto save settings:', e);
   }
 }
 

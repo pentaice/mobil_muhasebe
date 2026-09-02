@@ -72,7 +72,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       note: editNote || undefined,
       categoryId: editCategoryId,
       sourceType: editSourceType,
-      creditCardId: editSourceType === 'credit_card' ? editCardId : undefined,
+      creditCardId: editingTx.type === 'card_payment' ? editingTx.creditCardId : (editSourceType === 'credit_card' ? editCardId : undefined),
       date: newDate.toISOString(),
     };
 
@@ -399,53 +399,55 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
               </div>
 
               {/* Payment Source */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                  {i18n.paymentSource}
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditSourceType('credit_card')}
-                    className={`flex items-center justify-center gap-2 py-2.5 rounded-2xl text-xs font-semibold border-2 transition-all cursor-pointer ${
-                      editSourceType === 'credit_card'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300'
-                        : 'border-gray-100 dark:border-slate-700 text-gray-500 dark:text-slate-400 hover:border-gray-200 dark:hover:border-slate-600'
-                    }`}
-                  >
-                    <CardIcon className="w-4 h-4" />
-                    {i18n.creditCard}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditSourceType('cash_bank')}
-                    className={`flex items-center justify-center gap-2 py-2.5 rounded-2xl text-xs font-semibold border-2 transition-all cursor-pointer ${
-                      editSourceType === 'cash_bank'
-                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
-                        : 'border-gray-100 dark:border-slate-700 text-gray-500 dark:text-slate-400 hover:border-gray-200 dark:hover:border-slate-600'
-                    }`}
-                  >
-                    <Wallet className="w-4 h-4" />
-                    {i18n.cashBank}
-                  </button>
-                </div>
+              {editingTx.type !== 'card_payment' && (
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
+                    {i18n.paymentSource}
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditSourceType('credit_card')}
+                      className={`flex items-center justify-center gap-2 py-2.5 rounded-2xl text-xs font-semibold border-2 transition-all cursor-pointer ${
+                        editSourceType === 'credit_card'
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300'
+                          : 'border-gray-100 dark:border-slate-700 text-gray-500 dark:text-slate-400 hover:border-gray-200 dark:hover:border-slate-600'
+                      }`}
+                    >
+                      <CardIcon className="w-4 h-4" />
+                      {i18n.creditCard}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditSourceType('cash_bank')}
+                      className={`flex items-center justify-center gap-2 py-2.5 rounded-2xl text-xs font-semibold border-2 transition-all cursor-pointer ${
+                        editSourceType === 'cash_bank'
+                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
+                          : 'border-gray-100 dark:border-slate-700 text-gray-500 dark:text-slate-400 hover:border-gray-200 dark:hover:border-slate-600'
+                      }`}
+                    >
+                      <Wallet className="w-4 h-4" />
+                      {i18n.cashBank}
+                    </button>
+                  </div>
 
-                {/* Card Selector (if credit card) */}
-                {editSourceType === 'credit_card' && cards.length > 0 && (
-                  <select
-                    value={editCardId}
-                    onChange={(e) => setEditCardId(e.target.value)}
-                    className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl py-2.5 px-3 text-xs text-gray-700 dark:text-slate-200 font-medium focus:outline-none focus:border-blue-500 mt-2"
-                  >
-                    <option value="">{i18n.selectCard}</option>
-                    {cards.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} (•••• {c.last4})
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
+                  {/* Card Selector (if credit card) */}
+                  {editSourceType === 'credit_card' && cards.length > 0 && (
+                    <select
+                      value={editCardId}
+                      onChange={(e) => setEditCardId(e.target.value)}
+                      className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl py-2.5 px-3 text-xs text-gray-700 dark:text-slate-200 font-medium focus:outline-none focus:border-blue-500 mt-2"
+                    >
+                      <option value="">{i18n.selectCard}</option>
+                      {cards.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} (•••• {c.last4})
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
 
               {/* Date & Time */}
               <div className="space-y-1.5">

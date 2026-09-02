@@ -12,6 +12,9 @@ import {
   saveTheme,
   loadNotificationSettings,
   saveNotificationSettings,
+  loadAutoSaveSettings,
+  saveAutoSaveSettings,
+  loadAppsScriptUrl,
 } from './utils/storage';
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
@@ -77,6 +80,45 @@ export default function App() {
   useEffect(() => {
     saveTransactions(transactions);
   }, [transactions]);
+
+  // Auto Save to Sheets (Once a day)
+  useEffect(() => {
+    const checkAutoSave = async () => {
+      const autoSave = loadAutoSaveSettings();
+      if (!autoSave.enabled || !navigator.onLine) return;
+
+      const url = loadAppsScriptUrl().trim();
+      if (!url || !url.startsWith('https://script.google.com/')) return;
+
+      const today = new Date().toISOString().slice(0, 10);
+      if (autoSave.lastAutoSaveDate === today) return;
+
+      try {
+        const backupObj = {
+          categories: loadCategories(),
+          cards: loadCards(),
+          transactions: loadTransactions(),
+          exportedAt: new Date().toISOString(),
+        };
+
+        await fetch(url, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'text/plain',
+          },
+          body: JSON.stringify(backupObj),
+        });
+
+        saveAutoSaveSettings({ ...autoSave, lastAutoSaveDate: today });
+        console.log('Auto save to sheets successful.');
+      } catch (err) {
+        console.error('Auto save failed:', err);
+      }
+    };
+
+    checkAutoSave();
+  }, []);
 
   // Notifications Scheduler
   useEffect(() => {

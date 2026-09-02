@@ -1,5 +1,5 @@
 import React from 'react';
-import { Zap, CreditCard, PieChart, History, Grid } from 'lucide-react';
+import { Zap, CreditCard, PieChart, History, Settings } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useI18n } from '../i18n/I18nContext';
 
@@ -18,7 +18,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
     { id: 'cards', label: i18n.navCards, icon: CreditCard },
     { id: 'reports', label: i18n.navReports, icon: PieChart },
     { id: 'history', label: i18n.navHistory, icon: History },
-    { id: 'categories', label: i18n.navCategories, icon: Grid },
+    { id: 'categories', label: i18n.navCategories, icon: Settings },
   ];
 
   return (
