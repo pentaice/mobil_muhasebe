@@ -24,6 +24,23 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  
+  /* Mobil webview deneyimini native uygulamaya yaklaştıran düzeltmeler */
+  overscroll-behavior-y: none; /* Sayfanın aşağı/yukarı kaydırıldığında sekmesini (bounce) engeller */
+  -webkit-touch-callout: none; /* iOS'ta uzun basınca çıkan menüyü engeller */
+  -webkit-user-select: none; /* Safari text seçimi engelleme */
+  user-select: none; /* Tüm metin seçimini engeller (yanlışlıkla mavi seçimlerin oluşmasını engeller) */
+}
+
+/* Sadece input ve textarea'larda metin seçimine izin ver (Kopyala/Yapıştır için gerekli) */
+input, textarea {
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
+/* Butonlara tıklandığında Android'de çıkan mavi/gri efekti kaldırır */
+* {
+  -webkit-tap-highlight-color: transparent;
 }
 
 html.dark body {

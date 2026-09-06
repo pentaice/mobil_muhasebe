@@ -387,7 +387,7 @@ export default function App() {
         />
 
         {/* Main Body View */}
-        <main className="flex-1 px-4 pt-4 pb-20">
+        <main className="flex-1 px-4 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))]">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
