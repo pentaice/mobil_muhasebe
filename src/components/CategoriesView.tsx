@@ -429,6 +429,11 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
             <div>
               <p className="font-bold text-sm text-gray-900 dark:text-slate-100">{i18n.autoSaveSheets}</p>
               <p className="text-[11px] text-gray-500 dark:text-slate-400 max-w-[200px] leading-tight">{i18n.autoSaveSheetsDesc}</p>
+              {autoSaveSettings.lastAutoSaveDate && (
+                <p className="text-[9px] font-medium text-emerald-600 dark:text-emerald-400 mt-1">
+                  Son yedek: {autoSaveSettings.lastAutoSaveDate.split('T')[0]}
+                </p>
+              )}
             </div>
           </div>
           
@@ -1133,7 +1138,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
+            <div className="flex-1 overflow-y-auto p-4 space-y-2.5 pb-[calc(5rem+env(safe-area-inset-bottom))]">
               {categories.map((cat, index) => {
                 const catInfo = categoryTotals[cat.id] || { total: 0, count: 0 };
                 const isDiger = cat.id === 'cat-diger';

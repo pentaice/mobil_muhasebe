@@ -18,7 +18,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { loadCards, loadTransactions, calculateCardCycleInfo, loadCategories, loadAppsScriptUrl, saveAppsScriptUrl } from '../utils/storage';
+import { loadCards, loadTransactions, calculateCardCycleInfo, loadCategories, loadAppsScriptUrl, saveAppsScriptUrl, loadAutoSaveSettings } from '../utils/storage';
 
 interface HeaderProps {
   transactions: Transaction[];
@@ -194,7 +194,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-30 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-800/90 px-5 py-4 flex items-center justify-between text-gray-900 dark:text-slate-100 transition-colors shadow-2xs">
+      <header className="sticky top-0 z-30 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-800/90 px-5 pt-[calc(1rem+env(safe-area-inset-top))] pb-4 flex items-center justify-between text-gray-900 dark:text-slate-100 transition-colors shadow-2xs">
         {/* SOL KÖŞE - LOGO & İSİM */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 dark:shadow-none shrink-0">
@@ -246,7 +246,7 @@ export const Header: React.FC<HeaderProps> = ({
       {/* SETTINGS & BACKUP MODAL */}
       <AnimatePresence>
         {showSettingsModal && (
-          <div className="fixed inset-0 z-50 bg-gray-900/60 dark:bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 bg-gray-900/60 dark:bg-black/75 backdrop-blur-xs flex items-center justify-center px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -452,7 +452,7 @@ export const Header: React.FC<HeaderProps> = ({
                         placeholder="Yedek JSON metnini buraya yapıştırın..."
                         value={importJsonInput}
                         onChange={(e) => setImportJsonInput(e.target.value)}
-                        className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-3 text-xs font-mono text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600"
+                        className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-3 text-base md:text-sm font-mono text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600"
                       />
                       <button
                         type="submit"
@@ -486,9 +486,16 @@ export const Header: React.FC<HeaderProps> = ({
                         </button>
                       </div>
                       
-                      <p className="text-[11px] text-indigo-700/80 dark:text-indigo-300/80 leading-relaxed">
-                        Google E-Tablolar entegrasyonu için oluşturduğunuz web uygulamasının bağlantısını aşağıya yapıştırın.
-                      </p>
+                      <div className="space-y-1.5">
+                        <p className="text-[11px] text-indigo-700/80 dark:text-indigo-300/80 leading-relaxed">
+                          Google E-Tablolar entegrasyonu için oluşturduğunuz web uygulamasının bağlantısını aşağıya yapıştırın.
+                        </p>
+                        {loadAutoSaveSettings().lastAutoSaveDate && (
+                          <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                            Son yedek: {loadAutoSaveSettings().lastAutoSaveDate.split('T')[0]}
+                          </p>
+                        )}
+                      </div>
                       
                       <input
                         type="url"
@@ -498,7 +505,7 @@ export const Header: React.FC<HeaderProps> = ({
                           setAppsScriptUrl(e.target.value);
                           saveAppsScriptUrl(e.target.value);
                         }}
-                        className="w-full bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 rounded-xl p-3 text-xs font-mono text-gray-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all shadow-inner"
+                        className="w-full bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 rounded-xl p-3 text-base md:text-sm font-mono text-gray-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all shadow-inner"
                       />
                     </div>
 
@@ -521,7 +528,7 @@ export const Header: React.FC<HeaderProps> = ({
       {/* GOOGLE SHEETS HELP MODAL */}
       <AnimatePresence>
         {showSheetsHelpModal && (
-          <div className="fixed inset-0 z-[60] bg-gray-900/60 dark:bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[60] bg-gray-900/60 dark:bg-black/75 backdrop-blur-xs flex items-center justify-center px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}

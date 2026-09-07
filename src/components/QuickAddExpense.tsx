@@ -329,7 +329,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                     placeholder={i18n.notePlaceholder}
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-1.5 px-2.5 text-xs text-gray-800 dark:text-slate-200 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-blue-600"
+                    className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-1.5 px-2.5 text-base md:text-sm text-gray-800 dark:text-slate-200 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-blue-600"
                   />
 
                   <div className="flex items-center justify-between text-[11px] text-gray-500 dark:text-slate-400 pt-0.5">
@@ -348,7 +348,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                       type="datetime-local"
                       value={customDateTime}
                       onChange={(e) => setCustomDateTime(e.target.value)}
-                      className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-1.5 px-2.5 text-xs text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600"
+                      className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-1.5 px-2.5 text-base md:text-sm text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600"
                     />
                   )}
                 </motion.div>
@@ -375,7 +375,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
       {/* QUICK AMOUNT CUSTOMIZATION MODAL */}
       <AnimatePresence>
         {showQuickAmountModal && (
-          <div className="fixed inset-0 z-50 bg-gray-900/40 dark:bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 bg-gray-900/40 dark:bg-black/60 backdrop-blur-xs flex items-center justify-center px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -432,7 +432,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                     placeholder={i18n.amountPlaceholder}
                     value={newQuickAmountInput}
                     onChange={(e) => setNewQuickAmountInput(e.target.value)}
-                    className="flex-1 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600"
+                    className="flex-1 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 text-base md:text-sm font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600"
                   />
                   <button
                     type="submit"
