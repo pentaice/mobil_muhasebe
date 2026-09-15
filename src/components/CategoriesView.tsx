@@ -28,8 +28,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useI18n } from '../i18n/I18nContext';
 import { SUPPORTED_LANGUAGES, SUPPORTED_CURRENCIES, LanguageCode } from '../i18n/translations';
 import { loadNotificationSettings, saveNotificationSettings, NotificationSettings, loadAutoSaveSettings, saveAutoSaveSettings, AutoSaveSettings, loadAppsScriptUrl } from '../utils/storage';
-import { Capacitor } from '@capacitor/core';
-import { LocalNotifications } from '@capacitor/local-notifications';
+import {
+  requestNotificationPermission,
+  sendTestNotification,
+  syncNotificationSchedule,
+} from '../utils/notifications';
 
 interface CategoriesViewProps {
   categories: Category[];
@@ -225,64 +228,30 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
   const handleUpdateNotificationSettings = async (updates: Partial<NotificationSettings>) => {
     const newSettings = { ...notificationSettings, ...updates };
     
-    // If enabling notifications, request permission
+    // If enabling notifications, request permission first
     if (updates.enabled === true) {
-      if (Capacitor.isNativePlatform()) {
-        try {
-          const permStatus = await LocalNotifications.requestPermissions();
-          if (permStatus.display === 'granted') {
-            setNotificationSettings(newSettings);
-            saveNotificationSettings(newSettings);
-            
-            await LocalNotifications.schedule({
-              notifications: [
-                {
-                  title: i18n.notificationTestTitle,
-                  body: i18n.notificationTestBody,
-                  id: new Date().getTime(),
-                  schedule: { at: new Date(Date.now() + 1000) },
-                }
-              ]
-            });
-          } else {
-            alert(i18n.browserPermissionRequired);
-            const reverted = { ...newSettings, enabled: false };
-            setNotificationSettings(reverted);
-            saveNotificationSettings(reverted);
-          }
-        } catch (e) {
-          console.error(e);
-          alert(i18n.browserPermissionRequired);
-        }
-        return;
-      } else if ('Notification' in window) {
-        Notification.requestPermission().then(permission => {
-          if (permission !== 'granted') {
-            alert(i18n.browserPermissionRequired);
-            // Revert to disabled if permission denied
-            const reverted = { ...newSettings, enabled: false };
-            setNotificationSettings(reverted);
-            saveNotificationSettings(reverted);
-          } else {
-            setNotificationSettings(newSettings);
-            saveNotificationSettings(newSettings);
-            
-            // Show a test notification
-            new Notification(i18n.notificationTestTitle, {
-              body: i18n.notificationTestBody,
-              icon: '/icons/icon-192x192.png' // assuming standard PWA icon location, or could be omitted
-            });
-          }
-        });
-        return;
-      } else {
+      const granted = await requestNotificationPermission();
+      if (!granted) {
         alert(i18n.browserPermissionRequired);
+        const reverted = { ...newSettings, enabled: false };
+        setNotificationSettings(reverted);
+        saveNotificationSettings(reverted);
+        await syncNotificationSchedule(reverted, i18n);
         return;
       }
+      
+      setNotificationSettings(newSettings);
+      saveNotificationSettings(newSettings);
+      await syncNotificationSchedule(newSettings, i18n);
+      
+      // Fire a test notification immediately so the user can see it works
+      await sendTestNotification(i18n.notificationTestTitle, i18n.notificationTestBody);
+      return;
     }
     
     setNotificationSettings(newSettings);
     saveNotificationSettings(newSettings);
+    await syncNotificationSchedule(newSettings, i18n);
   };
 
   const handleToggleAutoSave = () => {
@@ -414,6 +383,23 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                     className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-2 px-3 text-xs font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
                   />
                 </div>
+              </div>
+              
+              {/* Test Notification Button */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const ok = await sendTestNotification(i18n.notificationTestTitle, i18n.notificationTestBody);
+                    if (!ok) {
+                      alert(i18n.browserPermissionRequired);
+                    }
+                  }}
+                  className="w-full py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-center justify-center gap-2 border border-emerald-200/60 dark:border-emerald-800/60 transition-colors cursor-pointer active:scale-[0.99]"
+                >
+                  <Bell className="w-3.5 h-3.5" />
+                  <span>{i18n.notificationTestTitle}</span>
+                </button>
               </div>
             </motion.div>
           )}

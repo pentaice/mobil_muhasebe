@@ -9,6 +9,10 @@
     "StatusBar": {
       "overlaysWebView": false,
       "backgroundColor": "#0f172b"
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_notification",
+      "iconColor": "#10b981"
     }
   }
 }

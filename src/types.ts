@@ -40,3 +40,17 @@ export interface MonthlySummary {
   byCategory: Record<string, number>;
   byCard: Record<string, number>;
 }
+
+export interface RecurringExpense {
+  id: string;
+  cardId: string; // Credit card ID
+  title: string; // e.g. "Netflix", "Kira", "Aidat"
+  amount: number;
+  categoryId: string;
+  dayOfMonth: number; // 1 - 31
+  startDate: string; // ISO date string when added
+  lastProcessedMonth?: string; // YYYY-MM
+  isActive: boolean;
+  createdAt: string;
+}
+

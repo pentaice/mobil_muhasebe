@@ -4,4 +4,6 @@
     <string name="title_activity_main">Cebim Muhasebe</string>
     <string name="package_name">com.cebim.muhasebe</string>
     <string name="custom_url_scheme">com.cebim.muhasebe</string>
+    <string name="widget_name">Hızlı Harcama</string>
+    <string name="widget_description">Uygulamayı açmadan ana ekrandan hızlıca harcama ekleyin.</string>
 </resources>

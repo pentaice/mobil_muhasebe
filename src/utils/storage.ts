@@ -1,4 +1,4 @@
-import { Category, CreditCard, Transaction } from '../types';
+import { Category, CreditCard, Transaction, RecurringExpense } from '../types';
 import { DEFAULT_CATEGORIES, DEFAULT_CREDIT_CARDS, INITIAL_TRANSACTIONS } from '../data/initialData';
 
 const STORAGE_KEYS = {
@@ -10,6 +10,7 @@ const STORAGE_KEYS = {
   APPS_SCRIPT_URL: 'cebim_apps_script_url_v5',
   NOTIFICATIONS: 'cebim_notifications_v5',
   AUTO_SAVE: 'cebim_auto_save_v5',
+  RECURRING_EXPENSES: 'cebim_recurring_expenses_v5',
 };
 
 export const DEFAULT_QUICK_AMOUNTS = [10, 50, 100, 250, 500, 1000];
@@ -197,6 +198,27 @@ export function resetAllData() {
   localStorage.removeItem(STORAGE_KEYS.TRANSACTIONS);
   localStorage.removeItem(STORAGE_KEYS.QUICK_AMOUNTS);
   localStorage.removeItem(STORAGE_KEYS.NOTIFICATIONS);
+  localStorage.removeItem(STORAGE_KEYS.RECURRING_EXPENSES);
+}
+
+export function loadRecurringExpenses(): RecurringExpense[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.RECURRING_EXPENSES);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.error('Error loading recurring expenses:', e);
+    return [];
+  }
+}
+
+export function saveRecurringExpenses(items: RecurringExpense[]) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.RECURRING_EXPENSES, JSON.stringify(items));
+  } catch (e) {
+    console.error('Error saving recurring expenses:', e);
+  }
 }
 
 // --- Card Cycle Calculations ---

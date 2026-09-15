@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_bg"
+    android:padding="10dp">
+
+    <!-- HEADER: Title & Method Tabs -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tv_widget_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Cebim • Hızlı Ekle"
+            android:textColor="#94a3b8"
+            android:textStyle="bold"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_method_card"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
+                android:text="💳 Kart"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#ffffff"
+                android:background="@drawable/widget_btn_active" />
+
+            <Button
+                android:id="@+id/btn_method_cash"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:layout_marginLeft="4dp"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
+                android:text="💵 Nakit"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#94a3b8"
+                android:background="@drawable/widget_btn_bg" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- AMOUNT DISPLAY & CLEAR -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/widget_amount_bg"
+        android:paddingLeft="10dp"
+        android:paddingRight="6dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp">
+
+        <TextView
+            android:id="@+id/tv_amount"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="0 ₺"
+            android:textColor="#f8fafc"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:maxLines="1" />
+
+        <Button
+            android:id="@+id/btn_key_clear"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="C"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#f43f5e"
+            android:background="@drawable/widget_btn_clear" />
+    </LinearLayout>
+
+    <!-- 4 TOP CATEGORIES ROW -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_cat_1"
+            android:layout_width="0dp"
+            android:layout_height="28dp"
+            android:layout_weight="1"
+            android:layout_marginRight="3dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="Yemek"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:textColor="#ffffff"
+            android:background="@drawable/widget_btn_active"
+            android:maxLines="1" />
+
+        <Button
+            android:id="@+id/btn_cat_2"
+            android:layout_width="0dp"
+            android:layout_height="28dp"
+            android:layout_weight="1"
+            android:layout_marginRight="3dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="Market"
+            android:textSize="10sp"
+            android:textColor="#94a3b8"
+            android:background="@drawable/widget_btn_bg"
+            android:maxLines="1" />
+
+        <Button
+            android:id="@+id/btn_cat_3"
+            android:layout_width="0dp"
+            android:layout_height="28dp"
+            android:layout_weight="1"
+            android:layout_marginRight="3dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="Kahve"
+            android:textSize="10sp"
+            android:textColor="#94a3b8"
+            android:background="@drawable/widget_btn_bg"
+            android:maxLines="1" />
+
+        <Button
+            android:id="@+id/btn_cat_4"
+            android:layout_width="0dp"
+            android:layout_height="28dp"
+            android:layout_weight="1"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="Ulaşım"
+            android:textSize="10sp"
+            android:textColor="#94a3b8"
+            android:background="@drawable/widget_btn_bg"
+            android:maxLines="1" />
+    </LinearLayout>
+
+    <!-- KEYPAD ROW 1 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_key_1"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:layout_marginRight="3dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="1"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#e2e8f0"
+            android:background="@drawable/widget_btn_bg" />
+
+        <Button
+            android:id="@+id/btn_key_2"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:layout_marginRight="3dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="2"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#e2e8f0"
+            android:background="@drawable/widget_btn_bg" />
+
+        <Button
+            android:id="@+id/btn_key_3"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:layout_marginRight="3dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="3"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#e2e8f0"
+            android:background="@drawable/widget_btn_bg" />
+
+        <Button
+            android:id="@+id/btn_preset_50"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="+50"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#a5b4fc"
+            android:background="@drawable/widget_btn_preset" />
+    </LinearLayout>
+
+    <!-- KEYPAD ROW 2 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_key_4"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:layout_marginRight="3dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="4"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#e2e8f0"
+            android:background="@drawable/widget_btn_bg" />
+
+        <Button
+            android:id="@+id/btn_key_5"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:layout_marginRight="3dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="5"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#e2e8f0"
+            android:background="@drawable/widget_btn_bg" />
+
+        <Button
+            android:id="@+id/btn_key_6"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:layout_marginRight="3dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="6"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#e2e8f0"
+            android:background="@drawable/widget_btn_bg" />
+
+        <Button
+            android:id="@+id/btn_preset_100"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="+100"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#a5b4fc"
+            android:background="@drawable/widget_btn_preset" />
+    </LinearLayout>
+
+    <!-- KEYPAD ROW 3 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_key_7"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:layout_marginRight="3dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="7"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#e2e8f0"
+            android:background="@drawable/widget_btn_bg" />
+
+        <Button
+            android:id="@+id/btn_key_8"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:layout_marginRight="3dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="8"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#e2e8f0"
+            android:background="@drawable/widget_btn_bg" />
+
+        <Button
+            android:id="@+id/btn_key_9"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:layout_marginRight="3dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="9"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#e2e8f0"
+            android:background="@drawable/widget_btn_bg" />
+
+        <Button
+            android:id="@+id/btn_preset_250"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="+250"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#a5b4fc"
+            android:background="@drawable/widget_btn_preset" />
+    </LinearLayout>
+
+    <!-- KEYPAD ROW 4 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_key_dot"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:layout_marginRight="3dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="."
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#e2e8f0"
+            android:background="@drawable/widget_btn_bg" />
+
+        <Button
+            android:id="@+id/btn_key_0"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:layout_marginRight="3dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="0"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#e2e8f0"
+            android:background="@drawable/widget_btn_bg" />
+
+        <Button
+            android:id="@+id/btn_key_back"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:layout_marginRight="3dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="⌫"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#fda4af"
+            android:background="@drawable/widget_btn_clear" />
+
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="✓ EKLE"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#ffffff"
+            android:background="@drawable/widget_btn_save" />
+    </LinearLayout>
+
+</LinearLayout>

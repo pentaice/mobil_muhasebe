@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Category, CreditCard, Transaction } from './types';
+import { Category, CreditCard, Transaction, RecurringExpense } from './types';
 import {
   loadCategories,
   saveCategories,
@@ -15,9 +15,12 @@ import {
   loadAutoSaveSettings,
   saveAutoSaveSettings,
   loadAppsScriptUrl,
+  loadRecurringExpenses,
+  saveRecurringExpenses,
 } from './utils/storage';
-import { Capacitor } from '@capacitor/core';
-import { LocalNotifications } from '@capacitor/local-notifications';
+import { processRecurringExpenses } from './utils/recurringExpenses';
+import { initNotificationChannel, syncNotificationSchedule } from './utils/notifications';
+import { syncCategoriesToWidget, checkAndImportWidgetTransactions } from './utils/widgetBridge';
 import { DEFAULT_CATEGORIES, DEFAULT_CREDIT_CARDS, INITIAL_TRANSACTIONS } from './data/initialData';
 import { Header } from './components/Header';
 import { BottomNav, ActiveTab } from './components/BottomNav';
@@ -35,6 +38,7 @@ export default function App() {
   const [categories, setCategories] = useState<Category[]>(() => loadCategories());
   const [cards, setCards] = useState<CreditCard[]>(() => loadCards());
   const [transactions, setTransactions] = useState<Transaction[]>(() => loadTransactions());
+  const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>(() => loadRecurringExpenses());
   const [activeTab, setActiveTab] = useState<ActiveTab>('add');
   const [toast, setToast] = useState<ToastState | null>(null);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => loadTheme() === 'dark');
@@ -68,9 +72,10 @@ export default function App() {
     });
   };
 
-  // Sync to LocalStorage
+  // Sync to LocalStorage & Widget
   useEffect(() => {
     saveCategories(categories);
+    syncCategoriesToWidget(categories);
   }, [categories]);
 
   useEffect(() => {
@@ -80,6 +85,10 @@ export default function App() {
   useEffect(() => {
     saveTransactions(transactions);
   }, [transactions]);
+
+  useEffect(() => {
+    saveRecurringExpenses(recurringExpenses);
+  }, [recurringExpenses]);
 
   // Auto Save to Sheets (Once a day)
   useEffect(() => {
@@ -98,6 +107,7 @@ export default function App() {
           categories: loadCategories(),
           cards: loadCards(),
           transactions: loadTransactions(),
+          recurringExpenses: loadRecurringExpenses(),
           exportedAt: new Date().toISOString(),
         };
 
@@ -120,75 +130,17 @@ export default function App() {
     checkAutoSave();
   }, []);
 
-  // Notifications Scheduler
+  // Initialize and synchronize OS-level Local Notifications
   useEffect(() => {
-    const checkNotifications = () => {
+    const initNotifications = async () => {
+      await initNotificationChannel();
       const settings = loadNotificationSettings();
-      if (!settings.enabled || !('Notification' in window) || Notification.permission !== 'granted') return;
-
-      const now = new Date();
-      const currentHour = now.getHours().toString().padStart(2, '0');
-      const currentMinute = now.getMinutes().toString().padStart(2, '0');
-      const currentTimeStr = `${currentHour}:${currentMinute}`;
-      
-      const [h, m] = settings.time.split(':').map(Number);
-      const time2Hour = (h + 12) % 24;
-      const time2Str = `${time2Hour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-      
-      if (currentTimeStr === settings.time || (settings.frequency === 'twice_daily' && currentTimeStr === time2Str)) {
-        let shouldNotify = false;
-        
-        if (!settings.lastNotified) {
-          shouldNotify = true;
-        } else {
-          const lastDate = new Date(settings.lastNotified);
-          
-          if (settings.frequency === 'twice_daily') {
-             const hoursDiff = (now.getTime() - lastDate.getTime()) / (1000 * 60 * 60);
-             if (hoursDiff >= 11) shouldNotify = true; // Minimum 11 hours apart to avoid double triggers
-          } else if (settings.frequency === 'daily') {
-            if (now.toDateString() !== lastDate.toDateString()) shouldNotify = true;
-          } else if (settings.frequency === 'weekly') {
-            const daysDiff = (now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24);
-            if (daysDiff >= 7) shouldNotify = true;
-          } else if (settings.frequency === 'monthly') {
-            if (now.getMonth() !== lastDate.getMonth() || now.getFullYear() !== lastDate.getFullYear()) {
-              shouldNotify = true;
-            }
-          }
-        }
-        
-        if (shouldNotify) {
-          if (Capacitor.isNativePlatform()) {
-            LocalNotifications.schedule({
-              notifications: [
-                {
-                  title: 'Bütçem',
-                  body: 'Bugünkü harcamalarınızı veya işlemlerinizi kaydettiniz mi?',
-                  id: new Date().getTime(),
-                  schedule: { at: new Date(Date.now() + 1000) }
-                }
-              ]
-            });
-          } else {
-            new Notification('Bütçem', {
-              body: 'Bugünkü harcamalarınızı veya işlemlerinizi kaydettiniz mi?',
-              icon: '/icons/icon-192x192.png'
-            });
-          }
-          
-          saveNotificationSettings({
-            ...settings,
-            lastNotified: now.toISOString()
-          });
-        }
+      if (settings.enabled) {
+        await syncNotificationSchedule(settings, i18n);
       }
     };
-
-    checkNotifications();
-    const interval = setInterval(checkNotifications, 60000); // Check every minute
-    return () => clearInterval(interval);
-  }, []);
+    initNotifications();
+  }, [i18n]);
 
   // Handlers
   const handleAddTransaction = (txData: Omit<Transaction, 'id' | 'createdAt'>) => {
@@ -204,6 +156,72 @@ export default function App() {
     } else {
       showToast(i18n.toastExpenseAdded, 'success');
     }
+  };
+
+  // Check and import pending transactions from home screen widget on mount and resume
+  useEffect(() => {
+    const checkWidget = () => {
+      checkAndImportWidgetTransactions(handleAddTransaction, showToast);
+    };
+
+    checkWidget();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkWidget();
+      }
+    };
+
+    window.addEventListener('focus', checkWidget);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', checkWidget);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  // Auto-process recurring card expenses
+  useEffect(() => {
+    const checkRecurring = () => {
+      const { newTransactions, updatedRecurringExpenses } = processRecurringExpenses(
+        recurringExpenses,
+        cards
+      );
+
+      if (newTransactions.length > 0) {
+        const preparedTxs: Transaction[] = newTransactions.map((t) => ({
+          ...t,
+          id: `tx-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          createdAt: new Date().toISOString(),
+        }));
+
+        setTransactions((prev) => [...preparedTxs, ...prev]);
+        setRecurringExpenses(updatedRecurringExpenses);
+        saveRecurringExpenses(updatedRecurringExpenses);
+
+        showToast(`${newTransactions.length} ${i18n.toastRecurringProcessed}`, 'info');
+      }
+    };
+
+    checkRecurring();
+    window.addEventListener('focus', checkRecurring);
+    return () => window.removeEventListener('focus', checkRecurring);
+  }, [cards, recurringExpenses, i18n]);
+
+  const handleAddRecurringExpense = (expData: Omit<RecurringExpense, 'id' | 'createdAt'>) => {
+    const newExp: RecurringExpense = {
+      ...expData,
+      id: `rec-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      createdAt: new Date().toISOString(),
+    };
+    setRecurringExpenses((prev) => [...prev, newExp]);
+    showToast(i18n.toastRecurringAdded, 'success');
+  };
+
+  const handleDeleteRecurringExpense = (id: string) => {
+    setRecurringExpenses((prev) => prev.filter((e) => e.id !== id));
+    showToast(i18n.toastRecurringDeleted, 'info');
   };
 
   const handleDeleteTransaction = (id: string) => {
@@ -410,10 +428,14 @@ export default function App() {
                 <CreditCardsView
                   cards={cards}
                   transactions={transactions}
+                  categories={categories}
+                  recurringExpenses={recurringExpenses}
                   onAddCard={handleAddCard}
                   onDeleteCard={handleDeleteCard}
                   onAddPayment={handleAddTransaction}
                   onUpdateCard={handleUpdateCard}
+                  onAddRecurringExpense={handleAddRecurringExpense}
+                  onDeleteRecurringExpense={handleDeleteRecurringExpense}
                 />
               )}
 

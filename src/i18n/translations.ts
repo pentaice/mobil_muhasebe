@@ -341,6 +341,19 @@ export type TranslationKeys = {
   browserPermissionRequired: string;
   notificationTestTitle: string;
   notificationTestBody: string;
+  reminderNotificationTitle: string;
+  reminderNotificationBody: string;
+  recurringExpenses: string;
+  addRecurringExpense: string;
+  recurringExpenseTitle: string;
+  recurringDayOfMonth: string;
+  recurringDayDesc: string;
+  deleteRecurringConfirm: string;
+  toastRecurringAdded: string;
+  toastRecurringDeleted: string;
+  toastRecurringProcessed: string;
+  monthlyTotalRecurring: string;
+  noRecurringExpenses: string;
   // End
 };
 
@@ -653,6 +666,19 @@ const translations: Record<LanguageCode, TranslationKeys> = {
     browserPermissionRequired: 'Tarayıcı İzni Gerekiyor',
     notificationTestTitle: 'Bildirim Testi',
     notificationTestBody: 'Test İçeriği',
+    reminderNotificationTitle: 'Cebim Muhasebe',
+    reminderNotificationBody: 'Bugünkü harcamalarınızı veya işlemlerinizi kaydettiniz mi?',
+    recurringExpenses: 'Düzenli Giderler',
+    addRecurringExpense: 'Düzenli Gider Ekle',
+    recurringExpenseTitle: 'Gider Adı / Açıklama',
+    recurringDayOfMonth: 'Ayın Hangi Günü',
+    recurringDayDesc: 'Her ay bu gün geldiğinde otomatik karta işlenir',
+    deleteRecurringConfirm: 'Bu düzenli gideri kaldırmak istediğinize emin misiniz?',
+    toastRecurringAdded: 'Düzenli gider eklendi',
+    toastRecurringDeleted: 'Düzenli gider kaldırıldı',
+    toastRecurringProcessed: 'adet düzenli kart gideri işlendi',
+    monthlyTotalRecurring: 'Aylık Toplam',
+    noRecurringExpenses: 'Bu karta tanımlı düzenli gider bulunmuyor',
 
   },
 
@@ -947,6 +973,19 @@ const translations: Record<LanguageCode, TranslationKeys> = {
     browserPermissionRequired: 'Browser Permission Required',
     notificationTestTitle: 'Notification Test',
     notificationTestBody: 'Test Body',
+    reminderNotificationTitle: 'Pocket Accounting',
+    reminderNotificationBody: 'Have you recorded your expenses or transactions today?',
+    recurringExpenses: 'Recurring Expenses',
+    addRecurringExpense: 'Add Recurring Expense',
+    recurringExpenseTitle: 'Expense Title / Description',
+    recurringDayOfMonth: 'Day of Month',
+    recurringDayDesc: 'Automatically charged to card on this day every month',
+    deleteRecurringConfirm: 'Are you sure you want to remove this recurring expense?',
+    toastRecurringAdded: 'Recurring expense added',
+    toastRecurringDeleted: 'Recurring expense removed',
+    toastRecurringProcessed: 'recurring card expense(s) processed',
+    monthlyTotalRecurring: 'Monthly Total',
+    noRecurringExpenses: 'No recurring expenses set for this card',
 
   },
 
@@ -1241,6 +1280,19 @@ const translations: Record<LanguageCode, TranslationKeys> = {
     browserPermissionRequired: 'Permiso Requerido',
     notificationTestTitle: 'Test de Notificación',
     notificationTestBody: 'Cuerpo de Prueba',
+    reminderNotificationTitle: 'Mi Contabilidad',
+    reminderNotificationBody: '¿Has registrado tus gastos o transacciones hoy?',
+    recurringExpenses: 'Gastos Recurrentes',
+    addRecurringExpense: 'Agregar Gasto Recurrente',
+    recurringExpenseTitle: 'Nombre del Gasto',
+    recurringDayOfMonth: 'Día del Mes',
+    recurringDayDesc: 'Se cargará a la tarjeta este día de cada mes',
+    deleteRecurringConfirm: '¿Estás seguro de eliminar este gasto recurrente?',
+    toastRecurringAdded: 'Gasto recurrente agregado',
+    toastRecurringDeleted: 'Gasto recurrente eliminado',
+    toastRecurringProcessed: 'gasto(s) recurrente(s) procesado(s)',
+    monthlyTotalRecurring: 'Total Mensual',
+    noRecurringExpenses: 'No hay gastos recurrentes para esta tarjeta',
 
   },
 
@@ -1535,6 +1587,19 @@ const translations: Record<LanguageCode, TranslationKeys> = {
     browserPermissionRequired: 'Permission Requise',
     notificationTestTitle: 'Test de Notification',
     notificationTestBody: 'Corps du Test',
+    reminderNotificationTitle: 'Ma Comptabilité',
+    reminderNotificationBody: "Avez-vous enregistré vos dépenses ou transactions aujourd'hui ?",
+    recurringExpenses: 'Dépenses Récurrentes',
+    addRecurringExpense: 'Ajouter Dépense Récurrente',
+    recurringExpenseTitle: 'Titre de la Dépense',
+    recurringDayOfMonth: 'Jour du Mois',
+    recurringDayDesc: 'Débité sur la carte ce jour chaque mois',
+    deleteRecurringConfirm: 'Voulez-vous vraiment supprimer cette dépense récurrente ?',
+    toastRecurringAdded: 'Dépense récurrente ajoutée',
+    toastRecurringDeleted: 'Dépense récurrente supprimée',
+    toastRecurringProcessed: 'dépense(s) récurrente(s) traitée(s)',
+    monthlyTotalRecurring: 'Total Mensuel',
+    noRecurringExpenses: 'Aucune dépense récurrente pour cette carte',
 
   },
 
@@ -1829,6 +1894,19 @@ const translations: Record<LanguageCode, TranslationKeys> = {
     browserPermissionRequired: '需要浏览器权限',
     notificationTestTitle: '通知测试',
     notificationTestBody: '测试内容',
+    reminderNotificationTitle: '我的记账',
+    reminderNotificationBody: '今天记录您的开支或交易了吗？',
+    recurringExpenses: '定期支出',
+    addRecurringExpense: '添加定期支出',
+    recurringExpenseTitle: '支出名称',
+    recurringDayOfMonth: '每月几号',
+    recurringDayDesc: '每月这天自动记入卡中',
+    deleteRecurringConfirm: '确定要删除此定期支出吗？',
+    toastRecurringAdded: '已添加定期支出',
+    toastRecurringDeleted: '已删除定期支出',
+    toastRecurringProcessed: '笔定期支出已处理',
+    monthlyTotalRecurring: '每月总计',
+    noRecurringExpenses: '此卡没有设置定期支出',
 
   },
 
@@ -2123,6 +2201,19 @@ const translations: Record<LanguageCode, TranslationKeys> = {
     browserPermissionRequired: 'ब्राउज़र अनुमति आवश्यक',
     notificationTestTitle: 'अधिसूचना परीक्षण',
     notificationTestBody: 'परीक्षण विवरण',
+    reminderNotificationTitle: 'मेरा हिसाब',
+    reminderNotificationBody: 'क्या आपने आज अपने खर्च या लेनदेन दर्ज किए हैं?',
+    recurringExpenses: 'आवर्ती खर्च',
+    addRecurringExpense: 'आवर्ती खर्च जोड़ें',
+    recurringExpenseTitle: 'खर्च का नाम',
+    recurringDayOfMonth: 'महीने का दिन',
+    recurringDayDesc: 'हर महीने इस दिन कार्ड में जोड़ा जाएगा',
+    deleteRecurringConfirm: 'क्या आप इस आवर्ती खर्च को हटाना चाहते हैं?',
+    toastRecurringAdded: 'आवर्ती खर्च जोड़ा गया',
+    toastRecurringDeleted: 'आवर्ती खर्च हटाया गया',
+    toastRecurringProcessed: 'आवर्ती कार्ड खर्च संसाधित',
+    monthlyTotalRecurring: 'मासिक कुल',
+    noRecurringExpenses: 'इस कार्ड के लिए कोई आवर्ती खर्च नहीं है',
 
   },
 };
