@@ -28,8 +28,15 @@ export function processRecurringExpenses(
   const daysInCurrentMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
   const updatedRecurringExpenses = recurringList.map((item) => {
-    // 1. Skip if inactive or card no longer exists
-    if (!item.isActive || !validCardIds.has(item.cardId)) {
+    // 1. Skip if inactive
+    if (!item.isActive) {
+      return item;
+    }
+
+    const effectiveSource = item.sourceType || (item.cardId ? 'credit_card' : 'cash_bank');
+
+    // If card payment but card no longer exists, skip
+    if (effectiveSource === 'credit_card' && item.cardId && !validCardIds.has(item.cardId)) {
       return item;
     }
 
@@ -64,8 +71,8 @@ export function processRecurringExpenses(
         type: 'expense',
         amount: item.amount,
         categoryId: item.categoryId || 'cat-fatura',
-        sourceType: 'credit_card',
-        creditCardId: item.cardId,
+        sourceType: effectiveSource,
+        creditCardId: effectiveSource === 'credit_card' ? item.cardId : undefined,
         date: txDate,
         note: `Düzenli Gider: ${item.title}`,
       });

@@ -16,12 +16,27 @@ import {
   HelpCircle,
   ChevronLeft,
   Settings,
+  History,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { loadCards, loadTransactions, calculateCardCycleInfo, loadCategories, loadAppsScriptUrl, saveAppsScriptUrl, loadAutoSaveSettings } from '../utils/storage';
+import {
+  loadCards,
+  loadTransactions,
+  calculateCardCycleInfo,
+  loadCategories,
+  loadIncomeCategories,
+  loadInvestmentAssets,
+  loadRecurringExpenses,
+  loadInitialCashBalance,
+  loadAppsScriptUrl,
+  saveAppsScriptUrl,
+  loadAutoSaveSettings,
+} from '../utils/storage';
 
 interface HeaderProps {
   transactions: Transaction[];
+  activeTab?: string;
+  onOpenHistory?: () => void;
   onExportData: () => void;
   onImportData: (jsonString: string) => void;
   onResetData: () => void;
@@ -30,6 +45,8 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   transactions,
+  activeTab,
+  onOpenHistory,
   onExportData,
   onImportData,
   onResetData,
@@ -136,8 +153,12 @@ export const Header: React.FC<HeaderProps> = ({
     try {
       const backupObj = {
         categories: loadCategories(),
+        incomeCategories: loadIncomeCategories(),
+        investmentAssets: loadInvestmentAssets(),
         cards: loadCards(),
         transactions: loadTransactions(),
+        recurringExpenses: loadRecurringExpenses(),
+        initialCashBalance: loadInitialCashBalance(),
         exportedAt: new Date().toISOString(),
       };
 
@@ -195,15 +216,11 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <>
       <header className="sticky top-0 z-30 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-800/90 px-5 pt-[calc(1rem+env(safe-area-inset-top))] pb-4 flex items-center justify-between text-gray-900 dark:text-slate-100 transition-colors shadow-2xs">
-        {/* SOL KÖŞE - LOGO & İSİM */}
-        <div className="flex items-center gap-3">
+        {/* SOL KÖŞE - LOGO */}
+        <div className="flex items-center">
           <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 dark:shadow-none shrink-0">
             <Wallet className="w-5 h-5 text-white" />
           </div>
-
-          <h1 className="font-extrabold text-lg tracking-tight text-gray-900 dark:text-white leading-none">
-            Bütçem
-          </h1>
         </div>
 
         {/* SAĞ KÖŞE - BU AY HARCAMA & YEDEKLEME */}
@@ -230,6 +247,22 @@ export const Header: React.FC<HeaderProps> = ({
               {formatTL(currentMonthExpenses)}
             </span>
           </div>
+
+          {/* Geçmiş Butonu (Sadece İkon) */}
+          {onOpenHistory && (
+            <button
+              type="button"
+              onClick={onOpenHistory}
+              title="İşlem Geçmişi"
+              className={`w-10 h-10 rounded-2xl border flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-2xs shrink-0 ${
+                activeTab === 'history'
+                  ? 'bg-blue-600 border-blue-600 text-white shadow-blue-500/20'
+                  : 'bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-750 border border-gray-200/90 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400'
+              }`}
+            >
+              <History className="w-4.5 h-4.5" />
+            </button>
+          )}
 
           {/* Yedekleme & Ayarlar Butonu */}
           <button
@@ -579,7 +612,7 @@ export const Header: React.FC<HeaderProps> = ({
                           </p>
                           <button 
                             onClick={() => {
-                              const code = `function doPost(e) {\n  var d = JSON.parse(e.postData.contents);\n  var ss = SpreadsheetApp.getActiveSpreadsheet();\n  \n  var s1 = ss.getSheetByName("Yedek");\n  if (!s1) { s1 = ss.insertSheet("Yedek"); }\n  s1.clear();\n  s1.getRange(1, 1).setValue(JSON.stringify(d));\n  \n  var s2 = ss.getSheetByName("Harcamalar");\n  if (!s2) { s2 = ss.insertSheet("Harcamalar"); }\n  s2.clear();\n  s2.appendRow(["Tarih", "Tutar", "Açıklama"]);\n  s2.getRange("A1:C1").setFontWeight("bold").setBackground("#d0e0e3");\n  \n  if (d.transactions && d.transactions.length > 0) {\n    var rows = d.transactions.map(function(t) {\n      return [t.date, t.amount, t.description || ""];\n    });\n    s2.getRange(2, 1, rows.length, 3).setValues(rows);\n  }\n  return ContentService.createTextOutput("OK");\n}\n\nfunction doGet(e) {\n  var ss = SpreadsheetApp.getActiveSpreadsheet();\n  var s1 = ss.getSheetByName("Yedek");\n  var data = s1 ? s1.getRange(1, 1).getValue() : "{}";\n  return ContentService.createTextOutput(data).setMimeType(ContentService.MimeType.JSON);\n}`;
+                              const code = `function doPost(e) {\\n  var d = JSON.parse(e.postData.contents);\\n  var ss = SpreadsheetApp.getActiveSpreadsheet();\\n  \\n  // 1. JSON Tam Yedek Sayfası (Geri Yükleme İçin)\\n  var s1 = ss.getSheetByName("Yedek");\\n  if (!s1) { s1 = ss.insertSheet("Yedek"); }\\n  s1.clear();\\n  s1.getRange(1, 1).setValue(JSON.stringify(d));\\n  \\n  // İsim Sözlükleri (ID'leri okunabilir isimlere çevirme)\\n  var catMap = {};\\n  if (d.categories) { d.categories.forEach(function(c) { catMap[c.id] = c.name; }); }\\n  if (d.incomeCategories) { d.incomeCategories.forEach(function(c) { catMap[c.id] = c.name; }); }\\n  var assetMap = {};\\n  if (d.investmentAssets) { d.investmentAssets.forEach(function(a) { assetMap[a.id] = a.name; }); }\\n  var cardMap = {};\\n  if (d.cards) { d.cards.forEach(function(c) { cardMap[c.id] = c.name; }); }\\n  \\n  // 2. Tüm Finansal İşlemler (Harcama, Gelir, Yatırım)\\n  var s2 = ss.getSheetByName("İşlemler");\\n  if (!s2) { s2 = ss.insertSheet("İşlemler"); }\\n  s2.clear();\\n  s2.appendRow(["Tarih", "İşlem Türü", "Tutar (TL)", "Kategori / Varlık", "Ödeme Kaynağı", "Açıklama / Kâr-Zarar"]);\\n  s2.getRange("A1:F1").setFontWeight("bold").setBackground("#d0e0e3");\\n  \\n  if (d.transactions && d.transactions.length > 0) {\\n    var typeLabels = {\\n      "expense": "Gider",\\n      "income": "Gelir",\\n      "card_payment": "Kart Borcu Ödemesi",\\n      "investment_deposit": "Yatırım Girişi",\\n      "investment_withdraw": "Yatırım Bozdurma"\\n    };\\n    var rows = d.transactions.map(function(t) {\\n      var typeStr = typeLabels[t.type] || t.type;\\n      var noteStr = t.note || "";\\n      if (t.profitOrLoss !== undefined && t.profitOrLoss !== null) {\\n        noteStr += " (Net Kâr/Zarar: " + t.profitOrLoss + " TL)";\\n      }\\n      var targetName = "";\\n      if (t.investmentAssetId && assetMap[t.investmentAssetId]) {\\n        targetName = assetMap[t.investmentAssetId];\\n      } else if (t.categoryId && catMap[t.categoryId]) {\\n        targetName = catMap[t.categoryId];\\n      } else {\\n        targetName = t.categoryId || t.investmentAssetId || "";\\n      }\\n      var sourceStr = "";\\n      if (t.sourceType === "credit_card") {\\n        sourceStr = (t.creditCardId && cardMap[t.creditCardId]) ? cardMap[t.creditCardId] : "Kredi Kartı";\\n      } else if (t.sourceType === "cash_bank") {\\n        sourceStr = "Nakit / Banka";\\n      } else if (t.cardId && cardMap[t.cardId]) {\\n        sourceStr = cardMap[t.cardId];\\n      } else {\\n        sourceStr = t.sourceType || "";\\n      }\\n      return [\\n        t.date ? t.date.slice(0, 10) : "",\\n        typeStr,\\n        t.amount,\\n        targetName,\\n        sourceStr,\\n        noteStr\\n      ];\\n    });\\n    s2.getRange(2, 1, rows.length, 6).setValues(rows);\\n  }\\n  \\n  // 3. Portföy / Yatırımlar Sayfası\\n  if (d.investmentAssets && d.investmentAssets.length > 0) {\\n    var s3 = ss.getSheetByName("Yatırımlar");\\n    if (!s3) { s3 = ss.insertSheet("Yatırımlar"); }\\n    s3.clear();\\n    s3.appendRow(["Varlık Adı", "Kategori", "Yatırılan Anapara (TL)", "Güncel Piyasa Değeri (TL)", "Net Kâr / Zarar (TL)", "Son Güncelleme"]);\\n    s3.getRange("A1:F1").setFontWeight("bold").setBackground("#d9ead3");\\n    \\n    var invRows = d.investmentAssets.map(function(a) {\\n      var invested = Number(a.investedAmount) || 0;\\n      var current = Number(a.currentValue) || 0;\\n      var pL = current - invested;\\n      return [\\n        a.name,\\n        a.category || "",\\n        invested,\\n        current,\\n        pL,\\n        a.updatedAt ? a.updatedAt.slice(0, 10) : ""\\n      ];\\n    });\\n    s3.getRange(2, 1, invRows.length, 6).setValues(invRows);\\n  }\\n  \\n  return ContentService.createTextOutput("OK");\\n}\\n\\nfunction doGet(e) {\\n  var ss = SpreadsheetApp.getActiveSpreadsheet();\\n  var s1 = ss.getSheetByName("Yedek");\\n  var data = s1 ? s1.getRange(1, 1).getValue() : "{}";\\n  return ContentService.createTextOutput(data).setMimeType(ContentService.MimeType.JSON);\\n}`;
                               navigator.clipboard.writeText(code);
                               onShowToast('Kod başarıyla kopyalandı!', 'success');
                             }}

@@ -352,8 +352,36 @@ export type TranslationKeys = {
   toastRecurringAdded: string;
   toastRecurringDeleted: string;
   toastRecurringProcessed: string;
+  toastRecurringUpdated: string;
+  editRecurringExpense: string;
+  deleteRecurringConfirmTitle: string;
+  deleteRecurringConfirmText: string;
   monthlyTotalRecurring: string;
   noRecurringExpenses: string;
+  income: string;
+  saveIncome: string;
+  incomeCategory: string;
+  incomeSource?: string;
+  toastIncomeAdded: string;
+  toastIncomeDeleted: string;
+  toastIncomeUpdated: string;
+  investments: string;
+  navInvestments: string;
+  portfolioValue: string;
+  totalInvested: string;
+  netProfitLoss: string;
+  realizedProfitLoss: string;
+  unrealizedProfitLoss: string;
+  availableCash: string;
+  investCash: string;
+  withdrawCash: string;
+  updateValuation: string;
+  newAsset: string;
+  savingsRate: string;
+  netSavings: string;
+  totalIncome: string;
+  cashBalance: string;
+  netWorth: string;
   // End
 };
 
@@ -677,8 +705,35 @@ const translations: Record<LanguageCode, TranslationKeys> = {
     toastRecurringAdded: 'Düzenli gider eklendi',
     toastRecurringDeleted: 'Düzenli gider kaldırıldı',
     toastRecurringProcessed: 'adet düzenli kart gideri işlendi',
+    toastRecurringUpdated: 'Düzenli gider güncellendi',
+    editRecurringExpense: 'Düzenli Gideri Düzenle',
+    deleteRecurringConfirmTitle: 'Düzenli Gideri Sil',
+    deleteRecurringConfirmText: 'adlı düzenli gideri silmek istediğinize emin misiniz? Gelecek aylarda otomatik eklenmeyecektir.',
     monthlyTotalRecurring: 'Aylık Toplam',
-    noRecurringExpenses: 'Bu karta tanımlı düzenli gider bulunmuyor',
+    noRecurringExpenses: 'Tanımlı düzenli gider bulunmuyor',
+    income: 'Gelir',
+    saveIncome: 'Geliri Kaydet',
+    incomeCategory: 'Gelir Kaynağı',
+    toastIncomeAdded: 'Gelir başarıyla kaydedildi',
+    toastIncomeDeleted: 'Gelir silindi',
+    toastIncomeUpdated: 'Gelir güncellendi',
+    investments: 'Yatırımlar',
+    navInvestments: 'Yatırım',
+    portfolioValue: 'Portföy Değeri',
+    totalInvested: 'Yatırılan Anapara',
+    netProfitLoss: 'Net Kâr / Zarar',
+    realizedProfitLoss: 'Gerçekleşen Kâr/Zarar',
+    unrealizedProfitLoss: 'Bekleyen Kâr/Zarar',
+    availableCash: 'Kullanılabilir Nakit',
+    investCash: 'Yatırıma Para Aktar',
+    withdrawCash: 'Nakite Çek / Bozdur',
+    updateValuation: 'Değer Güncelle',
+    newAsset: 'Yeni Varlık',
+    savingsRate: 'Birikim Oranı',
+    netSavings: 'Net Birikim',
+    totalIncome: 'Toplam Gelir',
+    cashBalance: 'Nakit Varlık',
+    netWorth: 'Net Servet',
 
   },
 
@@ -984,8 +1039,35 @@ const translations: Record<LanguageCode, TranslationKeys> = {
     toastRecurringAdded: 'Recurring expense added',
     toastRecurringDeleted: 'Recurring expense removed',
     toastRecurringProcessed: 'recurring card expense(s) processed',
+    toastRecurringUpdated: 'Recurring expense updated',
+    editRecurringExpense: 'Edit Recurring Expense',
+    deleteRecurringConfirmTitle: 'Delete Recurring Expense',
+    deleteRecurringConfirmText: 'Are you sure you want to delete this recurring expense? It will no longer be charged automatically.',
     monthlyTotalRecurring: 'Monthly Total',
-    noRecurringExpenses: 'No recurring expenses set for this card',
+    noRecurringExpenses: 'No recurring expenses defined',
+    income: 'Income',
+    saveIncome: 'Save Income',
+    incomeCategory: 'Income Source',
+    toastIncomeAdded: 'Income saved successfully',
+    toastIncomeDeleted: 'Income deleted',
+    toastIncomeUpdated: 'Income updated',
+    investments: 'Investments',
+    navInvestments: 'Invest',
+    portfolioValue: 'Portfolio Value',
+    totalInvested: 'Total Invested',
+    netProfitLoss: 'Net Profit / Loss',
+    realizedProfitLoss: 'Realized P&L',
+    unrealizedProfitLoss: 'Unrealized P&L',
+    availableCash: 'Available Cash',
+    investCash: 'Invest Cash',
+    withdrawCash: 'Withdraw to Cash',
+    updateValuation: 'Update Valuation',
+    newAsset: 'New Asset',
+    savingsRate: 'Savings Rate',
+    netSavings: 'Net Savings',
+    totalIncome: 'Total Income',
+    cashBalance: 'Cash Balance',
+    netWorth: 'Net Worth',
 
   },
 
@@ -1291,8 +1373,35 @@ const translations: Record<LanguageCode, TranslationKeys> = {
     toastRecurringAdded: 'Gasto recurrente agregado',
     toastRecurringDeleted: 'Gasto recurrente eliminado',
     toastRecurringProcessed: 'gasto(s) recurrente(s) procesado(s)',
-    monthlyTotalRecurring: 'Total Mensual',
-    noRecurringExpenses: 'No hay gastos recurrentes para esta tarjeta',
+    toastRecurringUpdated: 'Gasto recurrente actualizado',
+    editRecurringExpense: 'Editar gasto recurrente',
+    deleteRecurringConfirmTitle: 'Eliminar gasto recurrente',
+    deleteRecurringConfirmText: '¿Estás seguro de que deseas eliminar este gasto recurrente?',
+    monthlyTotalRecurring: 'Total mensual',
+    noRecurringExpenses: 'No hay gastos recurrentes definidos',
+    income: 'Ingreso',
+    saveIncome: 'Guardar Ingreso',
+    incomeCategory: 'Fuente de ingreso',
+    toastIncomeAdded: 'Ingreso guardado con éxito',
+    toastIncomeDeleted: 'Ingreso eliminado',
+    toastIncomeUpdated: 'Ingreso actualizado',
+    investments: 'Inversiones',
+    navInvestments: 'Inversión',
+    portfolioValue: 'Valor del portafolio',
+    totalInvested: 'Total invertido',
+    netProfitLoss: 'Ganancia / Pérdida neta',
+    realizedProfitLoss: 'Ganancia realizada',
+    unrealizedProfitLoss: 'Ganancia latente',
+    availableCash: 'Efectivo disponible',
+    investCash: 'Invertir dinero',
+    withdrawCash: 'Retirar a efectivo',
+    updateValuation: 'Actualizar valor',
+    newAsset: 'Nuevo activo',
+    savingsRate: 'Tasa de ahorro',
+    netSavings: 'Ahorro neto',
+    totalIncome: 'Ingreso total',
+    cashBalance: 'Saldo en efectivo',
+    netWorth: 'Patrimonio neto',
 
   },
 
@@ -1598,8 +1707,35 @@ const translations: Record<LanguageCode, TranslationKeys> = {
     toastRecurringAdded: 'Dépense récurrente ajoutée',
     toastRecurringDeleted: 'Dépense récurrente supprimée',
     toastRecurringProcessed: 'dépense(s) récurrente(s) traitée(s)',
-    monthlyTotalRecurring: 'Total Mensuel',
-    noRecurringExpenses: 'Aucune dépense récurrente pour cette carte',
+    toastRecurringUpdated: 'Dépense récurrente mise à jour',
+    editRecurringExpense: 'Modifier la dépense récurrente',
+    deleteRecurringConfirmTitle: 'Supprimer la dépense récurrente',
+    deleteRecurringConfirmText: 'Êtes-vous sûr de vouloir supprimer cette dépense récurrente ?',
+    monthlyTotalRecurring: 'Total mensuel',
+    noRecurringExpenses: 'Aucune dépense récurrente définie',
+    income: 'Revenu',
+    saveIncome: 'Enregistrer le revenu',
+    incomeCategory: 'Source de revenu',
+    toastIncomeAdded: 'Revenu enregistré avec succès',
+    toastIncomeDeleted: 'Revenu supprimé',
+    toastIncomeUpdated: 'Revenu mis à jour',
+    investments: 'Investissements',
+    navInvestments: 'Investir',
+    portfolioValue: 'Valeur du portefeuille',
+    totalInvested: 'Total investi',
+    netProfitLoss: 'Bénéfice / Perte nette',
+    realizedProfitLoss: 'Plus-value réalisée',
+    unrealizedProfitLoss: 'Plus-value latente',
+    availableCash: 'Liquidités disponibles',
+    investCash: 'Investir',
+    withdrawCash: 'Retirer en liquidités',
+    updateValuation: 'Mettre à jour la valeur',
+    newAsset: 'Nouvel actif',
+    savingsRate: "Taux d'épargne",
+    netSavings: 'Épargne nette',
+    totalIncome: 'Revenu total',
+    cashBalance: 'Trésorerie',
+    netWorth: 'Valeur nette',
 
   },
 
@@ -1905,8 +2041,35 @@ const translations: Record<LanguageCode, TranslationKeys> = {
     toastRecurringAdded: '已添加定期支出',
     toastRecurringDeleted: '已删除定期支出',
     toastRecurringProcessed: '笔定期支出已处理',
+    toastRecurringUpdated: '定期支出已更新',
+    editRecurringExpense: '编辑定期支出',
+    deleteRecurringConfirmTitle: '删除定期支出',
+    deleteRecurringConfirmText: '确定要删除此定期支出吗？删除后将不再自动扣款。',
     monthlyTotalRecurring: '每月总计',
-    noRecurringExpenses: '此卡没有设置定期支出',
+    noRecurringExpenses: '未定义定期支出',
+    income: '收入',
+    saveIncome: '保存收入',
+    incomeCategory: '收入来源',
+    toastIncomeAdded: '收入记录成功',
+    toastIncomeDeleted: '收入已删除',
+    toastIncomeUpdated: '收入已更新',
+    investments: '投资',
+    navInvestments: '投资',
+    portfolioValue: '投资组合价值',
+    totalInvested: '累计投资本金',
+    netProfitLoss: '净盈亏',
+    realizedProfitLoss: '已实现盈亏',
+    unrealizedProfitLoss: '未实现盈亏',
+    availableCash: '可用现金',
+    investCash: '转入投资',
+    withdrawCash: '提取为现金',
+    updateValuation: '更新估值',
+    newAsset: '新增资产',
+    savingsRate: '储蓄率',
+    netSavings: '净储蓄',
+    totalIncome: '总收入',
+    cashBalance: '现金资产',
+    netWorth: '净资产',
 
   },
 
@@ -2212,8 +2375,35 @@ const translations: Record<LanguageCode, TranslationKeys> = {
     toastRecurringAdded: 'आवर्ती खर्च जोड़ा गया',
     toastRecurringDeleted: 'आवर्ती खर्च हटाया गया',
     toastRecurringProcessed: 'आवर्ती कार्ड खर्च संसाधित',
+    toastRecurringUpdated: 'आवर्ती खर्च अद्यतित किया गया',
+    editRecurringExpense: 'आवर्ती खर्च संपादित करें',
+    deleteRecurringConfirmTitle: 'आवर्ती खर्च हटाएं',
+    deleteRecurringConfirmText: 'क्या आप वाकई इस आवर्ती खर्च को हटाना चाहते हैं?',
     monthlyTotalRecurring: 'मासिक कुल',
-    noRecurringExpenses: 'इस कार्ड के लिए कोई आवर्ती खर्च नहीं है',
+    noRecurringExpenses: 'कोई आवर्ती खर्च निर्धारित नहीं है',
+    income: 'आय',
+    saveIncome: 'आय सहेजें',
+    incomeCategory: 'आय का स्रोत',
+    toastIncomeAdded: 'आय सफलतापूर्वक जोड़ी गई',
+    toastIncomeDeleted: 'आय हटाई गई',
+    toastIncomeUpdated: 'आय अद्यतित की गई',
+    investments: 'निवेश',
+    navInvestments: 'निवेश',
+    portfolioValue: 'पोर्टफोलियो मूल्य',
+    totalInvested: 'कुल निवेशित राशि',
+    netProfitLoss: 'शुद्ध लाभ / हानि',
+    realizedProfitLoss: 'प्राप्त लाभ / हानि',
+    unrealizedProfitLoss: 'अवास्तविक लाभ / हानि',
+    availableCash: 'उपलब्ध नकद',
+    investCash: 'निवेश में जोड़ें',
+    withdrawCash: 'नकद निकालें',
+    updateValuation: 'मूल्यांकन अपडेट करें',
+    newAsset: 'नई संपत्ति',
+    savingsRate: 'बचत दर',
+    netSavings: 'शुद्ध बचत',
+    totalIncome: 'कुल आय',
+    cashBalance: 'नकद शेष',
+    netWorth: 'कुल संपत्ति',
 
   },
 };

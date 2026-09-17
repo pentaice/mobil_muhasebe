@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Category, CreditCard, Transaction } from '../types';
-import { formatShortDate } from '../utils/storage';
+import { Category, CreditCard, Transaction, IncomeCategory } from '../types';
+import { formatShortDate, loadIncomeCategories } from '../utils/storage';
 import { CategoryIcon } from './CategoryIcon';
 import { useI18n } from '../i18n/I18nContext';
 import {
@@ -19,15 +19,22 @@ import {
   Calendar,
   CalendarRange,
   TrendingUp,
+  TrendingDown,
   CreditCard as CardIcon,
   Wallet,
   X,
   Check,
   Filter,
+  ArrowUpRight,
+  ArrowDownLeft,
+  PiggyBank,
+  Percent,
+  Sparkles,
 } from 'lucide-react';
 
 interface ReportsViewProps {
   categories: Category[];
+  incomeCategories?: IncomeCategory[];
   cards: CreditCard[];
   transactions: Transaction[];
   isDarkMode?: boolean;
@@ -37,6 +44,7 @@ type PeriodType = 'this_month' | 'last_month' | 'last_30_days' | 'custom' | 'all
 
 export const ReportsView: React.FC<ReportsViewProps> = ({
   categories,
+  incomeCategories,
   cards,
   transactions,
   isDarkMode = false,
@@ -82,7 +90,13 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
     });
   }, [transactions, period, customStartDate, customEndDate]);
 
-  // Total Expenses & Payments
+  // Incomes & Expenses
+  const totalIncome = useMemo(() => {
+    return filteredTransactions
+      .filter((t) => t.type === 'income')
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+  }, [filteredTransactions]);
+
   const totalExpenses = useMemo(() => {
     return filteredTransactions
       .filter((t) => t.type === 'expense')
@@ -94,6 +108,41 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
       .filter((t) => t.type === 'card_payment')
       .reduce((sum, t) => sum + Number(t.amount), 0);
   }, [filteredTransactions]);
+
+  const netSavings = totalIncome - totalExpenses;
+  const savingsRate = totalIncome > 0 ? Math.max(0, Math.round((netSavings / totalIncome) * 100)) : 0;
+
+  // Realized Investment Profits/Losses in this period
+  const realizedProfitLoss = useMemo(() => {
+    return filteredTransactions
+      .filter((t) => t.type === 'investment_withdraw')
+      .reduce((sum, t) => sum + (t.profitOrLoss || 0), 0);
+  }, [filteredTransactions]);
+
+  // Income Sources Breakdown Data
+  const incomeData = useMemo(() => {
+    const incMap: Record<string, number> = {};
+    filteredTransactions.forEach((t) => {
+      if (t.type === 'income') {
+        incMap[t.categoryId] = (incMap[t.categoryId] || 0) + Number(t.amount);
+      }
+    });
+
+    const incCats = incomeCategories && incomeCategories.length > 0
+      ? incomeCategories
+      : loadIncomeCategories();
+
+    return incCats
+      .map((cat) => ({
+        id: cat.id,
+        name: cat.name,
+        value: incMap[cat.id] || 0,
+        color: cat.color,
+        icon: cat.icon,
+      }))
+      .filter((item) => item.value > 0)
+      .sort((a, b) => b.value - a.value);
+  }, [filteredTransactions, incomeCategories]);
 
   // 1. CATEGORY PIE CHART DATA
   const categoryData = useMemo(() => {
@@ -253,6 +302,152 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
           </button>
         </div>
       )}
+
+      {/* INCOME & EXPENSE BALANCE & SAVINGS ANALYSIS */}
+      <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl p-4 sm:p-5 shadow-sm space-y-4 transition-colors">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+              <PiggyBank className="w-4.5 h-4.5" />
+            </div>
+            <div>
+              <h3 className="text-xs font-black uppercase tracking-wider text-gray-500 dark:text-slate-400">
+                Gelir & Gider Dengesi
+              </h3>
+              <p className="text-sm font-extrabold text-gray-900 dark:text-slate-100">
+                {netSavings >= 0 ? 'Pozitif Nakit Akışı' : 'Bütçe Açığı'}
+              </p>
+            </div>
+          </div>
+
+          <span
+            className={`text-xs font-black px-2.5 py-1 rounded-xl flex items-center gap-1 ${
+              savingsRate > 0
+                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300'
+                : 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-slate-400'
+            }`}
+          >
+            <Percent className="w-3 h-3" />
+            <span>%{savingsRate} Birikim</span>
+          </span>
+        </div>
+
+        {/* 3 Metrics Cards */}
+        <div className="grid grid-cols-3 gap-2">
+          {/* Total Income */}
+          <div className="bg-gray-50 dark:bg-slate-800/80 rounded-2xl p-2.5 space-y-1">
+            <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+              <ArrowUpRight className="w-3 h-3" />
+              <span>{i18n.income}</span>
+            </div>
+            <p className="text-sm font-black text-gray-900 dark:text-slate-100 truncate">
+              {formatCurrency(totalIncome)}
+            </p>
+          </div>
+
+          {/* Total Expense */}
+          <div className="bg-gray-50 dark:bg-slate-800/80 rounded-2xl p-2.5 space-y-1">
+            <div className="flex items-center gap-1 text-[10px] font-bold text-rose-600 dark:text-rose-400">
+              <ArrowDownLeft className="w-3 h-3" />
+              <span>{i18n.expense}</span>
+            </div>
+            <p className="text-sm font-black text-gray-900 dark:text-slate-100 truncate">
+              {formatCurrency(totalExpenses)}
+            </p>
+          </div>
+
+          {/* Net Savings */}
+          <div className="bg-gray-50 dark:bg-slate-800/80 rounded-2xl p-2.5 space-y-1">
+            <div className="flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400">
+              <Sparkles className="w-3 h-3" />
+              <span>{i18n.netSavings}</span>
+            </div>
+            <p
+              className={`text-sm font-black truncate ${
+                netSavings >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+              }`}
+            >
+              {formatCurrency(netSavings)}
+            </p>
+          </div>
+        </div>
+
+        {/* Visual Progress Bar (Expense vs Savings) */}
+        {totalIncome > 0 && (
+          <div className="space-y-1.5 pt-1">
+            <div className="w-full h-3 bg-gray-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
+              <div
+                className="bg-rose-500 transition-all duration-500"
+                style={{ width: `${Math.min(100, (totalExpenses / totalIncome) * 100)}%` }}
+                title={`Harcama: %${((totalExpenses / totalIncome) * 100).toFixed(0)}`}
+              />
+              {netSavings > 0 && (
+                <div
+                  className="bg-emerald-500 transition-all duration-500"
+                  style={{ width: `${Math.min(100, (netSavings / totalIncome) * 100)}%` }}
+                  title={`Birikim: %${((netSavings / totalIncome) * 100).toFixed(0)}`}
+                />
+              )}
+            </div>
+            <div className="flex items-center justify-between text-[10px] text-gray-400 dark:text-slate-500 font-semibold px-0.5">
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
+                Harcama (%{((totalExpenses / totalIncome) * 100).toFixed(0)})
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                Birikim (%{savingsRate})
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Realized Profit / Loss Banner if present */}
+        {realizedProfitLoss !== 0 && (
+          <div className="p-2.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 flex items-center justify-between text-xs">
+            <span className="text-gray-600 dark:text-slate-300 font-medium">Yatırım Realize Kâr/Zarar:</span>
+            <span
+              className={`font-black ${
+                realizedProfitLoss >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+              }`}
+            >
+              {realizedProfitLoss >= 0 ? `+${formatCurrency(realizedProfitLoss)}` : formatCurrency(realizedProfitLoss)}
+            </span>
+          </div>
+        )}
+
+        {/* Income Sources Breakdown if income exists */}
+        {incomeData.length > 0 && (
+          <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-slate-800">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">
+              Gelir Kaynakları Dağılımı
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              {incomeData.map((inc) => (
+                <div
+                  key={inc.id}
+                  className="flex items-center justify-between p-2 rounded-xl bg-gray-50/70 dark:bg-slate-800/60 border border-gray-200/60 dark:border-slate-750"
+                >
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <div
+                      className="w-5 h-5 rounded-md flex items-center justify-center text-white text-[10px] shrink-0"
+                      style={{ backgroundColor: inc.color }}
+                    >
+                      <CategoryIcon name={inc.icon} size={11} />
+                    </div>
+                    <span className="text-xs font-semibold text-gray-800 dark:text-slate-200 truncate">
+                      {inc.name}
+                    </span>
+                  </div>
+                  <span className="text-xs font-black text-gray-900 dark:text-slate-100 shrink-0 pl-1">
+                    {formatCurrency(inc.value)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Summary Stat Cards */}
       <div className="grid grid-cols-2 gap-3">

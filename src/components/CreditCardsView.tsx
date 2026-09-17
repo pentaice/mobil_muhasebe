@@ -1,42 +1,39 @@
 import React, { useState } from 'react';
-import { CreditCard, Transaction, Category, RecurringExpense } from '../types';
+import { CreditCard, Transaction, Category } from '../types';
 import { calculateCardCycleInfo } from '../utils/storage';
 import { useI18n } from '../i18n/I18nContext';
 import { CreditCardPaymentModal } from './CreditCardPaymentModal';
 import { AddCreditCardModal } from './AddCreditCardModal';
 import { EditCreditCardModal } from './EditCreditCardModal';
 import { DeleteCardConfirmModal } from './DeleteCardConfirmModal';
-import { CardRecurringExpensesModal } from './CardRecurringExpensesModal';
-import { CreditCard as CardIcon, Plus, ShieldCheck, Trash2, Pencil, CalendarClock, ChevronRight } from 'lucide-react';
+import { WalletCard } from './WalletCard';
+import { CreditCard as CardIcon, Plus, ShieldCheck, Trash2, Pencil } from 'lucide-react';
 
 interface CreditCardsViewProps {
   cards: CreditCard[];
   transactions: Transaction[];
   categories: Category[];
-  recurringExpenses: RecurringExpense[];
+  initialCashBalance?: number;
+  onUpdateInitialBalance?: (newBalance: number) => void;
   onAddCard: (card: Omit<CreditCard, 'id'>) => void;
   onDeleteCard: (cardId: string, action: 'keep_records' | 'delete_all') => void;
   onAddPayment: (transaction: Omit<Transaction, 'id' | 'createdAt'>) => void;
   onUpdateCard: (card: CreditCard) => void;
-  onAddRecurringExpense: (expense: Omit<RecurringExpense, 'id' | 'createdAt'>) => void;
-  onDeleteRecurringExpense: (id: string) => void;
 }
 
 export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
   cards,
   transactions,
   categories,
-  recurringExpenses,
+  initialCashBalance = 0,
+  onUpdateInitialBalance,
   onAddCard,
   onDeleteCard,
   onAddPayment,
   onUpdateCard,
-  onAddRecurringExpense,
-  onDeleteRecurringExpense,
 }) => {
   const { t: i18n, formatCurrency } = useI18n();
   const [selectedCardForPayment, setSelectedCardForPayment] = useState<CreditCard | null>(null);
-  const [selectedCardForRecurring, setSelectedCardForRecurring] = useState<CreditCard | null>(null);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [selectedCardForEdit, setSelectedCardForEdit] = useState<CreditCard | null>(null);
   const [showEditModal, setShowEditModal] = useState<boolean>(false);
@@ -52,6 +49,24 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
 
   return (
     <div className="w-full max-w-lg mx-auto space-y-4 pb-8">
+      {/* 1. PHYSICAL LEATHER WALLET COMPONENT (SERBEST NAKİT & KASA) */}
+      <WalletCard
+        transactions={transactions}
+        initialCashBalance={initialCashBalance}
+        onUpdateInitialBalance={onUpdateInitialBalance || (() => {})}
+      />
+
+      {/* SECTION HEADER: KREDİ KARTLARI */}
+      <div className="flex items-center justify-between pt-2 px-1">
+        <h3 className="font-extrabold text-sm text-gray-900 dark:text-slate-100 flex items-center gap-1.5">
+          <CardIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          <span>Kredi Kartlarım ({cards.length})</span>
+        </h3>
+        <span className="text-[11px] text-gray-500 dark:text-slate-400 font-medium">
+          Toplam Borç: <strong className="text-blue-600 dark:text-blue-400">{formatCurrency(totalAllCardsDebt)}</strong>
+        </span>
+      </div>
+
       {/* Top Total Debt Overview */}
       <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl p-5 shadow-sm text-gray-900 dark:text-slate-100 flex items-center justify-between transition-colors">
         <div className="space-y-1">
@@ -197,28 +212,6 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
                     </div>
                   </div>
 
-                  {/* Recurring Expenses Button */}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCardForRecurring(card)}
-                    className="w-full py-2.5 px-3.5 bg-indigo-50/70 hover:bg-indigo-100/70 dark:bg-slate-800 dark:hover:bg-slate-750 text-indigo-700 dark:text-indigo-300 rounded-2xl font-bold text-xs flex items-center justify-between border border-indigo-200/50 dark:border-indigo-900/30 transition-all cursor-pointer active:scale-[0.99]"
-                  >
-                    <div className="flex items-center gap-2">
-                      <CalendarClock className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                      <span>{i18n.recurringExpenses}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      {recurringExpenses.filter(e => e.cardId === card.id).length > 0 ? (
-                        <span className="bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded-full font-black">
-                          {recurringExpenses.filter(e => e.cardId === card.id).length} • {formatCurrency(recurringExpenses.filter(e => e.cardId === card.id).reduce((sum, e) => sum + (e.isActive ? Number(e.amount) : 0), 0))}/ay
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-gray-400 font-semibold">+ Ekle</span>
-                      )}
-                      <ChevronRight className="w-3.5 h-3.5 text-indigo-400" />
-                    </div>
-                  </button>
-
                   {/* Payment Button */}
                   <button
                     onClick={() => setSelectedCardForPayment(card)}
@@ -271,18 +264,6 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
             onDeleteCard(cardToDelete.id, action);
             setCardToDelete(null);
           }}
-        />
-      )}
-
-      {/* Recurring Expenses Modal */}
-      {selectedCardForRecurring && (
-        <CardRecurringExpensesModal
-          card={selectedCardForRecurring}
-          categories={categories}
-          recurringExpenses={recurringExpenses}
-          onClose={() => setSelectedCardForRecurring(null)}
-          onAddRecurringExpense={onAddRecurringExpense}
-          onDeleteRecurringExpense={onDeleteRecurringExpense}
         />
       )}
     </div>

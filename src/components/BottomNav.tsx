@@ -1,9 +1,9 @@
 import React from 'react';
-import { Zap, CreditCard, PieChart, History, Settings } from 'lucide-react';
+import { Zap, CreditCard, PieChart, Settings } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useI18n } from '../i18n/I18nContext';
 
-export type ActiveTab = 'add' | 'cards' | 'reports' | 'history' | 'categories';
+export type ActiveTab = 'add' | 'cards' | 'investments' | 'reports' | 'history' | 'categories';
 
 interface BottomNavProps {
   activeTab: ActiveTab;
@@ -17,12 +17,11 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
     { id: 'add', label: i18n.navQuickAdd, icon: Zap, isAccent: true },
     { id: 'cards', label: i18n.navCards, icon: CreditCard },
     { id: 'reports', label: i18n.navReports, icon: PieChart },
-    { id: 'history', label: i18n.navHistory, icon: History },
     { id: 'categories', label: i18n.navCategories, icon: Settings },
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-gray-100 dark:border-slate-800 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] max-w-md mx-auto shadow-sm transition-colors">
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-gray-100 dark:border-slate-800 px-1 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] max-w-md mx-auto shadow-sm transition-colors">
       <div className="flex items-center justify-around">
         {tabs.map((tab) => {
           const Icon = tab.icon;

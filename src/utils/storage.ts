@@ -1,5 +1,11 @@
-import { Category, CreditCard, Transaction, RecurringExpense } from '../types';
-import { DEFAULT_CATEGORIES, DEFAULT_CREDIT_CARDS, INITIAL_TRANSACTIONS } from '../data/initialData';
+import { Category, CreditCard, Transaction, RecurringExpense, IncomeCategory, InvestmentAsset, InvestmentTransaction } from '../types';
+import {
+  DEFAULT_CATEGORIES,
+  DEFAULT_CREDIT_CARDS,
+  INITIAL_TRANSACTIONS,
+  DEFAULT_INCOME_CATEGORIES,
+  DEFAULT_INVESTMENT_ASSETS,
+} from '../data/initialData';
 
 const STORAGE_KEYS = {
   CATEGORIES: 'cebim_categories_v5',
@@ -11,6 +17,10 @@ const STORAGE_KEYS = {
   NOTIFICATIONS: 'cebim_notifications_v5',
   AUTO_SAVE: 'cebim_auto_save_v5',
   RECURRING_EXPENSES: 'cebim_recurring_expenses_v5',
+  INCOME_CATEGORIES: 'cebim_income_categories_v5',
+  INVESTMENT_ASSETS: 'cebim_investment_assets_v5',
+  INVESTMENT_TRANSACTIONS: 'cebim_investment_transactions_v5',
+  INITIAL_CASH_BALANCE: 'cebim_initial_cash_balance_v5',
 };
 
 export const DEFAULT_QUICK_AMOUNTS = [10, 50, 100, 250, 500, 1000];
@@ -199,6 +209,195 @@ export function resetAllData() {
   localStorage.removeItem(STORAGE_KEYS.QUICK_AMOUNTS);
   localStorage.removeItem(STORAGE_KEYS.NOTIFICATIONS);
   localStorage.removeItem(STORAGE_KEYS.RECURRING_EXPENSES);
+  localStorage.removeItem(STORAGE_KEYS.INCOME_CATEGORIES);
+  localStorage.removeItem(STORAGE_KEYS.INVESTMENT_ASSETS);
+  localStorage.removeItem(STORAGE_KEYS.INVESTMENT_TRANSACTIONS);
+  localStorage.removeItem(STORAGE_KEYS.INITIAL_CASH_BALANCE);
+}
+
+// --- Income Categories Storage ---
+
+export function loadIncomeCategories(): IncomeCategory[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.INCOME_CATEGORIES);
+    if (!raw) return DEFAULT_INCOME_CATEGORIES;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_INCOME_CATEGORIES;
+  } catch (e) {
+    return DEFAULT_INCOME_CATEGORIES;
+  }
+}
+
+export function saveIncomeCategories(categories: IncomeCategory[]) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.INCOME_CATEGORIES, JSON.stringify(categories));
+  } catch (e) {
+    console.error('Error saving income categories:', e);
+  }
+}
+
+// --- Investment Assets Storage ---
+
+export function loadInvestmentAssets(): InvestmentAsset[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.INVESTMENT_ASSETS);
+    if (!raw) return DEFAULT_INVESTMENT_ASSETS;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_INVESTMENT_ASSETS;
+  } catch (e) {
+    return DEFAULT_INVESTMENT_ASSETS;
+  }
+}
+
+export function saveInvestmentAssets(assets: InvestmentAsset[]) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.INVESTMENT_ASSETS, JSON.stringify(assets));
+  } catch (e) {
+    console.error('Error saving investment assets:', e);
+  }
+}
+
+// --- Investment Transactions Storage ---
+
+export function loadInvestmentTransactions(): InvestmentTransaction[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.INVESTMENT_TRANSACTIONS);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+export function saveInvestmentTransactions(txs: InvestmentTransaction[]) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.INVESTMENT_TRANSACTIONS, JSON.stringify(txs));
+  } catch (e) {
+    console.error('Error saving investment transactions:', e);
+  }
+}
+
+// --- Initial Cash Balance ---
+
+export function loadInitialCashBalance(): number {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.INITIAL_CASH_BALANCE);
+    return raw ? parseFloat(raw) || 0 : 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
+export function saveInitialCashBalance(amount: number) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.INITIAL_CASH_BALANCE, amount.toString());
+  } catch (e) {
+    console.error('Error saving initial cash balance:', e);
+  }
+}
+
+// --- Core Financial Calculations ---
+
+/**
+ * Calculates current liquid cash / bank balance.
+ *
+ * Inflow (+):
+ * - Initial cash balance
+ * - All income transactions ('income')
+ * - All investment withdrawals ('investment_withdraw')
+ *
+ * Outflow (-):
+ * - Cash expenses ('expense' where sourceType === 'cash_bank')
+ * - Credit card debt payments ('card_payment' paid from cash)
+ * - Cash moved into investments ('investment_deposit')
+ *
+ * Note: Card expenses do NOT decrease liquid cash when purchased;
+ * cash is decreased only when the credit card debt is actually paid ('card_payment')!
+ */
+export function calculateLiquidCashBalance(
+  transactions: Transaction[],
+  initialBalance: number = 0
+): number {
+  let balance = initialBalance;
+
+  transactions.forEach((t) => {
+    const amount = Number(t.amount) || 0;
+
+    switch (t.type) {
+      case 'income':
+        balance += amount;
+        break;
+      case 'investment_withdraw':
+        balance += amount;
+        break;
+      case 'expense':
+        if (t.sourceType === 'cash_bank') {
+          balance -= amount;
+        }
+        break;
+      case 'card_payment':
+        balance -= amount;
+        break;
+      case 'investment_deposit':
+        balance -= amount;
+        break;
+      default:
+        break;
+    }
+  });
+
+  return balance;
+}
+
+export interface InvestmentStats {
+  totalInvested: number; // Total net principal in active assets
+  totalCurrentValue: number; // Current valuation across all assets
+  unrealizedProfitLoss: number; // currentValue - investedAmount
+  realizedProfitLoss: number; // Net profit from closed/withdrawn positions
+  totalProfitLoss: number; // unrealized + realized
+  returnPercentage: number; // Overall return rate %
+}
+
+export function calculateInvestmentStats(
+  assets: InvestmentAsset[],
+  transactions: Transaction[]
+): InvestmentStats {
+  const totalInvested = assets.reduce((sum, a) => sum + (Number(a.investedAmount) || 0), 0);
+  const totalCurrentValue = assets.reduce((sum, a) => sum + (Number(a.currentValue) || 0), 0);
+  const unrealizedProfitLoss = totalCurrentValue - totalInvested;
+
+  // Realized profit from withdrawals
+  const realizedProfitLoss = transactions
+    .filter((t) => t.type === 'investment_withdraw')
+    .reduce((sum, t) => sum + (Number(t.profitOrLoss) || 0), 0);
+
+  const totalProfitLoss = unrealizedProfitLoss + realizedProfitLoss;
+  const returnPercentage = totalInvested > 0 ? (totalProfitLoss / totalInvested) * 100 : 0;
+
+  return {
+    totalInvested,
+    totalCurrentValue,
+    unrealizedProfitLoss,
+    realizedProfitLoss,
+    totalProfitLoss,
+    returnPercentage,
+  };
+}
+
+/**
+ * Net Worth = Liquid Cash + Current Investments Value - Total Unpaid Card Debts
+ */
+export function calculateNetWorth(
+  cashBalance: number,
+  investmentAssets: InvestmentAsset[],
+  totalCardDebt: number
+): number {
+  const totalInvestments = investmentAssets.reduce(
+    (sum, a) => sum + (Number(a.currentValue) || 0),
+    0
+  );
+  return cashBalance + totalInvestments - totalCardDebt;
 }
 
 export function loadRecurringExpenses(): RecurringExpense[] {

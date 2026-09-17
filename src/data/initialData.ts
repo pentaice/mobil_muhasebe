@@ -1,4 +1,4 @@
-import { Category, CreditCard, Transaction } from '../types';
+import { Category, CreditCard, Transaction, IncomeCategory, InvestmentAsset } from '../types';
 
 export const DEFAULT_CATEGORIES: Category[] = [
   {
@@ -111,3 +111,99 @@ export const DEFAULT_CATEGORIES: Category[] = [
 export const DEFAULT_CREDIT_CARDS: CreditCard[] = [];
 
 export const INITIAL_TRANSACTIONS: Transaction[] = [];
+
+export const DEFAULT_INCOME_CATEGORIES: IncomeCategory[] = [
+  {
+    id: 'inc-maas',
+    name: 'Maaş Geliri',
+    icon: 'Briefcase',
+    color: '#10b981',
+    isCustom: false,
+  },
+  {
+    id: 'inc-nakit',
+    name: 'Nakit Gelir',
+    icon: 'Banknote',
+    color: '#059669',
+    isCustom: false,
+  },
+  {
+    id: 'inc-freelance',
+    name: 'Freelance & Ek İş',
+    icon: 'Laptop',
+    color: '#3b82f6',
+    isCustom: false,
+  },
+  {
+    id: 'inc-kira',
+    name: 'Kira Geliri',
+    icon: 'Home',
+    color: '#8b5cf6',
+    isCustom: false,
+  },
+  {
+    id: 'inc-yatirim',
+    name: 'Yatırım & Temettü',
+    icon: 'TrendingUp',
+    color: '#f59e0b',
+    isCustom: false,
+  },
+  {
+    id: 'inc-diger',
+    name: 'Diğer Gelir',
+    icon: 'Coins',
+    color: '#64748b',
+    isCustom: false,
+  },
+];
+
+export const DEFAULT_INVESTMENT_ASSETS: InvestmentAsset[] = [
+  {
+    id: 'inv-altin',
+    name: 'Gram Altın',
+    category: 'gold',
+    investedAmount: 0,
+    currentValue: 0,
+    color: '#f59e0b',
+    icon: 'Coins',
+    notes: 'Altın birikimi',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'inv-doviz',
+    name: 'Dolar (USD)',
+    category: 'forex',
+    investedAmount: 0,
+    currentValue: 0,
+    color: '#10b981',
+    icon: 'DollarSign',
+    notes: 'Döviz birikimi',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'inv-borsa',
+    name: 'Borsa / Hisse Senedi',
+    category: 'stock',
+    investedAmount: 0,
+    currentValue: 0,
+    color: '#3b82f6',
+    icon: 'TrendingUp',
+    notes: 'Hisse senetleri',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'inv-fon',
+    name: 'Yatırım Fonu (TEFAS)',
+    category: 'fund',
+    investedAmount: 0,
+    currentValue: 0,
+    color: '#8b5cf6',
+    icon: 'PieChart',
+    notes: 'Fon yatırımları',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];

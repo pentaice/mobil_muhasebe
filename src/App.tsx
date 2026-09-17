@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Category, CreditCard, Transaction, RecurringExpense } from './types';
+import {
+  Category,
+  CreditCard,
+  Transaction,
+  RecurringExpense,
+  IncomeCategory,
+  InvestmentAsset,
+  InvestmentTransaction,
+} from './types';
 import {
   loadCategories,
   saveCategories,
@@ -17,11 +25,27 @@ import {
   loadAppsScriptUrl,
   loadRecurringExpenses,
   saveRecurringExpenses,
+  loadIncomeCategories,
+  saveIncomeCategories,
+  loadInvestmentAssets,
+  saveInvestmentAssets,
+  loadInvestmentTransactions,
+  saveInvestmentTransactions,
+  calculateInvestmentStats,
+  loadInitialCashBalance,
+  saveInitialCashBalance,
+  calculateLiquidCashBalance,
 } from './utils/storage';
 import { processRecurringExpenses } from './utils/recurringExpenses';
 import { initNotificationChannel, syncNotificationSchedule } from './utils/notifications';
 import { syncCategoriesToWidget, checkAndImportWidgetTransactions } from './utils/widgetBridge';
-import { DEFAULT_CATEGORIES, DEFAULT_CREDIT_CARDS, INITIAL_TRANSACTIONS } from './data/initialData';
+import {
+  DEFAULT_CATEGORIES,
+  DEFAULT_CREDIT_CARDS,
+  INITIAL_TRANSACTIONS,
+  DEFAULT_INCOME_CATEGORIES,
+  DEFAULT_INVESTMENT_ASSETS,
+} from './data/initialData';
 import { Header } from './components/Header';
 import { BottomNav, ActiveTab } from './components/BottomNav';
 import { QuickAddExpense } from './components/QuickAddExpense';
@@ -29,6 +53,7 @@ import { CreditCardsView } from './components/CreditCardsView';
 import { CategoriesView } from './components/CategoriesView';
 import { ReportsView } from './components/ReportsView';
 import { TransactionsView } from './components/TransactionsView';
+import { InvestmentsView } from './components/InvestmentsView';
 import { Toast, ToastState } from './components/Toast';
 import { motion, AnimatePresence } from 'motion/react';
 import { useI18n } from './i18n/I18nContext';
@@ -36,9 +61,13 @@ import { useI18n } from './i18n/I18nContext';
 export default function App() {
   const { t: i18n } = useI18n();
   const [categories, setCategories] = useState<Category[]>(() => loadCategories());
+  const [incomeCategories, setIncomeCategories] = useState<IncomeCategory[]>(() => loadIncomeCategories());
+  const [investmentAssets, setInvestmentAssets] = useState<InvestmentAsset[]>(() => loadInvestmentAssets());
+  const [investmentTransactions, setInvestmentTransactions] = useState<InvestmentTransaction[]>(() => loadInvestmentTransactions());
   const [cards, setCards] = useState<CreditCard[]>(() => loadCards());
   const [transactions, setTransactions] = useState<Transaction[]>(() => loadTransactions());
   const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>(() => loadRecurringExpenses());
+  const [initialCashBalance, setInitialCashBalance] = useState<number>(() => loadInitialCashBalance());
   const [activeTab, setActiveTab] = useState<ActiveTab>('add');
   const [toast, setToast] = useState<ToastState | null>(null);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => loadTheme() === 'dark');
@@ -90,6 +119,18 @@ export default function App() {
     saveRecurringExpenses(recurringExpenses);
   }, [recurringExpenses]);
 
+  useEffect(() => {
+    saveIncomeCategories(incomeCategories);
+  }, [incomeCategories]);
+
+  useEffect(() => {
+    saveInvestmentAssets(investmentAssets);
+  }, [investmentAssets]);
+
+  useEffect(() => {
+    saveInvestmentTransactions(investmentTransactions);
+  }, [investmentTransactions]);
+
   // Auto Save to Sheets (Once a day)
   useEffect(() => {
     const checkAutoSave = async () => {
@@ -105,9 +146,12 @@ export default function App() {
       try {
         const backupObj = {
           categories: loadCategories(),
+          incomeCategories: loadIncomeCategories(),
+          investmentAssets: loadInvestmentAssets(),
           cards: loadCards(),
           transactions: loadTransactions(),
           recurringExpenses: loadRecurringExpenses(),
+          initialCashBalance: loadInitialCashBalance(),
           exportedAt: new Date().toISOString(),
         };
 
@@ -153,6 +197,12 @@ export default function App() {
 
     if (txData.type === 'card_payment') {
       showToast(i18n.toastCardPaymentAdded, 'success');
+    } else if (txData.type === 'income') {
+      showToast('Gelir başarıyla kaydedildi!', 'success');
+    } else if (txData.type === 'investment_deposit') {
+      showToast('Paranız yatırıma aktarıldı!', 'success');
+    } else if (txData.type === 'investment_withdraw') {
+      showToast('Yatırımdan nakit çekildi!', 'success');
     } else {
       showToast(i18n.toastExpenseAdded, 'success');
     }
@@ -217,6 +267,13 @@ export default function App() {
     };
     setRecurringExpenses((prev) => [...prev, newExp]);
     showToast(i18n.toastRecurringAdded, 'success');
+  };
+
+  const handleUpdateRecurringExpense = (updatedExp: RecurringExpense) => {
+    setRecurringExpenses((prev) =>
+      prev.map((e) => (e.id === updatedExp.id ? updatedExp : e))
+    );
+    showToast(i18n.toastRecurringUpdated, 'success');
   };
 
   const handleDeleteRecurringExpense = (id: string) => {
@@ -314,12 +371,39 @@ export default function App() {
     showToast(i18n.toastCardUpdated, 'success');
   };
 
+  // Investment Asset Handlers
+  const handleAddInvestmentAsset = (assetData: Omit<InvestmentAsset, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const newAsset: InvestmentAsset = {
+      ...assetData,
+      id: `inv-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setInvestmentAssets((prev) => [...prev, newAsset]);
+    showToast(`"${assetData.name}" portföye eklendi!`, 'success');
+  };
+
+  const handleUpdateInvestmentAsset = (updatedAsset: InvestmentAsset) => {
+    setInvestmentAssets((prev) => prev.map((a) => (a.id === updatedAsset.id ? updatedAsset : a)));
+    showToast(`"${updatedAsset.name}" güncellendi!`, 'success');
+  };
+
+  const handleDeleteInvestmentAsset = (id: string) => {
+    setInvestmentAssets((prev) => prev.filter((a) => a.id !== id));
+    showToast('Varlık portföyden silindi.', 'info');
+  };
+
   // Export / Import Data (Android & Mobile Web Compatible)
   const handleExportData = async () => {
     const backupObj = {
       categories,
+      incomeCategories,
+      investmentAssets,
+      investmentTransactions,
       cards,
       transactions,
+      recurringExpenses,
+      initialCashBalance,
       exportedAt: new Date().toISOString(),
     };
     const jsonStr = JSON.stringify(backupObj, null, 2);
@@ -373,20 +457,46 @@ export default function App() {
     if (parsed.categories && Array.isArray(parsed.categories)) {
       setCategories(parsed.categories);
     }
+    if (parsed.incomeCategories && Array.isArray(parsed.incomeCategories)) {
+      setIncomeCategories(parsed.incomeCategories);
+    }
+    if (parsed.investmentAssets && Array.isArray(parsed.investmentAssets)) {
+      setInvestmentAssets(parsed.investmentAssets);
+    }
+    if (parsed.investmentTransactions && Array.isArray(parsed.investmentTransactions)) {
+      setInvestmentTransactions(parsed.investmentTransactions);
+    }
     if (parsed.cards && Array.isArray(parsed.cards)) {
       setCards(parsed.cards);
     }
     if (parsed.transactions && Array.isArray(parsed.transactions)) {
       setTransactions(parsed.transactions);
     }
+    if (parsed.initialCashBalance !== undefined && typeof parsed.initialCashBalance === 'number') {
+      setInitialCashBalance(parsed.initialCashBalance);
+      saveInitialCashBalance(parsed.initialCashBalance);
+    }
   };
 
   const handleResetData = () => {
     resetAllData();
     setCategories(DEFAULT_CATEGORIES);
+    setIncomeCategories(DEFAULT_INCOME_CATEGORIES);
+    setInvestmentAssets(DEFAULT_INVESTMENT_ASSETS);
+    setInvestmentTransactions([]);
     setCards(DEFAULT_CREDIT_CARDS);
     setTransactions(INITIAL_TRANSACTIONS);
+    setInitialCashBalance(0);
   };
+
+  const handleUpdateInitialCashBalance = (newBalance: number) => {
+    setInitialCashBalance(newBalance);
+    saveInitialCashBalance(newBalance);
+    showToast('Cüzdan bakiyesi güncellendi!', 'success');
+  };
+
+  const totalInvestmentsValuation = calculateInvestmentStats(investmentAssets, transactions).totalCurrentValue;
+  const liquidCashBalance = calculateLiquidCashBalance(transactions, initialCashBalance);
 
   return (
     <div className={`min-h-screen transition-colors duration-200 ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-gray-100 text-gray-900'} font-sans selection:bg-blue-600 selection:text-white`}>
@@ -398,6 +508,8 @@ export default function App() {
         {/* Top Header */}
         <Header
           transactions={transactions}
+          activeTab={activeTab}
+          onOpenHistory={() => setActiveTab('history')}
           onExportData={handleExportData}
           onImportData={handleImportData}
           onResetData={handleResetData}
@@ -417,9 +529,17 @@ export default function App() {
               {activeTab === 'add' && (
                 <QuickAddExpense
                   categories={categories}
+                  incomeCategories={incomeCategories}
                   cards={cards}
+                  recurringExpenses={recurringExpenses}
                   onAddTransaction={handleAddTransaction}
                   onOpenAddCategoryModal={() => setActiveTab('categories')}
+                  onAddRecurringExpense={handleAddRecurringExpense}
+                  onUpdateRecurringExpense={handleUpdateRecurringExpense}
+                  onDeleteRecurringExpense={handleDeleteRecurringExpense}
+                  onOpenInvestments={() => setActiveTab('investments')}
+                  totalInvestmentsValue={totalInvestmentsValuation}
+                  liquidCashBalance={liquidCashBalance}
                   focusTrigger={quickAddFocusTrigger}
                 />
               )}
@@ -429,19 +549,31 @@ export default function App() {
                   cards={cards}
                   transactions={transactions}
                   categories={categories}
-                  recurringExpenses={recurringExpenses}
+                  initialCashBalance={initialCashBalance}
+                  onUpdateInitialBalance={handleUpdateInitialCashBalance}
                   onAddCard={handleAddCard}
                   onDeleteCard={handleDeleteCard}
                   onAddPayment={handleAddTransaction}
                   onUpdateCard={handleUpdateCard}
-                  onAddRecurringExpense={handleAddRecurringExpense}
-                  onDeleteRecurringExpense={handleDeleteRecurringExpense}
+                />
+              )}
+
+              {activeTab === 'investments' && (
+                <InvestmentsView
+                  assets={investmentAssets}
+                  transactions={transactions}
+                  onAddAsset={handleAddInvestmentAsset}
+                  onUpdateAsset={handleUpdateInvestmentAsset}
+                  onDeleteAsset={handleDeleteInvestmentAsset}
+                  onAddTransaction={handleAddTransaction}
+                  onUpdateTransaction={handleUpdateTransaction}
                 />
               )}
 
               {activeTab === 'reports' && (
                 <ReportsView
                   categories={categories}
+                  incomeCategories={incomeCategories}
                   cards={cards}
                   transactions={transactions}
                   isDarkMode={isDarkMode}
@@ -451,6 +583,8 @@ export default function App() {
               {activeTab === 'history' && (
                 <TransactionsView
                   categories={categories}
+                  incomeCategories={incomeCategories}
+                  investmentAssets={investmentAssets}
                   cards={cards}
                   transactions={transactions}
                   onDeleteTransaction={handleDeleteTransaction}

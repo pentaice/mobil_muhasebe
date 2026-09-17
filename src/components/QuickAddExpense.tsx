@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Category, CreditCard, Transaction } from '../types';
+import { Category, CreditCard, Transaction, RecurringExpense, IncomeCategory } from '../types';
 import { CategoryIcon } from './CategoryIcon';
 import { formatTL, loadQuickAmounts, saveQuickAmounts, DEFAULT_QUICK_AMOUNTS } from '../utils/storage';
 import { useI18n } from '../i18n/I18nContext';
+import { RecurringExpensesModal } from './RecurringExpensesModal';
 import {
   Zap,
   CreditCard as CardIcon,
@@ -16,26 +17,50 @@ import {
   RotateCcw,
   Check,
   Info,
+  CalendarClock,
+  ChevronRight,
+  TrendingUp,
+  ArrowUpRight,
+  ArrowDownLeft,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface QuickAddExpenseProps {
   categories: Category[];
+  incomeCategories: IncomeCategory[];
   cards: CreditCard[];
+  recurringExpenses: RecurringExpense[];
   onAddTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt'>) => void;
   onOpenAddCategoryModal: () => void;
+  onAddRecurringExpense: (expense: Omit<RecurringExpense, 'id' | 'createdAt'>) => void;
+  onUpdateRecurringExpense: (expense: RecurringExpense) => void;
+  onDeleteRecurringExpense: (id: string) => void;
+  onOpenInvestments?: () => void;
+  totalInvestmentsValue?: number;
+  liquidCashBalance?: number;
   focusTrigger?: number;
 }
 
 export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
   categories,
+  incomeCategories,
   cards,
+  recurringExpenses,
   onAddTransaction,
   onOpenAddCategoryModal,
+  onAddRecurringExpense,
+  onUpdateRecurringExpense,
+  onDeleteRecurringExpense,
+  onOpenInvestments,
+  totalInvestmentsValue = 0,
+  liquidCashBalance,
   focusTrigger,
 }) => {
   const { t: i18n, formatCurrency, currency } = useI18n();
+  const [entryType, setEntryType] = useState<'expense' | 'income'>('expense');
+  const [showRecurringModal, setShowRecurringModal] = useState<boolean>(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(categories[0]?.id || 'cat-yemek');
+  const [selectedIncomeCategoryId, setSelectedIncomeCategoryId] = useState<string>(incomeCategories[0]?.id || 'inc-maas');
   const [amountStr, setAmountStr] = useState<string>('');
   const [sourceType, setSourceType] = useState<'credit_card' | 'cash_bank'>(cards.length > 0 ? 'credit_card' : 'cash_bank');
   const [selectedCardId, setSelectedCardId] = useState<string>(cards[0]?.id || '');
@@ -112,15 +137,26 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
 
     const txDate = isCustomDate ? new Date(customDateTime).toISOString() : new Date().toISOString();
 
-    onAddTransaction({
-      type: 'expense',
-      amount: amountNumber,
-      categoryId: selectedCategoryId,
-      sourceType: cards.length > 0 ? sourceType : 'cash_bank',
-      creditCardId: sourceType === 'credit_card' && cards.length > 0 ? selectedCardId : undefined,
-      date: txDate,
-      note: note.trim() || undefined,
-    });
+    if (entryType === 'income') {
+      onAddTransaction({
+        type: 'income',
+        amount: amountNumber,
+        categoryId: selectedIncomeCategoryId,
+        sourceType: 'cash_bank',
+        date: txDate,
+        note: note.trim() || undefined,
+      });
+    } else {
+      onAddTransaction({
+        type: 'expense',
+        amount: amountNumber,
+        categoryId: selectedCategoryId,
+        sourceType: cards.length > 0 ? sourceType : 'cash_bank',
+        creditCardId: sourceType === 'credit_card' && cards.length > 0 ? selectedCardId : undefined,
+        date: txDate,
+        note: note.trim() || undefined,
+      });
+    }
 
     // Reset inputs for next fast entry
     setAmountStr('');
@@ -131,8 +167,37 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
 
   return (
     <div className="w-full max-w-lg mx-auto">
-      {/* Compact Main Card Container */}
+      {/* Compact Main Card Container (ALWAYS AT TOP) */}
       <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl p-4 shadow-sm text-gray-900 dark:text-slate-100 relative overflow-hidden transition-colors">
+        
+        {/* ENTRY TYPE SWITCHER: GİDER / GELİR */}
+        <div className="grid grid-cols-2 p-1 bg-gray-100 dark:bg-slate-800 rounded-2xl mb-3.5">
+          <button
+            type="button"
+            onClick={() => setEntryType('expense')}
+            className={`py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              entryType === 'expense'
+                ? 'bg-white dark:bg-slate-700 text-rose-600 dark:text-rose-400 shadow-2xs scale-[1.01]'
+                : 'text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <ArrowDownLeft className="w-3.5 h-3.5" />
+            <span>{i18n.expense} Kaydet</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setEntryType('income')}
+            className={`py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              entryType === 'income'
+                ? 'bg-emerald-600 text-white shadow-2xs scale-[1.01]'
+                : 'text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <ArrowUpRight className="w-3.5 h-3.5" />
+            <span>{i18n.income} Kaydet</span>
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-3.5">
           {/* AMOUNT INPUT & QUICK CHIPS */}
           <div className="space-y-1.5">
@@ -145,7 +210,11 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                 placeholder="0"
                 value={amountStr}
                 onChange={(e) => setAmountStr(e.target.value)}
-                className="w-full bg-gray-50 dark:bg-slate-800 border-2 border-gray-200 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 rounded-2xl py-2.5 pl-3.5 pr-12 text-2xl font-black text-gray-900 dark:text-slate-100 tracking-tight focus:outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-slate-600"
+                className={`w-full bg-gray-50 dark:bg-slate-800 border-2 rounded-2xl py-2.5 pl-3.5 pr-12 text-2xl font-black text-gray-900 dark:text-slate-100 tracking-tight focus:outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-slate-600 ${
+                  entryType === 'income'
+                    ? 'border-emerald-200 dark:border-emerald-900/60 focus:border-emerald-600 dark:focus:border-emerald-500'
+                    : 'border-gray-200 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500'
+                }`}
               />
               <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
                 {amountStr && (
@@ -157,7 +226,9 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
                     {i18n.clear}
                   </button>
                 )}
-                <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{currency.symbol}</span>
+                <span className={`text-lg font-bold ${entryType === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                  {currency.symbol}
+                </span>
               </div>
             </div>
 
@@ -188,114 +259,175 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
             </div>
           </div>
 
-          {/* CATEGORY SELECTION */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between px-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-400">
-                {i18n.category}
-              </span>
-              <button
-                type="button"
-                onClick={onOpenAddCategoryModal}
-                className="text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-0.5 font-bold cursor-pointer"
-              >
-                <Plus className="w-3 h-3" />
-                <span>{i18n.add}</span>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5">
-              {categories.map((cat) => {
-                const isSelected = cat.id === selectedCategoryId;
-                return (
+          {/* CATEGORY & SOURCE SECTION */}
+          {entryType === 'expense' ? (
+            <>
+              {/* EXPENSE CATEGORY SELECTION */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between px-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-400">
+                    {i18n.category}
+                  </span>
                   <button
-                    key={cat.id}
                     type="button"
-                    onClick={() => setSelectedCategoryId(cat.id)}
-                    className={`relative flex flex-col items-center justify-center p-1.5 min-h-[60px] rounded-xl transition-all duration-150 border text-center cursor-pointer ${
-                      isSelected
-                        ? 'bg-blue-50/90 dark:bg-blue-950/40 border-blue-600 dark:border-blue-500 shadow-2xs scale-[1.02]'
-                        : 'bg-gray-50/70 dark:bg-slate-800/60 border-gray-200/80 dark:border-slate-750 text-gray-700 dark:text-slate-300 hover:border-gray-300 dark:hover:border-slate-650'
+                    onClick={onOpenAddCategoryModal}
+                    className="text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-0.5 font-bold cursor-pointer"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>{i18n.add}</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5">
+                  {categories.map((cat) => {
+                    const isSelected = cat.id === selectedCategoryId;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setSelectedCategoryId(cat.id)}
+                        className={`relative flex flex-col items-center justify-center p-1.5 min-h-[60px] rounded-xl transition-all duration-150 border text-center cursor-pointer ${
+                          isSelected
+                            ? 'bg-blue-50/90 dark:bg-blue-950/40 border-blue-600 dark:border-blue-500 shadow-2xs scale-[1.02]'
+                            : 'bg-gray-50/70 dark:bg-slate-800/60 border-gray-200/80 dark:border-slate-750 text-gray-700 dark:text-slate-300 hover:border-gray-300 dark:hover:border-slate-650'
+                        }`}
+                      >
+                        <div
+                          className="w-6 h-6 rounded-md flex items-center justify-center mb-1 text-white shadow-2xs shrink-0"
+                          style={{ backgroundColor: cat.color }}
+                        >
+                          <CategoryIcon name={cat.icon} size={13} />
+                        </div>
+                        <span
+                          className={`text-[9.5px] leading-[1.15] font-semibold text-center w-full break-words line-clamp-2 px-0.5 ${
+                            isSelected ? 'text-blue-900 dark:text-blue-200 font-bold' : 'text-gray-700 dark:text-slate-300'
+                          }`}
+                        >
+                          {cat.name}
+                        </span>
+
+                        {isSelected && (
+                          <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* PAYMENT SOURCE SELECTOR (KREDİ KARTI VEYA NAKİT/BANKA) */}
+              <div className="space-y-1.5">
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setSourceType('credit_card')}
+                    className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                      sourceType === 'credit_card'
+                        ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-600 dark:border-blue-500 text-blue-900 dark:text-blue-300 shadow-2xs'
+                        : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-400 hover:border-gray-300'
                     }`}
                   >
-                    <div
-                      className="w-6 h-6 rounded-md flex items-center justify-center mb-1 text-white shadow-2xs shrink-0"
-                      style={{ backgroundColor: cat.color }}
-                    >
-                      <CategoryIcon name={cat.icon} size={13} />
-                    </div>
-                    <span
-                      className={`text-[9.5px] leading-[1.15] font-semibold text-center w-full break-words line-clamp-2 px-0.5 ${
-                        isSelected ? 'text-blue-900 dark:text-blue-200 font-bold' : 'text-gray-700 dark:text-slate-300'
-                      }`}
-                    >
-                      {cat.name}
-                    </span>
+                    <CardIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                    <span>{i18n.creditCard}</span>
+                  </button>
 
-                    {isSelected && (
-                      <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400" />
+                  <button
+                    type="button"
+                    onClick={() => setSourceType('cash_bank')}
+                    className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                      sourceType === 'cash_bank'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-600 dark:border-emerald-500 text-emerald-900 dark:text-emerald-300 shadow-2xs'
+                        : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-400 hover:border-gray-300'
+                    }`}
+                  >
+                    <Wallet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span>{i18n.cashBank}</span>
+                    {liquidCashBalance !== undefined && (
+                      <span className="text-[10px] font-mono opacity-85 font-semibold">
+                        ({formatCurrency(liquidCashBalance)})
+                      </span>
                     )}
                   </button>
-                );
-              })}
-            </div>
-          </div>
+                </div>
 
-          {/* PAYMENT SOURCE SELECTOR */}
-          <div className="space-y-1.5">
-            <div className="grid grid-cols-2 gap-1.5">
-              <button
-                type="button"
-                onClick={() => setSourceType('credit_card')}
-                className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                  sourceType === 'credit_card'
-                    ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-600 dark:border-blue-500 text-blue-900 dark:text-blue-300 shadow-2xs'
-                    : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-400 hover:border-gray-300'
-                }`}
-              >
-                <CardIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                <span>{i18n.creditCard}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSourceType('cash_bank')}
-                className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                  sourceType === 'cash_bank'
-                    ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-600 dark:border-emerald-500 text-emerald-900 dark:text-emerald-300 shadow-2xs'
-                    : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-400 hover:border-gray-300'
-                }`}
-              >
-                <Wallet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>{i18n.cashBank}</span>
-              </button>
-            </div>
-
-            {/* Select Credit Card if Credit Card selected */}
-            {sourceType === 'credit_card' && (
-              <select
-                value={selectedCardId}
-                onChange={(e) => setSelectedCardId(e.target.value)}
-                className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-1.5 px-2.5 text-xs text-gray-800 dark:text-slate-200 font-semibold focus:outline-none focus:border-blue-600"
-              >
-                {cards.length === 0 ? (
-                  <option value="" disabled>{i18n.noCardsYet}</option>
-                ) : (
-                  cards.map((card) => (
-                    <option key={card.id} value={card.id}>
-                      💳 {card.name} (*{card.last4})
-                    </option>
-                  ))
+                {/* Select Credit Card if Credit Card selected */}
+                {sourceType === 'credit_card' && (
+                  <select
+                    value={selectedCardId}
+                    onChange={(e) => setSelectedCardId(e.target.value)}
+                    className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl py-1.5 px-2.5 text-xs text-gray-800 dark:text-slate-200 font-semibold focus:outline-none focus:border-blue-600"
+                  >
+                    {cards.length === 0 ? (
+                      <option value="" disabled>{i18n.noCardsYet}</option>
+                    ) : (
+                      cards.map((card) => (
+                        <option key={card.id} value={card.id}>
+                          💳 {card.name} (*{card.last4})
+                        </option>
+                      ))
+                    )}
+                  </select>
                 )}
-              </select>
-            )}
 
-            {sourceType === 'credit_card' && cards.length === 0 && (
-              <div className="flex items-center gap-2 p-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-xl text-[11px] text-amber-800 dark:text-amber-300">
-                <span>{i18n.noCardsYet}</span>
+                {sourceType === 'credit_card' && cards.length === 0 && (
+                  <div className="flex items-center gap-2 p-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-xl text-[11px] text-amber-800 dark:text-amber-300">
+                    <span>{i18n.noCardsYet}</span>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </>
+          ) : (
+            /* INCOME SOURCE SELECTION */
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between px-0.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                  {i18n.incomeCategory}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+                {incomeCategories.map((cat) => {
+                  const isSelected = cat.id === selectedIncomeCategoryId;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedIncomeCategoryId(cat.id)}
+                      className={`relative flex flex-col items-center justify-center p-2 min-h-[64px] rounded-xl transition-all duration-150 border text-center cursor-pointer ${
+                        isSelected
+                          ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-600 dark:border-emerald-500 shadow-2xs scale-[1.02]'
+                          : 'bg-gray-50/70 dark:bg-slate-800/60 border-gray-200/80 dark:border-slate-750 text-gray-700 dark:text-slate-300 hover:border-gray-300 dark:hover:border-slate-650'
+                      }`}
+                    >
+                      <div
+                        className="w-7 h-7 rounded-lg flex items-center justify-center mb-1 text-white shadow-2xs shrink-0"
+                        style={{ backgroundColor: cat.color }}
+                      >
+                        <CategoryIcon name={cat.icon} size={14} />
+                      </div>
+                      <span
+                        className={`text-[10px] leading-[1.15] font-semibold text-center w-full break-words line-clamp-1 px-0.5 ${
+                          isSelected ? 'text-emerald-900 dark:text-emerald-200 font-bold' : 'text-gray-700 dark:text-slate-300'
+                        }`}
+                      >
+                        {cat.name}
+                      </span>
+
+                      {isSelected && (
+                        <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Income Destination Note */}
+              <div className="p-2 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/40 flex items-center gap-2 text-[11px] text-emerald-800 dark:text-emerald-300 font-medium">
+                <Wallet className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>Nakit ve banka varlığınıza eklenir, serbest nakit akışınızı artırır.</span>
+              </div>
+            </div>
+          )}
 
           {/* ACCORDION/DRAWER FOR OPTIONAL DETAILS */}
           <div className="border-t border-gray-100 dark:border-slate-800 pt-1.5">
@@ -362,15 +494,96 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
             disabled={!amountNumber || amountNumber <= 0}
             className={`w-full py-3 px-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] ${
               amountNumber > 0
-                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-200 dark:shadow-none cursor-pointer'
+                ? entryType === 'income'
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200 dark:shadow-none cursor-pointer'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-200 dark:shadow-none cursor-pointer'
                 : 'bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-600 cursor-not-allowed'
             }`}
           >
             <Zap className="w-4 h-4 fill-current" />
-            <span>{i18n.saveExpense} ({amountNumber > 0 ? formatCurrency(amountNumber) : `${currency.symbol}0`})</span>
+            <span>
+              {entryType === 'income' ? i18n.saveIncome : i18n.saveExpense} (
+              {amountNumber > 0 ? formatCurrency(amountNumber) : `${currency.symbol}0`})
+            </span>
           </button>
         </form>
       </div>
+
+      {/* RECURRING EXPENSES ACTION BUTTON / MODULE (UNDER MAIN COMPONENT) */}
+      <button
+        type="button"
+        onClick={() => setShowRecurringModal(true)}
+        className="w-full mt-3.5 p-4 min-h-[66px] bg-white dark:bg-slate-850 hover:bg-indigo-50/50 dark:hover:bg-slate-800/90 border border-gray-100 dark:border-slate-750/80 rounded-3xl flex items-center justify-between transition-all cursor-pointer shadow-sm group active:scale-[0.99] text-gray-900 dark:text-slate-100"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+            <CalendarClock className="w-5 h-5" />
+          </div>
+          <div className="text-left">
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-sm text-gray-900 dark:text-slate-100 leading-tight">
+                {i18n.recurringExpenses}
+              </span>
+              {recurringExpenses.filter((e) => e.isActive).length > 0 ? (
+                <span className="bg-indigo-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                  {recurringExpenses.filter((e) => e.isActive).length} Aktif
+                </span>
+              ) : (
+                <span className="bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  Yeni
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-gray-500 dark:text-slate-400 font-medium mt-0.5">
+              {recurringExpenses.filter((e) => e.isActive).length > 0
+                ? `${formatCurrency(recurringExpenses.filter((e) => e.isActive).reduce((sum, e) => sum + Number(e.amount), 0))} / ay • Kira, fatura ve abonelikler`
+                : 'Aylık kira, faturalar ve düzenli abonelikleri yönetin'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400 text-xs font-bold pl-2 shrink-0">
+          <span className="hidden sm:inline">Görüntüle</span>
+          <div className="w-7 h-7 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
+            <ChevronRight className="w-4 h-4" />
+          </div>
+        </div>
+      </button>
+
+      {/* INVESTMENTS SUMMARY & QUICK NAV BUTTON */}
+      {onOpenInvestments && (
+        <button
+          type="button"
+          onClick={onOpenInvestments}
+          className="w-full mt-2.5 p-4 min-h-[66px] bg-white dark:bg-slate-850 hover:bg-teal-50/50 dark:hover:bg-slate-800/90 border border-gray-100 dark:border-slate-750/80 rounded-3xl flex items-center justify-between transition-all cursor-pointer shadow-sm group active:scale-[0.99] text-gray-900 dark:text-slate-100"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+            <div className="text-left">
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-sm text-gray-900 dark:text-slate-100 leading-tight">
+                  {i18n.investments} & Portföy
+                </span>
+                <span className="bg-teal-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                  {formatCurrency(totalInvestmentsValue || 0)}
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-500 dark:text-slate-400 font-medium mt-0.5">
+                Arta kalan parayı yatırıma aktar, kâr/zararını takip et
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 text-teal-600 dark:text-teal-400 text-xs font-bold pl-2 shrink-0">
+            <span className="hidden sm:inline">Portföye Git</span>
+            <div className="w-7 h-7 rounded-xl bg-teal-50 dark:bg-teal-950/40 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
+              <ChevronRight className="w-4 h-4" />
+            </div>
+          </div>
+        </button>
+      )}
 
       {/* QUICK AMOUNT CUSTOMIZATION MODAL */}
       <AnimatePresence>
@@ -468,6 +681,18 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
           </div>
         )}
       </AnimatePresence>
+
+      {/* RECURRING EXPENSES MODAL */}
+      <RecurringExpensesModal
+        isOpen={showRecurringModal}
+        onClose={() => setShowRecurringModal(false)}
+        recurringExpenses={recurringExpenses}
+        categories={categories}
+        cards={cards}
+        onAddRecurringExpense={onAddRecurringExpense}
+        onUpdateRecurringExpense={onUpdateRecurringExpense}
+        onDeleteRecurringExpense={onDeleteRecurringExpense}
+      />
     </div>
   );
 };

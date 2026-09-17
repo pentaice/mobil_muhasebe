@@ -1,13 +1,31 @@
 import React, { useState, useMemo } from 'react';
-import { Category, CreditCard, Transaction } from '../types';
+import { Category, CreditCard, Transaction, IncomeCategory, InvestmentAsset } from '../types';
 import { CategoryIcon } from './CategoryIcon';
-import { formatShortDate } from '../utils/storage';
+import { formatShortDate, loadIncomeCategories, loadInvestmentAssets } from '../utils/storage';
 import { useI18n } from '../i18n/I18nContext';
-import { Search, Trash2, ArrowDownLeft, Calendar, FileText, Pencil, X, Check, CreditCard as CardIcon, Wallet, Clock } from 'lucide-react';
+import {
+  Search,
+  Trash2,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Calendar,
+  FileText,
+  Pencil,
+  X,
+  Check,
+  CreditCard as CardIcon,
+  Wallet,
+  Clock,
+  TrendingUp,
+  Coins,
+  Sparkles,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface TransactionsViewProps {
   categories: Category[];
+  incomeCategories?: IncomeCategory[];
+  investmentAssets?: InvestmentAsset[];
   cards: CreditCard[];
   transactions: Transaction[];
   onDeleteTransaction: (id: string) => void;
@@ -16,6 +34,8 @@ interface TransactionsViewProps {
 
 export const TransactionsView: React.FC<TransactionsViewProps> = ({
   categories,
+  incomeCategories,
+  investmentAssets,
   cards,
   transactions,
   onDeleteTransaction,
@@ -85,36 +105,57 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     setDeleteConfirmId(null);
   };
 
+  const incomeCats = useMemo(
+    () => (incomeCategories && incomeCategories.length > 0 ? incomeCategories : loadIncomeCategories()),
+    [incomeCategories]
+  );
+  const invAssets = useMemo(
+    () => (investmentAssets && investmentAssets.length > 0 ? investmentAssets : loadInvestmentAssets()),
+    [investmentAssets]
+  );
+
   const filteredTransactions = useMemo(() => {
-    return transactions.filter((t) => {
-      // Type filter
-      if (selectedTypeFilter !== 'all' && t.type !== selectedTypeFilter) {
-        return false;
-      }
+    return transactions
+      .filter((t) => {
+        // Type filter
+        if (selectedTypeFilter !== 'all') {
+          if (selectedTypeFilter === 'investment') {
+            if (t.type !== 'investment_deposit' && t.type !== 'investment_withdraw') {
+              return false;
+            }
+          } else if (t.type !== selectedTypeFilter) {
+            return false;
+          }
+        }
 
-      // Category filter
-      if (selectedCategoryFilter !== 'all' && t.categoryId !== selectedCategoryFilter) {
-        return false;
-      }
-
-      // Search term
-      if (search.trim()) {
-        const query = search.toLowerCase();
-        const cat = categories.find((c) => c.id === t.categoryId);
-        const card = cards.find((c) => c.id === t.creditCardId);
-        const matchNote = t.note?.toLowerCase().includes(query);
-        const matchCat = cat?.name.toLowerCase().includes(query);
-        const matchCard = card?.name.toLowerCase().includes(query);
-        const matchAmount = t.amount.toString().includes(query);
-
-        if (!matchNote && !matchCat && !matchCard && !matchAmount) {
+        // Category filter
+        if (selectedCategoryFilter !== 'all' && t.categoryId !== selectedCategoryFilter) {
           return false;
         }
-      }
 
-      return true;
-    }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [transactions, search, selectedCategoryFilter, selectedTypeFilter, categories, cards]);
+        // Search term
+        if (search.trim()) {
+          const query = search.toLowerCase();
+          const cat = categories.find((c) => c.id === t.categoryId);
+          const incCat = incomeCats.find((c) => c.id === t.categoryId);
+          const invAsset = invAssets.find((a) => a.id === t.investmentAssetId);
+          const card = cards.find((c) => c.id === t.creditCardId);
+          const matchNote = t.note?.toLowerCase().includes(query);
+          const matchCat = cat?.name.toLowerCase().includes(query);
+          const matchIncCat = incCat?.name.toLowerCase().includes(query);
+          const matchInvAsset = invAsset?.name.toLowerCase().includes(query);
+          const matchCard = card?.name.toLowerCase().includes(query);
+          const matchAmount = t.amount.toString().includes(query);
+
+          if (!matchNote && !matchCat && !matchIncCat && !matchInvAsset && !matchCard && !matchAmount) {
+            return false;
+          }
+        }
+
+        return true;
+      })
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [transactions, search, selectedCategoryFilter, selectedTypeFilter, categories, cards, incomeCats, invAssets]);
 
   return (
     <div className="w-full max-w-lg mx-auto space-y-4 pb-8">
@@ -142,7 +183,9 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
           >
             <option value="all">{i18n.allTransactionTypes}</option>
             <option value="expense">{i18n.onlyExpenses}</option>
+            <option value="income">{i18n.income}</option>
             <option value="card_payment">{i18n.onlyCardPayments}</option>
+            <option value="investment">{i18n.investments}</option>
           </select>
 
           {/* Category Filter */}
@@ -172,7 +215,14 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
         ) : (
           filteredTransactions.map((t) => {
             const isExpense = t.type === 'expense';
+            const isIncome = t.type === 'income';
+            const isCardPayment = t.type === 'card_payment';
+            const isInvDeposit = t.type === 'investment_deposit';
+            const isInvWithdraw = t.type === 'investment_withdraw';
+
             const cat = categories.find((c) => c.id === t.categoryId);
+            const incCat = incomeCats.find((c) => c.id === t.categoryId);
+            const invAsset = invAssets.find((a) => a.id === t.investmentAssetId);
             const card = cards.find((c) => c.id === t.creditCardId);
 
             return (
@@ -181,26 +231,66 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 hover:border-gray-200 dark:hover:border-slate-700 rounded-2xl p-3.5 flex items-center justify-between shadow-xs transition-all"
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  {/* Category / Payment Icon */}
-                  {isExpense ? (
+                  {/* Category / Payment / Investment Icon */}
+                  {isExpense && (
                     <div
                       className="w-10 h-10 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-xs"
                       style={{ backgroundColor: cat?.color || '#9ca3af' }}
                     >
                       <CategoryIcon name={cat?.icon || 'Coins'} size={20} />
                     </div>
-                  ) : (
+                  )}
+
+                  {isIncome && (
+                    <div
+                      className="w-10 h-10 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-xs"
+                      style={{ backgroundColor: incCat?.color || '#10b981' }}
+                    >
+                      <CategoryIcon name={incCat?.icon || 'ArrowUpRight'} size={20} />
+                    </div>
+                  )}
+
+                  {isCardPayment && (
                     <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 font-bold border border-emerald-100 dark:border-emerald-900/60">
                       <ArrowDownLeft className="w-5 h-5" />
                     </div>
                   )}
 
+                  {isInvDeposit && (
+                    <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 font-bold border border-indigo-100 dark:border-indigo-900/60">
+                      <TrendingUp className="w-5 h-5" />
+                    </div>
+                  )}
+
+                  {isInvWithdraw && (
+                    <div className="w-10 h-10 rounded-2xl bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 font-bold border border-teal-100 dark:border-teal-900/60">
+                      <Coins className="w-5 h-5" />
+                    </div>
+                  )}
+
                   <div className="space-y-0.5 min-w-0">
                     <p className="font-bold text-xs text-gray-900 dark:text-slate-100 line-clamp-1">
-                      {isExpense ? cat?.name || i18n.expense : i18n.cardPayment}
+                      {isExpense && (cat?.name || i18n.expense)}
+                      {isIncome && (incCat?.name || i18n.income)}
+                      {isCardPayment && i18n.cardPayment}
+                      {isInvDeposit && (invAsset?.name ? `${invAsset.name} (Alış)` : 'Yatırıma Para Yatırma')}
+                      {isInvWithdraw && (invAsset?.name ? `${invAsset.name} (Satış)` : 'Yatırımdan Nakite Çekim')}
                     </p>
                     <p className="text-[11px] text-gray-500 dark:text-slate-400 line-clamp-1">
-                      {t.note || (isExpense ? (card ? card.name : i18n.cashBank) : card?.name || i18n.creditCard)}
+                      {t.note ||
+                        (isExpense
+                          ? card
+                            ? card.name
+                            : i18n.cashBank
+                          : isIncome
+                          ? 'Nakit / Banka Hesabı'
+                          : isCardPayment
+                          ? card?.name || i18n.creditCard
+                          : isInvWithdraw && t.profitOrLoss !== undefined
+                          ? t.profitOrLoss >= 0
+                            ? `+${formatCurrency(t.profitOrLoss)} kâr gerçekleşti`
+                            : `${formatCurrency(t.profitOrLoss)} zarar gerçekleşti`
+                          : 'Serbest Varlık')}
                     </p>
                     <div className="flex items-center gap-2 text-[10px] text-gray-400 dark:text-slate-500 whitespace-nowrap overflow-hidden">
                       <span className="flex items-center gap-1 shrink-0">
@@ -212,6 +302,16 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                           💳 {card.name}
                         </span>
                       )}
+                      {isIncome && (
+                        <span className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded font-semibold border border-emerald-200/60 dark:border-emerald-900/40 truncate shrink">
+                          Gelir
+                        </span>
+                      )}
+                      {(isInvDeposit || isInvWithdraw) && (
+                        <span className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded font-semibold border border-indigo-200/60 dark:border-indigo-900/40 truncate shrink">
+                          Yatırım
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -221,24 +321,41 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                   <div>
                     <p
                       className={`font-extrabold text-sm ${
-                        isExpense ? 'text-gray-900 dark:text-slate-100' : 'text-emerald-600 dark:text-emerald-400'
+                        isIncome || isInvWithdraw
+                          ? 'text-emerald-600 dark:text-emerald-400 font-black'
+                          : isInvDeposit
+                          ? 'text-indigo-600 dark:text-indigo-400 font-black'
+                          : isCardPayment
+                          ? 'text-emerald-600 dark:text-emerald-400 font-black'
+                          : 'text-gray-900 dark:text-slate-100'
                       }`}
                     >
-                      {isExpense ? '-' : '+'}{formatCurrency(t.amount)}
+                      {isIncome || isInvWithdraw ? '+' : isCardPayment ? '' : '-'}
+                      {formatCurrency(t.amount)}
                     </p>
                     <span className="text-[10px] text-gray-400 dark:text-slate-500 block font-medium">
-                      {isExpense ? i18n.expense : i18n.payment}
+                      {isIncome
+                        ? i18n.income
+                        : isExpense
+                        ? i18n.expense
+                        : isCardPayment
+                        ? i18n.payment
+                        : isInvDeposit
+                        ? 'Yatırım Girişi'
+                        : 'Yatırım Çıkışı'}
                     </span>
                   </div>
 
-                  {/* Edit Button */}
-                  <button
-                    onClick={() => openEditModal(t)}
-                    title={i18n.editTransaction}
-                    className="text-gray-300 dark:text-slate-600 hover:text-blue-600 dark:hover:text-blue-400 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors cursor-pointer"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
+                  {/* Edit Button (For regular expenses and incomes) */}
+                  {(isExpense || isIncome) && (
+                    <button
+                      onClick={() => openEditModal(t)}
+                      title={i18n.editTransaction}
+                      className="text-gray-300 dark:text-slate-600 hover:text-blue-600 dark:hover:text-blue-400 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors cursor-pointer"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  )}
 
                   {/* Delete Button */}
                   <button
