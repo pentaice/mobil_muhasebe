@@ -1,0 +1,5 @@
+Cebim Muhasebe v1.0.6 Yenilikleri:
+• Performans & Akıcı Kaydırma: İşlem geçmişi ve rapor listelerinde kaydırdıkça otomatik yükleme (Lazy Loading & Infinite Scroll) optimizasyonu eklendi; donmalar giderildi.
+• Google E-Tablolar Entegrasyonu: Yatırım işlemleri de artık otomatik ve manuel bulut yedeklemeye eksiksiz dahil edildi.
+• Kasa & Nakit Akışı: Nakit akış analizi ve cüzdan performansı iyileştirildi.
+• Kararlılık ve arayüz cilalamaları.

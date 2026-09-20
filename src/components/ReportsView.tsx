@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Category, CreditCard, Transaction, IncomeCategory } from '../types';
 import { formatShortDate, loadIncomeCategories } from '../utils/storage';
 import { CategoryIcon } from './CategoryIcon';
@@ -53,6 +53,8 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
   const [period, setPeriod] = useState<PeriodType>('this_month');
   const [showCustomDateModal, setShowCustomDateModal] = useState<boolean>(false);
   const [showHistory, setShowHistory] = useState<boolean>(false);
+  const [visibleHistoryCount, setVisibleHistoryCount] = useState<number>(20);
+  const historyLoadMoreRef = useRef<HTMLDivElement | null>(null);
 
   // Custom date range state (Defaults to earliest and latest transaction date or current month)
   const [customStartDate, setCustomStartDate] = useState<string>('2026-04-08');
@@ -89,6 +91,38 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
       return true; // 'all'
     });
   }, [transactions, period, customStartDate, customEndDate]);
+
+  // Memoized sorted transactions for lazy rendering
+  const sortedFilteredTransactions = useMemo(() => {
+    return [...filteredTransactions].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+  }, [filteredTransactions]);
+
+  // Reset pagination when filter/period changes
+  useEffect(() => {
+    setVisibleHistoryCount(20);
+  }, [period, customStartDate, customEndDate, transactions]);
+
+  // IntersectionObserver for auto lazy loading as user scrolls
+  useEffect(() => {
+    if (!showHistory) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleHistoryCount((prev) =>
+            Math.min(prev + 20, sortedFilteredTransactions.length)
+          );
+        }
+      },
+      { rootMargin: '150px' }
+    );
+
+    if (historyLoadMoreRef.current) {
+      observer.observe(historyLoadMoreRef.current);
+    }
+    return () => observer.disconnect();
+  }, [showHistory, sortedFilteredTransactions.length]);
 
   // Incomes & Expenses
   const totalIncome = useMemo(() => {
@@ -635,12 +669,11 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
         
         {showHistory && (
           <div className="space-y-3 pt-3 border-t border-gray-100 dark:border-slate-800">
-            {filteredTransactions.length === 0 ? (
+            {sortedFilteredTransactions.length === 0 ? (
               <p className="text-center text-xs text-gray-400 dark:text-slate-500 py-4">{i18n.noTransactionFound}</p>
             ) : (
-              [...filteredTransactions]
-                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                .map((t) => {
+              <>
+                {sortedFilteredTransactions.slice(0, visibleHistoryCount).map((t) => {
                   const cat = categories.find(c => c.id === t.categoryId) || { name: i18n.unknown, color: '#9ca3af', icon: 'HelpCircle' };
                   return (
                     <div key={t.id} className="flex items-center justify-between bg-gray-50 dark:bg-slate-800/70 p-3 rounded-2xl border border-gray-100 dark:border-slate-750">
@@ -661,7 +694,27 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                       </div>
                     </div>
                   );
-                })
+                })}
+
+                {/* Lazy Load Sentinel & Manual Load More Button */}
+                {sortedFilteredTransactions.length > visibleHistoryCount && (
+                  <div ref={historyLoadMoreRef} className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setVisibleHistoryCount((prev) =>
+                          Math.min(prev + 20, sortedFilteredTransactions.length)
+                        )
+                      }
+                      className="w-full py-2.5 px-4 rounded-2xl bg-indigo-50 hover:bg-indigo-100 dark:bg-slate-800 dark:hover:bg-slate-750 text-indigo-600 dark:text-indigo-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98 border border-indigo-100/80 dark:border-slate-700"
+                    >
+                      <span>
+                        Daha Fazla Göster ({sortedFilteredTransactions.length - visibleHistoryCount} kalan)
+                      </span>
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}

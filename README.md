@@ -163,5 +163,15 @@ mobil_muhasebe/
 
 ---
 
+## 📌 Sürüm Geçmişi (Changelog)
+
+### v1.0.6 (Build 7)
+- **⚡ Akıcı Kaydırma & Lazy Loading:** İşlem Geçmişi (`TransactionsView`) ve Raporlar (`ReportsView` - "Geçmişi Göster") listelerinde IntersectionObserver destekli kademeli yükleme (Lazy Loading & Infinite Scroll) optimizasyonu eklendi.
+- **☁️ Eksiksiz E-Tablo Yedekleme:** Yatırım işlem geçmişi (`investmentTransactions`) otomatik ve manuel Google E-Tablo senkronizasyonuna eklendi.
+- **💳 Kasa & Nakit Akışı İyileştirmeleri:** Nakit giriş-çıkış analizi ve cüzdan kartı hesaplamaları hızlandırıldı.
+- **📁 Proje Düzeni:** Dosyalama ve kök dizin temizliği tamamlandı, gereksiz hata ayıklama kalıntıları kaldırıldı.
+
+---
+
 ## 📄 Lisans
 Bu proje MIT lisansı ile lisanslanmıştır.

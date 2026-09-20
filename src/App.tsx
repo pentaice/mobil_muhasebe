@@ -148,6 +148,7 @@ export default function App() {
           categories: loadCategories(),
           incomeCategories: loadIncomeCategories(),
           investmentAssets: loadInvestmentAssets(),
+          investmentTransactions: loadInvestmentTransactions(),
           cards: loadCards(),
           transactions: loadTransactions(),
           recurringExpenses: loadRecurringExpenses(),

@@ -163,6 +163,9 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
     setNote('');
     setIsCustomDate(false);
     setShowDetailsDrawer(false);
+    if (entryType === 'income') {
+      setEntryType('expense');
+    }
   };
 
   return (
@@ -170,33 +173,22 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
       {/* Compact Main Card Container (ALWAYS AT TOP) */}
       <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl p-4 shadow-sm text-gray-900 dark:text-slate-100 relative overflow-hidden transition-colors">
         
-        {/* ENTRY TYPE SWITCHER: GİDER / GELİR */}
-        <div className="grid grid-cols-2 p-1 bg-gray-100 dark:bg-slate-800 rounded-2xl mb-3.5">
-          <button
-            type="button"
-            onClick={() => setEntryType('expense')}
-            className={`py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-              entryType === 'expense'
-                ? 'bg-white dark:bg-slate-700 text-rose-600 dark:text-rose-400 shadow-2xs scale-[1.01]'
-                : 'text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200'
-            }`}
-          >
-            <ArrowDownLeft className="w-3.5 h-3.5" />
-            <span>{i18n.expense} Kaydet</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setEntryType('income')}
-            className={`py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-              entryType === 'income'
-                ? 'bg-emerald-600 text-white shadow-2xs scale-[1.01]'
-                : 'text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200'
-            }`}
-          >
-            <ArrowUpRight className="w-3.5 h-3.5" />
-            <span>{i18n.income} Kaydet</span>
-          </button>
-        </div>
+        {/* If in Income Mode, show an elegant compact banner to switch back */}
+        {entryType === 'income' && (
+          <div className="flex items-center justify-between pb-2.5 mb-2 border-b border-emerald-100 dark:border-emerald-900/40">
+            <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 font-extrabold text-xs">
+              <ArrowUpRight className="w-4 h-4" />
+              <span>Gelir Girişi Modu</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setEntryType('expense')}
+              className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 cursor-pointer"
+            >
+              <span>← Harcama Moduna Dön</span>
+            </button>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-3.5">
           {/* AMOUNT INPUT & QUICK CHIPS */}
@@ -509,11 +501,48 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
         </form>
       </div>
 
+      {/* INCOME QUICK ACTION BUTTON / MODULE */}
+      <button
+        type="button"
+        onClick={() => {
+          setEntryType('income');
+          setTimeout(() => amountInputRef.current?.focus(), 50);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        className="w-full mt-3.5 p-4 min-h-[66px] bg-white dark:bg-slate-850 hover:bg-emerald-50/50 dark:hover:bg-slate-800/90 border border-gray-100 dark:border-slate-750/80 rounded-3xl flex items-center justify-between transition-all cursor-pointer shadow-sm group active:scale-[0.99] text-gray-900 dark:text-slate-100"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold shadow-2xs group-hover:scale-105 transition-transform shrink-0">
+            <ArrowUpRight className="w-5 h-5" />
+          </div>
+          <div className="text-left">
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-sm text-gray-900 dark:text-slate-100 leading-tight">
+                {i18n.income} Ekle / Kaydet
+              </span>
+              <span className="bg-emerald-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                Maaş & Gelir
+              </span>
+            </div>
+            <p className="text-[11px] text-gray-500 dark:text-slate-400 font-medium mt-0.5">
+              Maaş, prim veya ek gelirlerinizi kasaya kaydedin
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-xs font-bold pl-2 shrink-0">
+          <span className="hidden sm:inline">Gelir Modu</span>
+          <div className="w-7 h-7 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
+            <ChevronRight className="w-4 h-4" />
+          </div>
+        </div>
+      </button>
+
       {/* RECURRING EXPENSES ACTION BUTTON / MODULE (UNDER MAIN COMPONENT) */}
       <button
         type="button"
         onClick={() => setShowRecurringModal(true)}
-        className="w-full mt-3.5 p-4 min-h-[66px] bg-white dark:bg-slate-850 hover:bg-indigo-50/50 dark:hover:bg-slate-800/90 border border-gray-100 dark:border-slate-750/80 rounded-3xl flex items-center justify-between transition-all cursor-pointer shadow-sm group active:scale-[0.99] text-gray-900 dark:text-slate-100"
+        className="w-full mt-2.5 p-4 min-h-[66px] bg-white dark:bg-slate-850 hover:bg-indigo-50/50 dark:hover:bg-slate-800/90 border border-gray-100 dark:border-slate-750/80 rounded-3xl flex items-center justify-between transition-all cursor-pointer shadow-sm group active:scale-[0.99] text-gray-900 dark:text-slate-100"
       >
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold shadow-2xs group-hover:scale-105 transition-transform shrink-0">

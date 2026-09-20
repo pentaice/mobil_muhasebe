@@ -1,0 +1,5 @@
+Cebim Muhasebe v1.0.6 What's New:
+• Performance & Smooth Scrolling: Added Lazy Loading & Infinite Scrolling for transaction history and reports lists; eliminating UI stutters.
+• Google Sheets Backup: Investment transactions are now fully backed up via automatic and manual cloud sync.
+• Wallet & Cash Flow: Cash flow analytics drawer and performance improvements.
+• General UI polishing and stability fixes.

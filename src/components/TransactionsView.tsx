@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Category, CreditCard, Transaction, IncomeCategory, InvestmentAsset } from '../types';
 import { CategoryIcon } from './CategoryIcon';
 import { formatShortDate, loadIncomeCategories, loadInvestmentAssets } from '../utils/storage';
@@ -47,6 +47,10 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>('all');
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  // Lazy loading / Pagination state
+  const [visibleCount, setVisibleCount] = useState<number>(25);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   // Edit form state
   const [editAmount, setEditAmount] = useState<string>('');
@@ -155,7 +159,38 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
         return true;
       })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [transactions, search, selectedCategoryFilter, selectedTypeFilter, categories, cards, incomeCats, invAssets]);
+  }, [
+    transactions,
+    selectedTypeFilter,
+    selectedCategoryFilter,
+    search,
+    categories,
+    incomeCats,
+    invAssets,
+    cards,
+  ]);
+
+  // Reset pagination on filter / search / data change
+  useEffect(() => {
+    setVisibleCount(25);
+  }, [search, selectedTypeFilter, selectedCategoryFilter, transactions]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + 25, filteredTransactions.length));
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+    return () => observer.disconnect();
+  }, [filteredTransactions.length]);
 
   return (
     <div className="w-full max-w-lg mx-auto space-y-4 pb-8">
@@ -213,8 +248,9 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
             <p className="text-gray-400 dark:text-slate-500 text-xs">{i18n.tryChangingSearch}</p>
           </div>
         ) : (
-          filteredTransactions.map((t) => {
-            const isExpense = t.type === 'expense';
+          <>
+            {filteredTransactions.slice(0, visibleCount).map((t) => {
+              const isExpense = t.type === 'expense';
             const isIncome = t.type === 'income';
             const isCardPayment = t.type === 'card_payment';
             const isInvDeposit = t.type === 'investment_deposit';
@@ -368,9 +404,29 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 </div>
               </div>
             );
-          })
-        )}
-      </div>
+          })}
+
+          {/* Lazy Load Sentinel & Load More Button */}
+          {filteredTransactions.length > visibleCount && (
+            <div ref={loadMoreRef} className="pt-2 pb-3">
+              <button
+                type="button"
+                onClick={() =>
+                  setVisibleCount((prev) =>
+                    Math.min(prev + 25, filteredTransactions.length)
+                  )
+                }
+                className="w-full py-2.5 px-4 rounded-2xl bg-gray-50 dark:bg-slate-800/80 hover:bg-gray-100 dark:hover:bg-slate-800 border border-gray-200/80 dark:border-slate-700 text-xs font-bold text-gray-700 dark:text-slate-300 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98"
+              >
+                <span>
+                  Daha Fazla Göster ({filteredTransactions.length - visibleCount} işlem daha)
+                </span>
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
 
       {/* Delete Confirmation Modal */}
       <AnimatePresence>
