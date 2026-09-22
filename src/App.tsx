@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { App as CapApp } from '@capacitor/app';
+import { executeBackHandler } from './utils/backButton';
 import {
   Category,
   CreditCard,
@@ -69,9 +71,102 @@ export default function App() {
   const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>(() => loadRecurringExpenses());
   const [initialCashBalance, setInitialCashBalance] = useState<number>(() => loadInitialCashBalance());
   const [activeTab, setActiveTab] = useState<ActiveTab>('add');
+  const [tabHistory, setTabHistory] = useState<ActiveTab[]>(['add']);
+  const activeTabRef = useRef<ActiveTab>(activeTab);
+  activeTabRef.current = activeTab;
+  const tabHistoryRef = useRef<ActiveTab[]>(tabHistory);
+  tabHistoryRef.current = tabHistory;
+  const lastBackPressTimeRef = useRef<number>(0);
   const [toast, setToast] = useState<ToastState | null>(null);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => loadTheme() === 'dark');
   const [quickAddFocusTrigger, setQuickAddFocusTrigger] = useState<number>(0);
+
+  // Navigate between tabs and track navigation history
+  const navigateToTab = (targetTab: ActiveTab) => {
+    if (targetTab === activeTabRef.current) return;
+
+    if (targetTab === 'add') {
+      // Returning to the home screen resets tab history to root
+      setTabHistory(['add']);
+      tabHistoryRef.current = ['add'];
+    } else {
+      setTabHistory((prev) => {
+        const next = [...prev, targetTab];
+        tabHistoryRef.current = next;
+        return next;
+      });
+    }
+
+    setActiveTab(targetTab);
+    activeTabRef.current = targetTab;
+    if (targetTab === 'add') {
+      setQuickAddFocusTrigger((n) => n + 1);
+    }
+  };
+
+  // Handle hardware / gesture back navigation
+  const handleBackNavigation = () => {
+    const currentTab = activeTabRef.current;
+    const currentHistory = tabHistoryRef.current;
+
+    if (currentTab !== 'add') {
+      // Return to previous tab
+      if (currentHistory.length > 1) {
+        const nextHistory = currentHistory.slice(0, -1);
+        const prevTab = nextHistory[nextHistory.length - 1];
+        tabHistoryRef.current = nextHistory;
+        setTabHistory(nextHistory);
+        setActiveTab(prevTab);
+        activeTabRef.current = prevTab;
+        if (prevTab === 'add') {
+          setQuickAddFocusTrigger((n) => n + 1);
+        }
+      } else {
+        tabHistoryRef.current = ['add'];
+        setTabHistory(['add']);
+        setActiveTab('add');
+        activeTabRef.current = 'add';
+        setQuickAddFocusTrigger((n) => n + 1);
+      }
+    } else {
+      // On main page "Hızlı Ekle": require 2 back presses within 2 seconds to exit
+      const now = Date.now();
+      if (now - lastBackPressTimeRef.current < 2000) {
+        CapApp.exitApp();
+      } else {
+        lastBackPressTimeRef.current = now;
+        showToast(i18n.pressBackAgainToExit, 'info');
+      }
+    }
+  };
+
+  // Listen to Android hardware / gesture back button
+  useEffect(() => {
+    let listenerHandle: { remove: () => void } | null = null;
+
+    const setupBackListener = async () => {
+      try {
+        listenerHandle = await CapApp.addListener('backButton', () => {
+          // 1. Check if an active modal or overlay consumes the back button
+          const handled = executeBackHandler();
+          if (handled) return;
+
+          // 2. Otherwise navigate back or exit if on home
+          handleBackNavigation();
+        });
+      } catch (err) {
+        console.warn('Capacitor App backButton listener setup failed:', err);
+      }
+    };
+
+    setupBackListener();
+
+    return () => {
+      if (listenerHandle) {
+        listenerHandle.remove();
+      }
+    };
+  }, [i18n]);
 
   // Toggle Dark Mode
   const handleToggleTheme = () => {
@@ -510,7 +605,7 @@ export default function App() {
         <Header
           transactions={transactions}
           activeTab={activeTab}
-          onOpenHistory={() => setActiveTab('history')}
+          onOpenHistory={() => navigateToTab('history')}
           onExportData={handleExportData}
           onImportData={handleImportData}
           onResetData={handleResetData}
@@ -534,11 +629,11 @@ export default function App() {
                   cards={cards}
                   recurringExpenses={recurringExpenses}
                   onAddTransaction={handleAddTransaction}
-                  onOpenAddCategoryModal={() => setActiveTab('categories')}
+                  onOpenAddCategoryModal={() => navigateToTab('categories')}
                   onAddRecurringExpense={handleAddRecurringExpense}
                   onUpdateRecurringExpense={handleUpdateRecurringExpense}
                   onDeleteRecurringExpense={handleDeleteRecurringExpense}
-                  onOpenInvestments={() => setActiveTab('investments')}
+                  onOpenInvestments={() => navigateToTab('investments')}
                   totalInvestmentsValue={totalInvestmentsValuation}
                   liquidCashBalance={liquidCashBalance}
                   focusTrigger={quickAddFocusTrigger}
@@ -612,10 +707,7 @@ export default function App() {
         {/* Bottom Tab Bar */}
         <BottomNav
           activeTab={activeTab}
-          setActiveTab={(tab) => {
-            setActiveTab(tab);
-            if (tab === 'add') setQuickAddFocusTrigger((n) => n + 1);
-          }}
+          setActiveTab={(tab) => navigateToTab(tab)}
         />
       </div>
     </div>

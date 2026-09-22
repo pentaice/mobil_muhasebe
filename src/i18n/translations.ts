@@ -382,6 +382,7 @@ export type TranslationKeys = {
   totalIncome: string;
   cashBalance: string;
   netWorth: string;
+  pressBackAgainToExit: string;
   // End
 };
 
@@ -734,6 +735,7 @@ const translations: Record<LanguageCode, TranslationKeys> = {
     totalIncome: 'Toplam Gelir',
     cashBalance: 'Nakit Varlık',
     netWorth: 'Net Servet',
+    pressBackAgainToExit: 'Çıkmak için tekrar geri tuşuna basın',
 
   },
 
@@ -1068,6 +1070,7 @@ const translations: Record<LanguageCode, TranslationKeys> = {
     totalIncome: 'Total Income',
     cashBalance: 'Cash Balance',
     netWorth: 'Net Worth',
+    pressBackAgainToExit: 'Press back again to exit',
 
   },
 
@@ -1402,6 +1405,7 @@ const translations: Record<LanguageCode, TranslationKeys> = {
     totalIncome: 'Ingreso total',
     cashBalance: 'Saldo en efectivo',
     netWorth: 'Patrimonio neto',
+    pressBackAgainToExit: 'Presione atrás de nuevo para salir',
 
   },
 
@@ -1736,6 +1740,7 @@ const translations: Record<LanguageCode, TranslationKeys> = {
     totalIncome: 'Revenu total',
     cashBalance: 'Trésorerie',
     netWorth: 'Valeur nette',
+    pressBackAgainToExit: 'Appuyez à nouveau sur retour pour quitter',
 
   },
 
@@ -2070,6 +2075,7 @@ const translations: Record<LanguageCode, TranslationKeys> = {
     totalIncome: '总收入',
     cashBalance: '现金资产',
     netWorth: '净资产',
+    pressBackAgainToExit: '再按一次返回键退出应用',
 
   },
 
@@ -2404,6 +2410,7 @@ const translations: Record<LanguageCode, TranslationKeys> = {
     totalIncome: 'कुल आय',
     cashBalance: 'नकद शेष',
     netWorth: 'कुल संपत्ति',
+    pressBackAgainToExit: 'बाहर निकलने के लिए फिर से वापस दबाएं',
 
   },
 };

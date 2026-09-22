@@ -165,6 +165,15 @@ mobil_muhasebe/
 
 ## 📌 Sürüm Geçmişi (Changelog)
 
+### v1.0.7 (Build 8)
+- **🔙 Gelişmiş Geri Tuşu Yönetimi (Android Back Navigation):**
+  - Donanımsal geri tuşuna veya geri kaydırma hareketine basıldığında uygulamanın doğrudan kapanması engellendi.
+  - Açık modallar (Kart Ekle/Düzenle, Düzenli Ödemeler, Cüzdan Düzenleme, Kategori ve Yatırım pencereleri) geri tuşuna basıldığında güvenle kapatılır.
+  - Sayfalar ve sekmeler arası gezinme geçmişi (Navigation Stack) eklendi; önceki ekrana kesintisiz geri dönülür.
+  - Ana sayfa ("Hızlı Ekle") ekranında yanlışlıkla çıkışları önlemek için "Çıkmak için tekrar geri tuşuna basın" uyarısı ve 2 saniye içinde çift tıkla çıkış güvenliği devreye alındı.
+- **⚡ Capacitor App Entegrasyonu:** En güncel yerel uygulama yaşam döngüsü ve donanım olayları altyapısı sağlandı.
+- **🚀 Performans & Kararlılık:** Bellek yönetimi ve tip güvenliği optimizasyonları yapıldı.
+
 ### v1.0.6 (Build 7)
 - **⚡ Akıcı Kaydırma & Lazy Loading:** İşlem Geçmişi (`TransactionsView`) ve Raporlar (`ReportsView` - "Geçmişi Göster") listelerinde IntersectionObserver destekli kademeli yükleme (Lazy Loading & Infinite Scroll) optimizasyonu eklendi.
 - **☁️ Eksiksiz E-Tablo Yedekleme:** Yatırım işlem geçmişi (`investmentTransactions`) otomatik ve manuel Google E-Tablo senkronizasyonuna eklendi.

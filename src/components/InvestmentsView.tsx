@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { InvestmentAsset, Transaction, InvestmentTransaction, InvestmentCategory } from '../types';
 import { useI18n } from '../i18n/I18nContext';
 import { calculateInvestmentStats, calculateLiquidCashBalance } from '../utils/storage';
+import { useBackHandler } from '../utils/backButton';
 import {
   TrendingUp,
   TrendingDown,
@@ -66,6 +67,29 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
   const [showNewAssetModal, setShowNewAssetModal] = useState<boolean>(false);
   const [selectedAssetForAction, setSelectedAssetForAction] = useState<InvestmentAsset | null>(null);
   const [assetToDelete, setAssetToDelete] = useState<InvestmentAsset | null>(null);
+
+  useBackHandler(() => {
+    if (assetToDelete) {
+      setAssetToDelete(null);
+      return;
+    }
+    if (showDepositModal) {
+      setShowDepositModal(false);
+      return;
+    }
+    if (showWithdrawModal) {
+      setShowWithdrawModal(false);
+      return;
+    }
+    if (showValuationModal) {
+      setShowValuationModal(false);
+      return;
+    }
+    if (showNewAssetModal) {
+      setShowNewAssetModal(false);
+      return;
+    }
+  }, Boolean(assetToDelete || showDepositModal || showWithdrawModal || showValuationModal || showNewAssetModal), 15);
 
   // Deposit Form State
   const [depositAssetId, setDepositAssetId] = useState<string>('');

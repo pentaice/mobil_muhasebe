@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Transaction } from '../types';
 import { calculateLiquidCashBalance } from '../utils/storage';
 import { useI18n } from '../i18n/I18nContext';
+import { useBackHandler } from '../utils/backButton';
 import {
   Wallet,
   ArrowDownLeft,
@@ -46,6 +47,17 @@ export const WalletCard: React.FC<WalletCardProps> = ({
   // Bottom Sheet Analysis Drawer State
   const [showAnalysisModal, setShowAnalysisModal] = useState<boolean>(false);
   const [analysisType, setAnalysisType] = useState<'inflow' | 'outflow'>('inflow');
+
+  useBackHandler(() => {
+    if (showEditModal) {
+      setShowEditModal(false);
+      return;
+    }
+    if (showAnalysisModal) {
+      setShowAnalysisModal(false);
+      return;
+    }
+  }, showEditModal || showAnalysisModal, 15);
 
   // Current liquid cash balance
   const currentCash = useMemo(

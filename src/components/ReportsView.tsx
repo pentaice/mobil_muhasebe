@@ -3,6 +3,7 @@ import { Category, CreditCard, Transaction, IncomeCategory } from '../types';
 import { formatShortDate, loadIncomeCategories } from '../utils/storage';
 import { CategoryIcon } from './CategoryIcon';
 import { useI18n } from '../i18n/I18nContext';
+import { useBackHandler } from '../utils/backButton';
 import {
   ResponsiveContainer,
   PieChart,
@@ -55,6 +56,13 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [visibleHistoryCount, setVisibleHistoryCount] = useState<number>(20);
   const historyLoadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  useBackHandler(() => {
+    if (showCustomDateModal) {
+      setShowCustomDateModal(false);
+      return;
+    }
+  }, showCustomDateModal, 15);
 
   // Custom date range state (Defaults to earliest and latest transaction date or current month)
   const [customStartDate, setCustomStartDate] = useState<string>('2026-04-08');

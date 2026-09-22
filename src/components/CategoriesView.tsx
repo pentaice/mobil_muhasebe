@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Category, Transaction } from '../types';
 import { CategoryIcon, AVAILABLE_ICONS } from './CategoryIcon';
 import { formatTL } from '../utils/storage';
+import { useBackHandler } from '../utils/backButton';
 import {
   Plus,
   Trash2,
@@ -105,6 +106,37 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [deleteMode, setDeleteMode] = useState<'menu' | 'select_target' | 'confirm_purge'>('menu');
   const [selectedTargetCatId, setSelectedTargetCatId] = useState<string>('');
+
+  useBackHandler(() => {
+    if (categoryToDelete) {
+      setCategoryToDelete(null);
+      return;
+    }
+    if (editingCategory) {
+      setEditingCategory(null);
+      return;
+    }
+    if (showAddModal) {
+      setShowAddModal(false);
+      return;
+    }
+    if (isLocalizationOpen) {
+      setIsLocalizationOpen(false);
+      return;
+    }
+    if (showPrivacyModal) {
+      setShowPrivacyModal(false);
+      return;
+    }
+    if (showTermsModal) {
+      setShowTermsModal(false);
+      return;
+    }
+    if (showCategoriesModal) {
+      setShowCategoriesModal(false);
+      return;
+    }
+  }, Boolean(categoryToDelete || editingCategory || showAddModal || isLocalizationOpen || showPrivacyModal || showTermsModal || showCategoriesModal), 15);
 
   // Calculate total spent and transaction count per category
   const categoryTotals: Record<string, { total: number; count: number }> = {};

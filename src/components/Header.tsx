@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Transaction } from '../types';
 import { formatTL } from '../utils/storage';
+import { useBackHandler } from '../utils/backButton';
 import {
   Wallet,
   Download,
@@ -62,6 +63,29 @@ export const Header: React.FC<HeaderProps> = ({
   const [activeSettingsPanel, setActiveSettingsPanel] = useState<'main' | 'restore' | 'sheets_settings'>('main');
   const [showJsonInfo, setShowJsonInfo] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useBackHandler(() => {
+    if (showSheetsHelpModal) {
+      setShowSheetsHelpModal(false);
+      return;
+    }
+    if (showResetConfirm) {
+      setShowResetConfirm(false);
+      return;
+    }
+    if (showJsonInfo) {
+      setShowJsonInfo(false);
+      return;
+    }
+    if (activeSettingsPanel !== 'main') {
+      setActiveSettingsPanel('main');
+      return;
+    }
+    if (showSettingsModal) {
+      setShowSettingsModal(false);
+      return;
+    }
+  }, showSettingsModal || showSheetsHelpModal || showResetConfirm || showJsonInfo, 15);
 
   React.useEffect(() => {
     const handleOpenSheetsSettings = () => {

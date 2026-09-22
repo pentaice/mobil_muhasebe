@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CreditCard, Transaction, Category } from '../types';
 import { calculateCardCycleInfo } from '../utils/storage';
 import { useI18n } from '../i18n/I18nContext';
+import { useBackHandler } from '../utils/backButton';
 import { CreditCardPaymentModal } from './CreditCardPaymentModal';
 import { AddCreditCardModal } from './AddCreditCardModal';
 import { EditCreditCardModal } from './EditCreditCardModal';
@@ -38,6 +39,25 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
   const [selectedCardForEdit, setSelectedCardForEdit] = useState<CreditCard | null>(null);
   const [showEditModal, setShowEditModal] = useState<boolean>(false);
   const [cardToDelete, setCardToDelete] = useState<CreditCard | null>(null);
+
+  useBackHandler(() => {
+    if (cardToDelete) {
+      setCardToDelete(null);
+      return;
+    }
+    if (showAddModal) {
+      setShowAddModal(false);
+      return;
+    }
+    if (showEditModal) {
+      setShowEditModal(false);
+      return;
+    }
+    if (selectedCardForPayment) {
+      setSelectedCardForPayment(null);
+      return;
+    }
+  }, Boolean(cardToDelete || showAddModal || showEditModal || selectedCardForPayment), 15);
 
   // Total credit cards debt across all cards
   const totalAllCardsDebt = cards.reduce((sum, card) => {

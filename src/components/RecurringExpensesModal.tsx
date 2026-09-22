@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { RecurringExpense, Category, CreditCard, PaymentSourceType } from '../types';
 import { useI18n } from '../i18n/I18nContext';
+import { useBackHandler } from '../utils/backButton';
 import { CategoryIcon } from './CategoryIcon';
 import {
   CalendarClock,
@@ -74,6 +75,18 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
 
   // Delete Confirmation State
   const [itemToDelete, setItemToDelete] = useState<RecurringExpense | null>(null);
+
+  useBackHandler(() => {
+    if (itemToDelete) {
+      setItemToDelete(null);
+      return;
+    }
+    if (formMode) {
+      setFormMode(null);
+      return;
+    }
+    onClose();
+  }, isOpen, 20);
 
   if (!isOpen) return null;
 

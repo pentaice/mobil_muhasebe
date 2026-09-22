@@ -3,6 +3,7 @@ import { Category, CreditCard, Transaction, IncomeCategory, InvestmentAsset } fr
 import { CategoryIcon } from './CategoryIcon';
 import { formatShortDate, loadIncomeCategories, loadInvestmentAssets } from '../utils/storage';
 import { useI18n } from '../i18n/I18nContext';
+import { useBackHandler } from '../utils/backButton';
 import {
   Search,
   Trash2,
@@ -47,6 +48,17 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>('all');
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  useBackHandler(() => {
+    if (deleteConfirmId) {
+      setDeleteConfirmId(null);
+      return;
+    }
+    if (editingTx) {
+      setEditingTx(null);
+      return;
+    }
+  }, Boolean(deleteConfirmId || editingTx), 15);
 
   // Lazy loading / Pagination state
   const [visibleCount, setVisibleCount] = useState<number>(25);

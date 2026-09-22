@@ -4,6 +4,7 @@ import { CategoryIcon } from './CategoryIcon';
 import { formatTL, loadQuickAmounts, saveQuickAmounts, DEFAULT_QUICK_AMOUNTS } from '../utils/storage';
 import { useI18n } from '../i18n/I18nContext';
 import { RecurringExpensesModal } from './RecurringExpensesModal';
+import { useBackHandler } from '../utils/backButton';
 import {
   Zap,
   CreditCard as CardIcon,
@@ -75,6 +76,17 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
   const [quickAmounts, setQuickAmounts] = useState<number[]>(() => loadQuickAmounts());
   const [showQuickAmountModal, setShowQuickAmountModal] = useState<boolean>(false);
   const [newQuickAmountInput, setNewQuickAmountInput] = useState<string>('');
+
+  useBackHandler(() => {
+    if (showQuickAmountModal) {
+      setShowQuickAmountModal(false);
+      return;
+    }
+    if (showRecurringModal) {
+      setShowRecurringModal(false);
+      return;
+    }
+  }, showQuickAmountModal || showRecurringModal);
 
   const amountInputRef = useRef<HTMLInputElement>(null);
   const amountNumber = parseFloat(amountStr) || 0;
