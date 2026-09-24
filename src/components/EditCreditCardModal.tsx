@@ -10,9 +10,9 @@ interface EditCreditCardModalProps {
 }
 
 const GRADIENT_PRESETS = [
-  { label: 'Garanti / Yeşil', value: 'from-emerald-700 via-teal-800 to-slate-900' },
+  { label: 'Garanti (Green)', value: 'from-emerald-700 via-teal-800 to-slate-900' },
   { label: 'World / Mavi', value: 'from-blue-700 via-indigo-900 to-slate-950' },
-  { label: 'Axess / Kırmızı-Turuncu', value: 'from-rose-700 via-amber-800 to-slate-950' },
+  { label: 'Axess (Red)', value: 'from-rose-700 via-amber-800 to-slate-950' },
   { label: 'Maximum / Mor', value: 'from-purple-800 via-indigo-900 to-slate-950' },
   { label: 'Siyah Luxury / Gold', value: 'from-slate-900 via-neutral-900 to-amber-950' },
 ];

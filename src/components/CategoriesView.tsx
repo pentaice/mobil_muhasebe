@@ -210,7 +210,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
 
   // Start Delete Flow
   const handleClickDelete = (cat: Category) => {
-    if (cat.id === 'cat-diger') return; // Cannot delete Diğer
+    if (cat.id === 'cat-diger') return; // Cannot delete other category
 
     const info = categoryTotals[cat.id];
     if (info && info.count > 0) {
@@ -895,7 +895,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
 
                   <div className="bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 rounded-2xl p-4 space-y-2 text-xs text-rose-900 dark:text-rose-200 leading-relaxed">
                     <p className="font-bold">
-                      ⚠️ Bu işlem sonucunda:
+                      ⚠️ {i18n.asResultOfThis}
                     </p>
                     <ul className="list-disc list-inside space-y-1 text-rose-800 dark:text-rose-300">
                       <li>
@@ -1174,7 +1174,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                         type="button"
                         disabled={isFirst}
                         onClick={() => handleMoveUp(index)}
-                        title="Yukarı Taşı"
+                        title={i18n.moveUp}
                         className={`p-1 rounded-lg transition-colors ${
                           isFirst
                             ? 'text-gray-300 dark:text-slate-700 cursor-not-allowed opacity-30'
@@ -1187,7 +1187,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                         type="button"
                         disabled={isLast}
                         onClick={() => handleMoveDown(index)}
-                        title="Aşağı Taşı"
+                        title={i18n.moveDown}
                         className={`p-1 rounded-lg transition-colors ${
                           isLast
                             ? 'text-gray-300 dark:text-slate-700 cursor-not-allowed opacity-30'
@@ -1227,7 +1227,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                       <button
                         type="button"
                         onClick={() => handleStartEdit(cat)}
-                        title="Kategoriyi Düzenle (İsim, Renk, Simge)"
+                        title={i18n.editCategoryTooltip}
                         className="text-gray-400 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 p-2 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors cursor-pointer active:scale-95"
                       >
                         <Edit2 className="w-4 h-4" />

@@ -58,7 +58,7 @@ export async function checkAndImportWidgetTransactions(
     await WidgetBridge.clearPendingTransactions();
 
     if (showToast && txs.length > 0) {
-      showToast(`Widget üzerinden ${txs.length} harcama aktarıldı`, 'success');
+      showToast(`${txs.length} transactions imported`, 'success');
     }
 
     return txs.length;

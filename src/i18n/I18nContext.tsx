@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { LanguageCode, CurrencyConfig, SUPPORTED_CURRENCIES, getTranslations, TranslationKeys } from './translations';
+import { LanguageCode, CurrencyConfig, SUPPORTED_CURRENCIES, getTranslations, TranslationKeys, DEFAULT_CATEGORY_NAMES } from './translations';
 
 const STORAGE_KEY_LANG = 'cebim_language_v4';
 const STORAGE_KEY_CURRENCY = 'cebim_currency_v4';
@@ -40,6 +40,7 @@ interface I18nContextType {
   setCurrency: (currency: CurrencyConfig) => void;
   t: TranslationKeys;
   formatCurrency: (amount: number) => string;
+  getCategoryName: (cat?: { id?: string; name?: string; isCustom?: boolean } | null) => string;
 }
 
 const I18nContext = createContext<I18nContextType | null>(null);

@@ -321,8 +321,8 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                       {isExpense && (cat?.name || i18n.expense)}
                       {isIncome && (incCat?.name || i18n.income)}
                       {isCardPayment && i18n.cardPayment}
-                      {isInvDeposit && (invAsset?.name ? `${invAsset.name} (Alış)` : 'Yatırıma Para Yatırma')}
-                      {isInvWithdraw && (invAsset?.name ? `${invAsset.name} (Satış)` : 'Yatırımdan Nakite Çekim')}
+                      {isInvDeposit && (invAsset?.name ? `${invAsset.name} (${i18n.invBuy})` : i18n.investCash)}
+                      {isInvWithdraw && (invAsset?.name ? `${invAsset.name} (${i18n.invSell})` : i18n.withdrawCashTitle)}
                     </p>
                     <p className="text-[11px] text-gray-500 dark:text-slate-400 line-clamp-1">
                       {t.note ||
@@ -331,14 +331,14 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                             ? card.name
                             : i18n.cashBank
                           : isIncome
-                          ? 'Nakit / Banka Hesabı'
+                          ? i18n.cashBank
                           : isCardPayment
                           ? card?.name || i18n.creditCard
                           : isInvWithdraw && t.profitOrLoss !== undefined
                           ? t.profitOrLoss >= 0
-                            ? `+${formatCurrency(t.profitOrLoss)} kâr gerçekleşti`
-                            : `${formatCurrency(t.profitOrLoss)} zarar gerçekleşti`
-                          : 'Serbest Varlık')}
+                            ? `+${formatCurrency(t.profitOrLoss)} ${i18n.profitRealizedShort}`
+                            : `${formatCurrency(t.profitOrLoss)} ${i18n.lossRealizedShort}`
+                          : i18n.freeAsset)}
                     </p>
                     <div className="flex items-center gap-2 text-[10px] text-gray-400 dark:text-slate-500 whitespace-nowrap overflow-hidden">
                       <span className="flex items-center gap-1 shrink-0">
@@ -352,12 +352,12 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                       )}
                       {isIncome && (
                         <span className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded font-semibold border border-emerald-200/60 dark:border-emerald-900/40 truncate shrink">
-                          Gelir
+                          {i18n.income}
                         </span>
                       )}
                       {(isInvDeposit || isInvWithdraw) && (
                         <span className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded font-semibold border border-indigo-200/60 dark:border-indigo-900/40 truncate shrink">
-                          Yatırım
+                          {i18n.investments}
                         </span>
                       )}
                     </div>
@@ -389,8 +389,8 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                         : isCardPayment
                         ? i18n.payment
                         : isInvDeposit
-                        ? 'Yatırım Girişi'
-                        : 'Yatırım Çıkışı'}
+                        ? i18n.investmentInflow
+                        : i18n.investmentOutflow}
                     </span>
                   </div>
 
@@ -431,7 +431,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 className="w-full py-2.5 px-4 rounded-2xl bg-gray-50 dark:bg-slate-800/80 hover:bg-gray-100 dark:hover:bg-slate-800 border border-gray-200/80 dark:border-slate-700 text-xs font-bold text-gray-700 dark:text-slate-300 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98"
               >
                 <span>
-                  Daha Fazla Göster ({filteredTransactions.length - visibleCount} işlem daha)
+                  {i18n.showMore} ({filteredTransactions.length - visibleCount} {i18n.remainingTransactions})
                 </span>
               </button>
             </div>

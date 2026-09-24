@@ -74,7 +74,7 @@ export function processRecurringExpenses(
         sourceType: effectiveSource,
         creditCardId: effectiveSource === 'credit_card' ? item.cardId : undefined,
         date: txDate,
-        note: `Düzenli Gider: ${item.title}`,
+        note: `${item.title}`,
       });
 
       return {

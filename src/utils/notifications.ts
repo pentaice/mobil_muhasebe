@@ -20,8 +20,8 @@ export async function initNotificationChannel(): Promise<void> {
   try {
     await LocalNotifications.createChannel({
       id: REMINDER_CHANNEL_ID,
-      name: 'Cebim Hatırlatıcıları',
-      description: 'Harcama ve bütçe takip hatırlatıcı bildirimleri',
+      name: 'Cebim Reminders',
+      description: 'Expense and budget tracking reminders',
       importance: 4, // IMPORTANCE_HIGH (Shows banner, plays sound)
       visibility: 1, // VISIBILITY_PUBLIC
       vibration: true,
@@ -173,7 +173,7 @@ export async function syncNotificationSchedule(
     const minute = parseInt(mStr, 10) || 0;
 
     const notifTitle = t.reminderNotificationTitle || t.appName || 'Cebim Muhasebe';
-    const notifBody = t.reminderNotificationBody || 'Bugünkü harcamalarınızı veya işlemlerinizi kaydettiniz mi?';
+    const notifBody = t.reminderNotificationBody || "Don't forget to record today's expenses and transactions";
 
     const notificationsToSchedule: LocalNotificationSchema[] = [];
 

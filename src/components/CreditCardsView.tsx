@@ -80,10 +80,10 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
       <div className="flex items-center justify-between pt-2 px-1">
         <h3 className="font-extrabold text-sm text-gray-900 dark:text-slate-100 flex items-center gap-1.5">
           <CardIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-          <span>Kredi Kartlarım ({cards.length})</span>
+          <span>{i18n.myCreditCards} ({cards.length})</span>
         </h3>
         <span className="text-[11px] text-gray-500 dark:text-slate-400 font-medium">
-          Toplam Borç: <strong className="text-blue-600 dark:text-blue-400">{formatCurrency(totalAllCardsDebt)}</strong>
+          {i18n.totalDebtLabel}: <strong className="text-blue-600 dark:text-blue-400">{formatCurrency(totalAllCardsDebt)}</strong>
         </span>
       </div>
 

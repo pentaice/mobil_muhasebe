@@ -294,11 +294,11 @@ export default function App() {
     if (txData.type === 'card_payment') {
       showToast(i18n.toastCardPaymentAdded, 'success');
     } else if (txData.type === 'income') {
-      showToast('Gelir başarıyla kaydedildi!', 'success');
+      showToast(i18n.toastIncomeSuccess, 'success');
     } else if (txData.type === 'investment_deposit') {
-      showToast('Paranız yatırıma aktarıldı!', 'success');
+      showToast(i18n.toastInvestDepositSuccess, 'success');
     } else if (txData.type === 'investment_withdraw') {
-      showToast('Yatırımdan nakit çekildi!', 'success');
+      showToast(i18n.toastInvestWithdrawSuccess, 'success');
     } else {
       showToast(i18n.toastExpenseAdded, 'success');
     }
@@ -428,7 +428,7 @@ export default function App() {
       showToast(`"${catName}" ${i18n.toastCategoryDeletedPurge}`, 'info');
     } else if (action === 'reassign_custom' && targetCatId) {
       const targetCat = categories.find((c) => c.id === targetCatId);
-      const targetName = targetCat ? targetCat.name : 'seçilen kategori';
+      const targetName = targetCat ? targetCat.name : i18n.targetCategory;
       setTransactions((prev) =>
         prev.map((t) => (t.categoryId === catId ? { ...t, categoryId: targetCatId } : t))
       );
@@ -476,17 +476,17 @@ export default function App() {
       updatedAt: new Date().toISOString(),
     };
     setInvestmentAssets((prev) => [...prev, newAsset]);
-    showToast(`"${assetData.name}" portföye eklendi!`, 'success');
+    showToast(`"${assetData.name}" ${i18n.toastAssetAdded}`, 'success');
   };
 
   const handleUpdateInvestmentAsset = (updatedAsset: InvestmentAsset) => {
     setInvestmentAssets((prev) => prev.map((a) => (a.id === updatedAsset.id ? updatedAsset : a)));
-    showToast(`"${updatedAsset.name}" güncellendi!`, 'success');
+    showToast(`"${updatedAsset.name}" ${i18n.toastAssetUpdated}`, 'success');
   };
 
   const handleDeleteInvestmentAsset = (id: string) => {
     setInvestmentAssets((prev) => prev.filter((a) => a.id !== id));
-    showToast('Varlık portföyden silindi.', 'info');
+    showToast(i18n.toastAssetDeleted, 'info');
   };
 
   // Export / Import Data (Android & Mobile Web Compatible)
@@ -588,7 +588,7 @@ export default function App() {
   const handleUpdateInitialCashBalance = (newBalance: number) => {
     setInitialCashBalance(newBalance);
     saveInitialCashBalance(newBalance);
-    showToast('Cüzdan bakiyesi güncellendi!', 'success');
+    showToast(i18n.toastWalletBalanceUpdated, 'success');
   };
 
   const totalInvestmentsValuation = calculateInvestmentStats(investmentAssets, transactions).totalCurrentValue;

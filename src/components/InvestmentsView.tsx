@@ -41,13 +41,13 @@ interface InvestmentsViewProps {
 }
 
 const CATEGORY_LABELS: Record<InvestmentCategory, { label: string; icon: any; color: string }> = {
-  gold: { label: 'Altın & Kıymetli Maden', icon: Coins, color: '#f59e0b' },
-  forex: { label: 'Döviz & Nakit', icon: DollarSign, color: '#10b981' },
-  stock: { label: 'Borsa & Hisse', icon: TrendingUp, color: '#3b82f6' },
-  fund: { label: 'Yatırım Fonu (TEFAS)', icon: ChartIcon, color: '#8b5cf6' },
-  crypto: { label: 'Kripto Para', icon: Sparkles, color: '#ec4899' },
-  deposit: { label: 'Vadeli / Mevduat', icon: Briefcase, color: '#06b6d4' },
-  other: { label: 'Diğer Varlıklar', icon: Wallet, color: '#64748b' },
+  gold: { label: 'Gold & Metals', icon: Coins, color: '#f59e0b' },
+  forex: { label: 'Forex & Cash', icon: DollarSign, color: '#10b981' },
+  stock: { label: 'Stocks & Equities', icon: TrendingUp, color: '#3b82f6' },
+  fund: { label: 'Mutual Funds', icon: ChartIcon, color: '#8b5cf6' },
+  crypto: { label: 'Crypto', icon: Sparkles, color: '#ec4899' },
+  deposit: { label: 'Time Deposit', icon: Briefcase, color: '#06b6d4' },
+  other: { label: 'Other Assets', icon: Wallet, color: '#64748b' },
 };
 
 export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
@@ -59,6 +59,18 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
   onAddTransaction,
 }) => {
   const { t: i18n, formatCurrency, currency } = useI18n();
+
+  const getCategoryLabel = (category: InvestmentCategory): string => {
+    switch (category) {
+      case 'gold': return i18n.assetGold;
+      case 'forex': return i18n.assetForex;
+      case 'stock': return i18n.assetStock;
+      case 'fund': return i18n.assetFund;
+      case 'crypto': return i18n.assetCrypto;
+      case 'deposit': return i18n.assetDeposit;
+      default: return i18n.assetOther;
+    }
+  };
 
   // Active Modals
   const [showDepositModal, setShowDepositModal] = useState<boolean>(false);
@@ -168,7 +180,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
       sourceType: 'cash_bank',
       investmentAssetId: asset.id,
       date: new Date().toISOString(),
-      note: depositNote.trim() || `${asset.name} yatırımı`,
+      note: depositNote.trim() || `${asset.name} (${i18n.investCash})`,
     });
 
     setShowDepositModal(false);
@@ -224,7 +236,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
       investmentAssetId: asset.id,
       profitOrLoss,
       date: new Date().toISOString(),
-      note: withdrawNote.trim() || `${asset.name} bozdurma (${profitOrLoss >= 0 ? `+${profitOrLoss}` : profitOrLoss} ₺ net getiri)`,
+      note: withdrawNote.trim() || `${asset.name} (${i18n.withdrawCashTitle})`,
     });
 
     setShowWithdrawModal(false);
@@ -344,7 +356,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
         <div className="mt-3.5 pt-2.5 border-t border-white/15 flex items-center justify-between text-xs">
           <div className="flex items-center gap-1.5 text-teal-100">
             <Wallet className="w-3.5 h-3.5 text-teal-200" />
-            <span>Kullanılabilir Serbest Nakit:</span>
+            <span>{i18n.availableCash}:</span>
           </div>
           <span className="font-extrabold text-white bg-white/20 px-2 py-0.5 rounded-lg">
             {formatCurrency(availableCash)}
@@ -368,7 +380,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
             {i18n.investCash}
           </span>
           <span className="text-[9.5px] text-gray-400 dark:text-slate-500 text-center mt-0.5">
-            Nakitten aktar
+            {i18n.transferFromCash}
           </span>
         </button>
 
@@ -384,7 +396,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
             {i18n.withdrawCash}
           </span>
           <span className="text-[9.5px] text-gray-400 dark:text-slate-500 text-center mt-0.5">
-            Kâr/zarar hesapla
+            {i18n.calcProfitLoss}
           </span>
         </button>
 
@@ -402,7 +414,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
             {i18n.updateValuation}
           </span>
           <span className="text-[9.5px] text-gray-400 dark:text-slate-500 text-center mt-0.5">
-            Piyasa değeri
+            {i18n.marketValue}
           </span>
         </button>
       </div>
@@ -413,10 +425,10 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
       <div className="space-y-2.5">
         <div className="flex items-center justify-between px-1">
           <h3 className="font-extrabold text-sm text-gray-900 dark:text-slate-100">
-            Varlıklarım & Pozisyonlar ({assets.length})
+            {i18n.myAssetsAndPositions} ({assets.length})
           </h3>
           <span className="text-[11px] text-gray-500 dark:text-slate-400 font-medium">
-            Gerçekleşen Kâr: <strong className="text-emerald-600 dark:text-emerald-400">{formatCurrency(stats.realizedProfitLoss)}</strong>
+            {i18n.realizedProfitLoss}: <strong className="text-emerald-600 dark:text-emerald-400">{formatCurrency(stats.realizedProfitLoss)}</strong>
           </span>
         </div>
 
@@ -426,7 +438,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
               <Coins className="w-6 h-6" />
             </div>
             <p className="text-xs text-gray-500 dark:text-slate-400">
-              Henüz bir yatırım varlığı tanımlamadınız. Altın, döviz veya hisse senedi ekleyerek başlayın.
+              {i18n.noAssetsDesc}
             </p>
             <button
               type="button"
@@ -434,7 +446,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
               className="bg-teal-600 text-white font-bold text-xs py-2 px-4 rounded-xl inline-flex items-center gap-1.5"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>İlk Varlığı Ekle</span>
+              <span>{i18n.addFirstAsset}</span>
             </button>
           </div>
         ) : (
@@ -463,7 +475,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                         {asset.name}
                       </h4>
                       <span className="text-[10px] text-gray-500 dark:text-slate-400 font-medium">
-                        {catInfo.label}
+                        {getCategoryLabel(asset.category)}
                       </span>
                     </div>
                   </div>
@@ -488,30 +500,30 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                 {/* Sub details: Cost vs Actions */}
                 <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-slate-800 text-xs">
                   <span className="text-[11px] text-gray-500 dark:text-slate-400">
-                    Yatırılan Anapara: <strong>{formatCurrency(asset.investedAmount)}</strong>
+                    {i18n.investedPrincipal}: <strong>{formatCurrency(asset.investedAmount)}</strong>
                   </span>
 
                   <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => handleOpenDeposit(asset)}
-                      title="Para Aktar"
+                      title={i18n.investCash}
                       className="text-[10px] font-bold px-2 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 rounded-lg hover:bg-emerald-100 transition-colors"
                     >
-                      + Yatır
+                      {i18n.investMore}
                     </button>
                     <button
                       type="button"
                       onClick={() => handleOpenWithdraw(asset)}
-                      title="Nakite Çek"
+                      title={i18n.withdrawCash}
                       className="text-[10px] font-bold px-2 py-1 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-100 transition-colors"
                     >
-                      ⇄ Bozdur
+                      {i18n.withdrawCashTitle}
                     </button>
                     <button
                       type="button"
                       onClick={() => handleOpenValuation(asset)}
-                      title="Değer Güncelle"
+                      title={i18n.updateValuationTitle}
                       className="p-1 rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 hover:text-blue-600 transition-colors"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
@@ -519,7 +531,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                     <button
                       type="button"
                       onClick={() => setAssetToDelete(asset)}
-                      title="Varlığı Sil"
+                      title={i18n.deleteAssetTitle}
                       className="p-1 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -539,9 +551,9 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
         <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl p-4 shadow-2xs space-y-3">
           <div className="flex items-center justify-between">
             <h4 className="font-extrabold text-xs text-gray-900 dark:text-slate-100">
-              Son Gerçekleşen Kâr / Zarar İşlemleri
+              {i18n.recentRealizedPL}
             </h4>
-            <span className="text-[10.5px] text-gray-400 font-medium">Bozdurulanlar</span>
+            <span className="text-[10.5px] text-gray-400 font-medium">{i18n.cashedOutLabel}</span>
           </div>
 
           <div className="space-y-2">
@@ -554,10 +566,10 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                 >
                   <div>
                     <span className="font-bold text-gray-800 dark:text-slate-200 block leading-tight">
-                      {t.note || 'Yatırım Bozdurma'}
+                      {t.note || i18n.investmentWithdrawal}
                     </span>
                     <span className="text-[10px] text-gray-400">
-                      {new Date(t.date).toLocaleDateString('tr-TR')} • Nakit Girişi: {formatCurrency(t.amount)}
+                      {new Date(t.date).toLocaleDateString(currency.locale || 'tr-TR')} • {i18n.cashInflowPrefix} {formatCurrency(t.amount)}
                     </span>
                   </div>
 
@@ -568,7 +580,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                         : 'bg-rose-100/70 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300'
                     }`}
                   >
-                    {pL >= 0 ? `+${formatCurrency(pL)} Kâr` : `${formatCurrency(pL)} Zarar`}
+                    {pL >= 0 ? `+${formatCurrency(pL)} ${i18n.profitRealizedShort}` : `${formatCurrency(pL)} ${i18n.lossRealizedShort}`}
                   </span>
                 </div>
               );
@@ -596,7 +608,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                   </div>
                   <div>
                     <h3 className="font-extrabold text-sm">{i18n.investCash}</h3>
-                    <p className="text-[10px] text-gray-500">Nakit bakiyenizden yatırıma aktarın</p>
+                    <p className="text-[10px] text-gray-500">{i18n.transferFromCashDesc}</p>
                   </div>
                 </div>
                 <button
@@ -611,14 +623,14 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
               <form onSubmit={handleConfirmDeposit} className="space-y-3">
                 {/* Available Cash banner */}
                 <div className="bg-teal-50 dark:bg-teal-950/40 border border-teal-200/60 dark:border-teal-900/40 p-2.5 rounded-2xl flex items-center justify-between text-xs">
-                  <span className="text-teal-800 dark:text-teal-200 font-medium">Kullanılabilir Nakit:</span>
+                  <span className="text-teal-800 dark:text-teal-200 font-medium">{i18n.availableCash}:</span>
                   <span className="font-black text-teal-900 dark:text-teal-100">{formatCurrency(availableCash)}</span>
                 </div>
 
                 {/* Target Asset */}
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                    Yatırım Varlığı
+                    {i18n.investmentAssetLabel}
                   </label>
                   <select
                     value={depositAssetId}
@@ -636,7 +648,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                 {/* Amount */}
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                    Aktarılacak Tutar ({currency.symbol})
+                    {i18n.amountToTransfer} ({currency.symbol})
                   </label>
                   <input
                     type="number"
@@ -669,11 +681,11 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                 {/* Note */}
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                    Not (İsteğe Bağlı)
+                    {i18n.noteOptional}
                   </label>
                   <input
                     type="text"
-                    placeholder="Örn: Gram altın alımı, fon takviyesi"
+                    placeholder={i18n.transferPlaceholder}
                     value={depositNote}
                     onChange={(e) => setDepositNote(e.target.value)}
                     className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs"
@@ -686,14 +698,14 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                     onClick={() => setShowDepositModal(false)}
                     className="flex-1 py-2.5 bg-gray-100 dark:bg-slate-800 rounded-xl font-bold text-xs text-gray-600 dark:text-slate-300"
                   >
-                    Vazgeç
+                    {i18n.cancel}
                   </button>
                   <button
                     type="submit"
                     className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1 shadow-md shadow-emerald-500/20"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    <span>Yatırımı Onayla</span>
+                    <span>{i18n.confirmInvestment}</span>
                   </button>
                 </div>
               </form>
@@ -721,7 +733,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                   </div>
                   <div>
                     <h3 className="font-extrabold text-sm">{i18n.withdrawCash}</h3>
-                    <p className="text-[10px] text-gray-500">Yatırımı nakite çevirip kâr/zarar kaydedin</p>
+                    <p className="text-[10px] text-gray-500">{i18n.cashOutSubtitle}</p>
                   </div>
                 </div>
                 <button
@@ -737,7 +749,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                 {/* Source Asset */}
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                    Bozdurulacak Varlık
+                    {i18n.assetToCashOut}
                   </label>
                   <select
                     value={withdrawAssetId}
@@ -749,7 +761,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                   >
                     {assets.map((a) => (
                       <option key={a.id} value={a.id}>
-                        {a.name} (Güncel: {formatCurrency(a.currentValue)} • Anapara: {formatCurrency(a.investedAmount)})
+                        {a.name} ({formatCurrency(a.currentValue)} • {i18n.investedPrincipal}: {formatCurrency(a.investedAmount)})
                       </option>
                     ))}
                   </select>
@@ -758,7 +770,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                 {/* Cash Received */}
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                    Ele Geçen Nakit Tutar ({currency.symbol})
+                    {i18n.cashReceived} ({currency.symbol})
                   </label>
                   <input
                     type="number"
@@ -775,9 +787,9 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                      Bu Paranın Anapara Maliyeti ({currency.symbol})
+                      {i18n.principalCost} ({currency.symbol})
                     </label>
-                    <span className="text-[9px] text-gray-400">Yatırılan tutar</span>
+                    <span className="text-[9px] text-gray-400">{i18n.investedAmountHelp}</span>
                   </div>
                   <input
                     type="number"
@@ -800,7 +812,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                     }`}
                   >
                     <span className="text-[10px] uppercase tracking-wider font-bold block">
-                      Gerçekleşen Sonuç
+                      {i18n.realizedResult}
                     </span>
                     <p className="text-base font-black">
                       {parseFloat(withdrawAmountStr) - parseFloat(withdrawCostBasisStr) >= 0 ? '+' : ''}
@@ -811,10 +823,10 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                             parseFloat(withdrawCostBasisStr)) *
                           100
                         ).toFixed(1)}
-                        % Getiri)
+                        % ${i18n.returnPctLabel})
                       </span>
                     </p>
-                    <p className="text-[10px] opacity-80">Bu tutar nakit varlığınıza eklenecektir.</p>
+                    <p className="text-[10px] opacity-80">{i18n.cashAddedNotice}</p>
                   </div>
                 )}
 
@@ -824,14 +836,14 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                     onClick={() => setShowWithdrawModal(false)}
                     className="flex-1 py-2.5 bg-gray-100 dark:bg-slate-800 rounded-xl font-bold text-xs text-gray-600 dark:text-slate-300"
                   >
-                    Vazgeç
+                    {i18n.cancel}
                   </button>
                   <button
                     type="submit"
                     className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1 shadow-md shadow-amber-500/20"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    <span>Nakite Çevir</span>
+                    <span>{i18n.convertToCash}</span>
                   </button>
                 </div>
               </form>
@@ -859,7 +871,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                   </div>
                   <div>
                     <h3 className="font-extrabold text-sm">{i18n.updateValuation}</h3>
-                    <p className="text-[10px] text-gray-500">Varlığınızın güncel piyasa değerini yazın</p>
+                    <p className="text-[10px] text-gray-500">{i18n.updateValuationSubtitle}</p>
                   </div>
                 </div>
                 <button
@@ -874,7 +886,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
               <form onSubmit={handleConfirmValuation} className="space-y-3">
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                    Varlık Seçin
+                    {i18n.selectAssetLabel}
                   </label>
                   <select
                     value={valuationAssetId}
@@ -895,7 +907,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
 
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                    Yeni Güncel Değer ({currency.symbol})
+                    {i18n.newCurrentValue} ({currency.symbol})
                   </label>
                   <input
                     type="number"
@@ -907,7 +919,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                     className="w-full bg-gray-50 dark:bg-slate-800 border-2 border-gray-200 dark:border-slate-700 focus:border-indigo-600 rounded-xl py-2 px-3 text-xl font-black"
                   />
                   <p className="text-[10.5px] text-gray-400 pt-1">
-                    Anapara sabit kalır; güncel değere göre kâr/zararınız otomatik güncellenir.
+                    {i18n.valuationNotice}
                   </p>
                 </div>
 
@@ -917,14 +929,14 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                     onClick={() => setShowValuationModal(false)}
                     className="flex-1 py-2.5 bg-gray-100 dark:bg-slate-800 rounded-xl font-bold text-xs text-gray-600 dark:text-slate-300"
                   >
-                    Vazgeç
+                    {i18n.cancel}
                   </button>
                   <button
                     type="submit"
                     className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1 shadow-md shadow-indigo-500/20"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    <span>Değeri Güncelle</span>
+                    <span>{i18n.confirmValuation}</span>
                   </button>
                 </div>
               </form>
@@ -952,7 +964,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                   </div>
                   <div>
                     <h3 className="font-extrabold text-sm">{i18n.newAsset}</h3>
-                    <p className="text-[10px] text-gray-500">Yeni yatırım enstrümanı tanımlayın</p>
+                    <p className="text-[10px] text-gray-500">{i18n.newAssetSubtitle}</p>
                   </div>
                 </div>
                 <button
@@ -967,12 +979,12 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
               <form onSubmit={handleConfirmNewAsset} className="space-y-3">
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                    Varlık Adı
+                    {i18n.assetNameLabel}
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="Örn: Çeyrek Altın, Apple Hissesi, Euro"
+                    placeholder={i18n.assetNamePlaceholder}
                     value={newAssetName}
                     onChange={(e) => setNewAssetName(e.target.value)}
                     className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold"
@@ -981,7 +993,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
 
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                    Varlık Sınıfı
+                    {i18n.assetClassLabel}
                   </label>
                   <div className="grid grid-cols-2 gap-1.5">
                     {(Object.keys(CATEGORY_LABELS) as InvestmentCategory[]).map((catKey) => {
@@ -1002,7 +1014,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                           }`}
                         >
                           <c.icon className="w-4 h-4" style={{ color: c.color }} />
-                          <span className="text-[11px] truncate">{c.label}</span>
+                          <span className="text-[11px] truncate">{getCategoryLabel(catKey)}</span>
                         </button>
                       );
                     })}
@@ -1015,14 +1027,14 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                     onClick={() => setShowNewAssetModal(false)}
                     className="flex-1 py-2.5 bg-gray-100 dark:bg-slate-800 rounded-xl font-bold text-xs text-gray-600 dark:text-slate-300"
                   >
-                    Vazgeç
+                    {i18n.cancel}
                   </button>
                   <button
                     type="submit"
                     className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1 shadow-md shadow-teal-500/20"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    <span>Varlığı Kaydet</span>
+                    <span>{i18n.saveAssetBtn}</span>
                   </button>
                 </div>
               </form>
@@ -1048,7 +1060,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                   <div className="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center">
                     <Trash2 className="w-4 h-4" />
                   </div>
-                  <h3 className="font-extrabold text-sm">Varlığı Sil</h3>
+                  <h3 className="font-extrabold text-sm">{i18n.deleteAssetTitle}</h3>
                 </div>
                 <button
                   type="button"
@@ -1061,20 +1073,15 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
 
               <div className="space-y-3">
                 <p className="text-xs text-gray-600 dark:text-slate-300 leading-relaxed">
-                  <strong className="text-gray-900 dark:text-slate-100">"{assetToDelete.name}"</strong> adlı varlığı portföyünüzden silmek istediğinize emin misiniz?
+                  <strong className="text-gray-900 dark:text-slate-100">"{assetToDelete.name}"</strong> {i18n.deleteAssetConfirmText}
                 </p>
 
                 {Number(assetToDelete.currentValue) > 0 && (
                   <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 flex items-start gap-2.5 text-xs text-amber-800 dark:text-amber-200">
                     <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                     <div className="space-y-1">
-                      <p className="font-bold text-[11.5px]">Önemli Uyarı:</p>
-                      <p className="text-[11px] leading-relaxed">
-                        Bu varlıkta şu an <strong className="font-bold">{formatCurrency(assetToDelete.currentValue)}</strong> piyasa değeri ve <strong className="font-bold">{formatCurrency(assetToDelete.investedAmount)}</strong> anaparanız bulunmaktadır.
-                      </p>
-                      <p className="text-[10.5px] opacity-90 leading-relaxed">
-                        Varlığı silmeden önce <strong>"⇄ Bozdur"</strong> işlemiyle paranızı serbest nakite aktarmanız tavsiye edilir. Silindiğinde portföy toplam değerinizden düşülecektir.
-                      </p>
+                      <p className="font-bold text-[11.5px]">{i18n.importantWarning}</p>
+                      <p className="text-[11px] leading-relaxed">{i18n.deleteAssetWarningDesc}</p>
                     </div>
                   </div>
                 )}
@@ -1086,14 +1093,14 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
                   onClick={() => setAssetToDelete(null)}
                   className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-slate-750 text-xs font-bold text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
-                  İptal
+                  {i18n.cancel}
                 </button>
                 <button
                   type="button"
                   onClick={handleConfirmDeleteAsset}
                   className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all cursor-pointer active:scale-95"
                 >
-                  Evet, Varlığı Sil
+                  {i18n.yesDeleteAsset}
                 </button>
               </div>
             </motion.div>

@@ -354,10 +354,10 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
             </div>
             <div>
               <h3 className="text-xs font-black uppercase tracking-wider text-gray-500 dark:text-slate-400">
-                Gelir & Gider Dengesi
+                {i18n.incomeExpenseBalance}
               </h3>
               <p className="text-sm font-extrabold text-gray-900 dark:text-slate-100">
-                {netSavings >= 0 ? 'Pozitif Nakit Akışı' : 'Bütçe Açığı'}
+                {netSavings >= 0 ? i18n.positiveCashFlow : i18n.budgetDeficit}
               </p>
             </div>
           </div>
@@ -370,7 +370,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
             }`}
           >
             <Percent className="w-3 h-3" />
-            <span>%{savingsRate} Birikim</span>
+            <span>%{savingsRate} {i18n.savings}</span>
           </span>
         </div>
 
@@ -421,24 +421,24 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
               <div
                 className="bg-rose-500 transition-all duration-500"
                 style={{ width: `${Math.min(100, (totalExpenses / totalIncome) * 100)}%` }}
-                title={`Harcama: %${((totalExpenses / totalIncome) * 100).toFixed(0)}`}
+                title={`${i18n.expense}: %${((totalExpenses / totalIncome) * 100).toFixed(0)}`}
               />
               {netSavings > 0 && (
                 <div
                   className="bg-emerald-500 transition-all duration-500"
                   style={{ width: `${Math.min(100, (netSavings / totalIncome) * 100)}%` }}
-                  title={`Birikim: %${((netSavings / totalIncome) * 100).toFixed(0)}`}
+                  title={`${i18n.savings}: %${((netSavings / totalIncome) * 100).toFixed(0)}`}
                 />
               )}
             </div>
             <div className="flex items-center justify-between text-[10px] text-gray-400 dark:text-slate-500 font-semibold px-0.5">
               <span className="flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
-                Harcama (%{((totalExpenses / totalIncome) * 100).toFixed(0)})
+                {i18n.expense} (%{((totalExpenses / totalIncome) * 100).toFixed(0)})
               </span>
               <span className="flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-                Birikim (%{savingsRate})
+                {i18n.savings} (%{savingsRate})
               </span>
             </div>
           </div>
@@ -447,7 +447,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
         {/* Realized Profit / Loss Banner if present */}
         {realizedProfitLoss !== 0 && (
           <div className="p-2.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 flex items-center justify-between text-xs">
-            <span className="text-gray-600 dark:text-slate-300 font-medium">Yatırım Realize Kâr/Zarar:</span>
+            <span className="text-gray-600 dark:text-slate-300 font-medium">{i18n.realizedPL}:</span>
             <span
               className={`font-black ${
                 realizedProfitLoss >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
@@ -462,7 +462,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
         {incomeData.length > 0 && (
           <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-slate-800">
             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">
-              Gelir Kaynakları Dağılımı
+              {i18n.incomeSourceBreakdown}
             </span>
             <div className="grid grid-cols-2 gap-2">
               {incomeData.map((inc) => (
@@ -717,7 +717,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                       className="w-full py-2.5 px-4 rounded-2xl bg-indigo-50 hover:bg-indigo-100 dark:bg-slate-800 dark:hover:bg-slate-750 text-indigo-600 dark:text-indigo-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98 border border-indigo-100/80 dark:border-slate-700"
                     >
                       <span>
-                        Daha Fazla Göster ({sortedFilteredTransactions.length - visibleHistoryCount} kalan)
+                        {i18n.showMore} ({sortedFilteredTransactions.length - visibleHistoryCount} {i18n.remainingTransactions})
                       </span>
                     </button>
                   </div>

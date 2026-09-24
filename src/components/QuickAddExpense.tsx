@@ -190,14 +190,14 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
           <div className="flex items-center justify-between pb-2.5 mb-2 border-b border-emerald-100 dark:border-emerald-900/40">
             <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 font-extrabold text-xs">
               <ArrowUpRight className="w-4 h-4" />
-              <span>Gelir Girişi Modu</span>
+              <span>{i18n.incomeMode}</span>
             </div>
             <button
               type="button"
               onClick={() => setEntryType('expense')}
               className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 cursor-pointer"
             >
-              <span>← Harcama Moduna Dön</span>
+              <span>{i18n.backToExpenseMode}</span>
             </button>
           </div>
         )}
@@ -428,7 +428,7 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
               {/* Income Destination Note */}
               <div className="p-2 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/40 flex items-center gap-2 text-[11px] text-emerald-800 dark:text-emerald-300 font-medium">
                 <Wallet className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span>Nakit ve banka varlığınıza eklenir, serbest nakit akışınızı artırır.</span>
+                <span>{i18n.addedToCashNotice}</span>
               </div>
             </div>
           )}
@@ -530,20 +530,20 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
           <div className="text-left">
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-sm text-gray-900 dark:text-slate-100 leading-tight">
-                {i18n.income} Ekle / Kaydet
+                {i18n.saveIncome}
               </span>
               <span className="bg-emerald-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
-                Maaş & Gelir
+                {i18n.salaryAndIncome}
               </span>
             </div>
             <p className="text-[11px] text-gray-500 dark:text-slate-400 font-medium mt-0.5">
-              Maaş, prim veya ek gelirlerinizi kasaya kaydedin
+              {i18n.salarySubtitle}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-xs font-bold pl-2 shrink-0">
-          <span className="hidden sm:inline">Gelir Modu</span>
+          <span className="hidden sm:inline">{i18n.incomeMode}</span>
           <div className="w-7 h-7 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
             <ChevronRight className="w-4 h-4" />
           </div>
@@ -567,24 +567,24 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
               </span>
               {recurringExpenses.filter((e) => e.isActive).length > 0 ? (
                 <span className="bg-indigo-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
-                  {recurringExpenses.filter((e) => e.isActive).length} Aktif
+                  {recurringExpenses.filter((e) => e.isActive).length} {i18n.activeTab}
                 </span>
               ) : (
                 <span className="bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                  Yeni
+                  {i18n.addNew}
                 </span>
               )}
             </div>
             <p className="text-[11px] text-gray-500 dark:text-slate-400 font-medium mt-0.5">
               {recurringExpenses.filter((e) => e.isActive).length > 0
-                ? `${formatCurrency(recurringExpenses.filter((e) => e.isActive).reduce((sum, e) => sum + Number(e.amount), 0))} / ay • Kira, fatura ve abonelikler`
-                : 'Aylık kira, faturalar ve düzenli abonelikleri yönetin'}
+                ? `${formatCurrency(recurringExpenses.filter((e) => e.isActive).reduce((sum, e) => sum + Number(e.amount), 0))} / ${i18n.monthly.toLowerCase()} • ${i18n.recurringSubtitle}`
+                : i18n.recurringSubtitle}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400 text-xs font-bold pl-2 shrink-0">
-          <span className="hidden sm:inline">Görüntüle</span>
+          <span className="hidden sm:inline">{i18n.viewAction}</span>
           <div className="w-7 h-7 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
             <ChevronRight className="w-4 h-4" />
           </div>
@@ -605,20 +605,20 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
             <div className="text-left">
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-sm text-gray-900 dark:text-slate-100 leading-tight">
-                  {i18n.investments} & Portföy
+                  {i18n.investments} {i18n.portfolioSuffix}
                 </span>
                 <span className="bg-teal-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
                   {formatCurrency(totalInvestmentsValue || 0)}
                 </span>
               </div>
               <p className="text-[11px] text-gray-500 dark:text-slate-400 font-medium mt-0.5">
-                Arta kalan parayı yatırıma aktar, kâr/zararını takip et
+                {i18n.investSurplusSubtitle}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5 text-teal-600 dark:text-teal-400 text-xs font-bold pl-2 shrink-0">
-            <span className="hidden sm:inline">Portföye Git</span>
+            <span className="hidden sm:inline">{i18n.goToPortfolio}</span>
             <div className="w-7 h-7 rounded-xl bg-teal-50 dark:bg-teal-950/40 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
               <ChevronRight className="w-4 h-4" />
             </div>

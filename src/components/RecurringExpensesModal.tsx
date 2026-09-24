@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { RecurringExpense, Category, CreditCard, PaymentSourceType } from '../types';
 import { useI18n } from '../i18n/I18nContext';
 import { useBackHandler } from '../utils/backButton';
@@ -34,17 +34,17 @@ interface RecurringExpensesModalProps {
   onDeleteRecurringExpense: (id: string) => void;
 }
 
-// Quick templates for fast creation
-const QUICK_PRESETS = [
-  { title: 'Netflix', categoryKeyword: 'fatura' },
-  { title: 'Spotify', categoryKeyword: 'fatura' },
-  { title: 'YouTube Premium', categoryKeyword: 'fatura' },
-  { title: 'Ev Kirası', categoryKeyword: 'kira' },
-  { title: 'İnternet Faturası', categoryKeyword: 'fatura' },
-  { title: 'Site / Bina Aidatı', categoryKeyword: 'kira' },
-  { title: 'Elektrik Faturası', categoryKeyword: 'fatura' },
-  { title: 'Doğalgaz', categoryKeyword: 'fatura' },
-  { title: 'Spor Salonu', categoryKeyword: 'sağlık' },
+// Quick templates definition
+const QUICK_PRESETS_BASE = [
+  { titleKey: 'Netflix', categoryKeyword: 'fatura', isRaw: true },
+  { titleKey: 'Spotify', categoryKeyword: 'fatura', isRaw: true },
+  { titleKey: 'YouTube Premium', categoryKeyword: 'fatura', isRaw: true },
+  { titleKey: 'templateRent', categoryKeyword: 'kira' },
+  { titleKey: 'templateInternet', categoryKeyword: 'fatura' },
+  { titleKey: 'templateDues', categoryKeyword: 'kira' },
+  { titleKey: 'templateElectricity', categoryKeyword: 'fatura' },
+  { titleKey: 'templateGas', categoryKeyword: 'fatura' },
+  { titleKey: 'templateGym', categoryKeyword: 'saglik' },
 ];
 
 export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
@@ -58,6 +58,11 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
   onDeleteRecurringExpense,
 }) => {
   const { t: i18n, formatCurrency, currency } = useI18n();
+
+  const quickPresets = useMemo(() => QUICK_PRESETS_BASE.map(p => ({
+    title: p.isRaw ? p.titleKey : ((i18n as any)[p.titleKey] || p.titleKey),
+    categoryKeyword: p.categoryKeyword
+  })), [i18n]);
 
   // Filter tab: 'all' | 'active' | 'paused'
   const [filterTab, setFilterTab] = useState<'all' | 'active' | 'paused'>('all');
@@ -135,7 +140,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
     return (
       categories.find((c) => c.id === catId) || {
         id: 'cat-diger',
-        name: 'Diğer',
+        name: i18n.categoryOther || 'Other',
         icon: 'Sparkles',
         color: '#64748b',
       }
@@ -170,7 +175,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
   };
 
   // Apply Quick Preset
-  const handleApplyPreset = (preset: typeof QUICK_PRESETS[0]) => {
+  const handleApplyPreset = (preset: { title: string; categoryKeyword: string }) => {
     setFormTitle(preset.title);
     const matchedCategory = categories.find((c) =>
       c.name.toLowerCase().includes(preset.categoryKeyword) ||
@@ -247,7 +252,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                 {i18n.recurringExpenses}
               </h2>
               <p className="text-[11px] text-gray-500 dark:text-slate-400">
-                Aylık düzenli harcama ve abonelikler
+                {i18n.recurringSubtitle}
               </p>
             </div>
           </div>
@@ -259,7 +264,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
               className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs py-2 px-3 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-blue-500/20"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Yeni Ekle</span>
+              <span>{i18n.addNew}</span>
             </button>
             <button
               type="button"
@@ -280,21 +285,21 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
             <div className="flex items-start justify-between relative z-10">
               <div>
                 <span className="text-[11px] font-semibold text-indigo-100 uppercase tracking-wider block">
-                  Aylık Düzenli Yük
+                  {i18n.monthlyRecurringLoad}
                 </span>
                 <p className="text-2xl sm:text-3xl font-black tracking-tight mt-0.5">
                   {formatCurrency(totalMonthlyCommitment)}
-                  <span className="text-xs font-normal text-indigo-200 ml-1">/ ay</span>
+                  <span className="text-xs font-normal text-indigo-200 ml-1">/ {i18n.monthly.toLowerCase()}</span>
                 </p>
               </div>
 
               <div className="flex flex-col items-end gap-1">
                 <span className="bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full text-[11px] font-bold">
-                  {activeCount} Aktif Gider
+                  {activeCount} {i18n.activeExpensesCount}
                 </span>
                 {pausedCount > 0 && (
                   <span className="text-[10px] text-indigo-200 font-medium">
-                    {pausedCount} duraklatıldı
+                    {pausedCount} {i18n.pausedCountLabel}
                   </span>
                 )}
               </div>
@@ -305,14 +310,14 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
               <div className="mt-3 pt-3 border-t border-white/15 flex items-center justify-between text-xs text-indigo-50">
                 <div className="flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-indigo-200" />
-                  <span>En Yakın: <strong>{nextUpcoming.title}</strong></span>
+                  <span>{i18n.nextUpcomingLabel}: <strong>{nextUpcoming.title}</strong></span>
                 </div>
                 <span className="bg-white/25 px-2 py-0.5 rounded-lg text-[10px] font-black tracking-wide">
                   {nextUpcoming.daysRemaining === 0
-                    ? 'Bugün'
+                    ? i18n.today
                     : nextUpcoming.daysRemaining === 1
-                    ? 'Yarın'
-                    : `${nextUpcoming.daysRemaining} gün sonra (ayın ${nextUpcoming.targetDay}'i)`}
+                    ? i18n.tomorrow
+                    : `${nextUpcoming.daysRemaining} ${i18n.daysLater} (${i18n.everyMonthDay.replace('{day}', String(nextUpcoming.targetDay))})`}
                 </span>
               </div>
             )}
@@ -330,7 +335,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                     : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200'
                 }`}
               >
-                Tümü ({recurringExpenses.length})
+                {i18n.allTab} ({recurringExpenses.length})
               </button>
               <button
                 type="button"
@@ -341,7 +346,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                     : 'text-gray-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400'
                 }`}
               >
-                Aktif ({activeCount})
+                {i18n.activeTab} ({activeCount})
               </button>
               <button
                 type="button"
@@ -352,7 +357,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                     : 'text-gray-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400'
                 }`}
               >
-                Duraklatılan ({pausedCount})
+                {i18n.pausedTab} ({pausedCount})
               </button>
             </div>
           )}
@@ -365,10 +370,10 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
               </div>
               <div className="space-y-1">
                 <h3 className="font-bold text-sm text-gray-800 dark:text-slate-200">
-                  {filterTab === 'all' ? 'Henüz düzenli gideriniz yok' : 'Bu filtrede gider bulunamadı'}
+                  {filterTab === 'all' ? i18n.noRecurringTitle : i18n.noRecurringFiltered}
                 </h3>
                 <p className="text-xs text-gray-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
-                  Kira, faturalar veya dijital aboneliklerinizi ekleyin, günü geldiğinde otomatik olarak harcama kaydedilsin.
+                  {i18n.noRecurringDesc}
                 </p>
               </div>
               {filterTab === 'all' && (
@@ -378,7 +383,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2 px-4 rounded-xl inline-flex items-center gap-1.5 transition-all shadow-md shadow-blue-500/20 cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>İlk Düzenli Gideri Ekle</span>
+                  <span>{i18n.addFirstRecurring}</span>
                 </button>
               )}
             </div>
@@ -429,12 +434,12 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                             ) : (
                               <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded-md">
                                 <Wallet className="w-3 h-3" />
-                                <span>Nakit / Banka</span>
+                                <span>{i18n.cashBank}</span>
                               </span>
                             )}
 
                             <span className="text-gray-500 dark:text-slate-400 font-medium">
-                              • Her ayın {item.dayOfMonth}'i
+                              • {i18n.everyMonthDay.replace('{day}', String(item.dayOfMonth))}
                             </span>
                           </div>
 
@@ -442,19 +447,19 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                           <div className="pt-0.5">
                             {!item.isActive ? (
                               <span className="inline-flex items-center text-[10px] font-semibold text-gray-500 dark:text-slate-400 bg-gray-200/70 dark:bg-slate-800 px-2 py-0.5 rounded-full">
-                                ⏸️ Duraklatıldı
+                                ⏸️ {i18n.statusPaused}
                               </span>
                             ) : isProcessedThisMonth ? (
                               <span className="inline-flex items-center text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full">
-                                ✓ Bu ay işlendi
+                                ✓ {i18n.statusProcessed}
                               </span>
                             ) : isDueToday ? (
                               <span className="inline-flex items-center text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/60 px-2 py-0.5 rounded-full animate-pulse">
-                                ⚡ Bugün işlenecek
+                                ⚡ {i18n.statusToday}
                               </span>
                             ) : (
                               <span className="inline-flex items-center text-[10px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-full">
-                                ⏱️ {item.dayOfMonth > currentDay ? `${item.dayOfMonth - currentDay} gün sonra` : 'Gelecek ay'}
+                                ⏱️ {item.dayOfMonth > currentDay ? `${item.dayOfMonth - currentDay} ${i18n.daysLater}` : i18n.nextMonth}
                               </span>
                             )}
                           </div>
@@ -472,7 +477,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                           <button
                             type="button"
                             onClick={() => handleToggleActive(item)}
-                            title={item.isActive ? 'Duraklat' : 'Aktifleştir'}
+                            title={item.isActive ? i18n.pause : i18n.resume}
                             className={`p-1.5 rounded-xl border transition-colors cursor-pointer ${
                               item.isActive
                                 ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
@@ -486,7 +491,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                           <button
                             type="button"
                             onClick={() => handleOpenEditForm(item)}
-                            title="Düzenle"
+                            title={i18n.edit}
                             className="p-1.5 rounded-xl bg-gray-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-gray-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 border border-gray-200 dark:border-slate-700 transition-colors cursor-pointer"
                           >
                             <Pencil className="w-3.5 h-3.5" />
@@ -496,7 +501,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                           <button
                             type="button"
                             onClick={() => setItemToDelete(item)}
-                            title="Sil"
+                            title={i18n.delete}
                             className="p-1.5 rounded-xl bg-gray-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-gray-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 border border-gray-200 dark:border-slate-700 transition-colors cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -518,7 +523,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
             onClick={onClose}
             className="w-full py-2.5 bg-gray-200/80 hover:bg-gray-300/80 dark:bg-slate-800 dark:hover:bg-slate-750 text-gray-800 dark:text-slate-200 rounded-2xl font-bold text-xs transition-colors cursor-pointer"
           >
-            Kapat
+            {i18n.close}
           </button>
         </div>
       </div>
@@ -544,10 +549,10 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                   </div>
                   <div>
                     <h3 className="font-extrabold text-sm text-gray-900 dark:text-slate-100">
-                      {formMode === 'new' ? 'Yeni Düzenli Gider Ekle' : 'Düzenli Gideri Düzenle'}
+                      {formMode === 'new' ? i18n.addRecurringExpense : i18n.editRecurringExpense}
                     </h3>
                     <p className="text-[10px] text-gray-500 dark:text-slate-400">
-                      Aylık döngü bilgilerini tanımlayın
+                      {i18n.recurringExpenseDetails}
                     </p>
                   </div>
                 </div>
@@ -564,10 +569,10 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
               {formMode === 'new' && (
                 <div className="space-y-1.5">
                   <span className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider block">
-                    Hızlı Şablonlar
+                    {i18n.quickTemplates}
                   </span>
                   <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar scrollbar-none">
-                    {QUICK_PRESETS.map((preset) => (
+                    {quickPresets.map((preset) => (
                       <button
                         key={preset.title}
                         type="button"
@@ -587,12 +592,12 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                 {/* Title */}
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-gray-600 dark:text-slate-400 uppercase tracking-wider block">
-                    Gider Başlığı / Açıklama
+                    {i18n.recurringExpenseTitle}
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="Örn: Netflix, Ev Kirası, Fiber İnternet..."
+                    placeholder={i18n.recurringTitlePlaceholder}
                     value={formTitle}
                     onChange={(e) => setFormTitle(e.target.value)}
                     className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-semibold text-gray-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 transition-colors"
@@ -602,7 +607,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                 {/* Amount */}
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-gray-600 dark:text-slate-400 uppercase tracking-wider block">
-                    Aylık Tutar ({currency.symbol})
+                    {i18n.monthlyTotalRecurring} ({currency.symbol})
                   </label>
                   <div className="relative">
                     <input
@@ -624,7 +629,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                 {/* Category Selection */}
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-bold text-gray-600 dark:text-slate-400 uppercase tracking-wider block">
-                    Kategori
+                    {i18n.category}
                   </label>
                   <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 max-h-36 overflow-y-auto p-1 border border-gray-200/60 dark:border-slate-800 rounded-2xl bg-gray-50/50 dark:bg-slate-800/40">
                     {categories.map((cat) => {
@@ -662,7 +667,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                 {/* Payment Source: Credit Card vs Cash/Bank */}
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-bold text-gray-600 dark:text-slate-400 uppercase tracking-wider block">
-                    Ödeme Kaynağı
+                    {i18n.payUsing}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
@@ -675,7 +680,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                       }`}
                     >
                       <CardIcon className="w-3.5 h-3.5" />
-                      <span>Kredi Kartı</span>
+                      <span>{i18n.creditCard}</span>
                     </button>
 
                     <button
@@ -709,7 +714,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                         </select>
                       ) : (
                         <p className="text-[11px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 p-2 rounded-xl border border-amber-200 dark:border-amber-900/40">
-                          Kayıtlı kredi kartınız yok. Nakit/Banka seçilecek veya önce kart ekleyebilirsiniz.
+                          {i18n.noCardsForRecurringWarning}
                         </p>
                       )}
                     </div>
@@ -720,10 +725,10 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                 <div className="space-y-1.5 bg-gray-50 dark:bg-slate-800/60 p-3 rounded-2xl border border-gray-200/70 dark:border-slate-750">
                   <div className="flex items-center justify-between">
                     <label className="text-[11px] font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider">
-                      Ayın Hangi Günü?
+                      {i18n.whichDayOfMonth}
                     </label>
                     <span className="text-sm font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-lg">
-                      Her ayın {formDayOfMonth}'i
+                      {i18n.everyMonthDay.replace('{day}', String(formDayOfMonth))}
                     </span>
                   </div>
 
@@ -749,14 +754,14 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                             : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-400 border-gray-200 dark:border-slate-700'
                         }`}
                       >
-                        {day === 31 ? 'Son' : `${day}`}
+                        {day === 31 ? i18n.lastDay : `${day}`}
                       </button>
                     ))}
                   </div>
 
                   <p className="text-[10.5px] text-gray-500 dark:text-slate-400 pt-1 flex items-center gap-1">
                     <Info className="w-3 h-3 text-blue-500 shrink-0" />
-                    <span>Gider eklendikten sonra başlayacak şekilde çalışır; geçmişe dönük işlem yazılmaz.</span>
+                    <span>{i18n.recurringNotice}</span>
                   </p>
                 </div>
 
@@ -767,14 +772,14 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                     onClick={() => setFormMode(null)}
                     className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 rounded-xl font-bold text-xs transition-colors cursor-pointer"
                   >
-                    Vazgeç
+                    {i18n.cancel}
                   </button>
                   <button
                     type="submit"
                     className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-98 text-white rounded-xl font-bold text-xs transition-all shadow-md shadow-blue-500/20 cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    <span>{formMode === 'new' ? 'Gideri Kaydet' : 'Değişiklikleri Kaydet'}</span>
+                    <span>{formMode === 'new' ? i18n.saveExpense : i18n.saveChanges}</span>
                   </button>
                 </div>
               </form>
@@ -802,15 +807,13 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
 
               <div className="space-y-1.5">
                 <h3 className="font-extrabold text-base text-gray-900 dark:text-slate-100">
-                  Düzenli Gideri Sil
+                  {i18n.deleteRecurringConfirmTitle}
                 </h3>
                 <p className="text-xs text-gray-600 dark:text-slate-300 leading-relaxed">
-                  <strong>"{itemToDelete.title}"</strong> için tanımlanan{' '}
-                  <strong className="text-rose-600 dark:text-rose-400">{formatCurrency(itemToDelete.amount)}</strong>{' '}
-                  tutarındaki düzenli gideri silmek istediğinize emin misiniz?
+                  <strong>"{itemToDelete.title}"</strong> ({formatCurrency(itemToDelete.amount)}) {i18n.deleteRecurringConfirmText}
                 </p>
                 <p className="text-[11px] text-gray-400 dark:text-slate-500">
-                  Gelecek aylarda otomatik kayıt yapılmayacaktır. Önceki harcama geçmişiniz silinmez.
+                  {i18n.recurringDeleteWarning}
                 </p>
               </div>
 
@@ -820,7 +823,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                   onClick={() => setItemToDelete(null)}
                   className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 rounded-xl font-bold text-xs transition-colors cursor-pointer"
                 >
-                  Vazgeç
+                  {i18n.cancel}
                 </button>
                 <button
                   type="button"
@@ -828,7 +831,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                   className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 active:scale-98 text-white rounded-xl font-bold text-xs transition-all shadow-md shadow-rose-500/20 cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>Evet, Sil</span>
+                  <span>{i18n.yesDelete}</span>
                 </button>
               </div>
             </motion.div>
