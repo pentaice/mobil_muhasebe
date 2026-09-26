@@ -31,7 +31,7 @@ Bu doküman, **Cebim Muhasebe (com.cebim.muhasebe)** uygulamasının Google Play
 | :--- | :--- |
 | **Uygulama Adı (Default)** | Cebim Muhasebe |
 | **Paket Adı (Package Name)** | `com.cebim.muhasebe` |
-| **Mevcut Sürüm** | `1.0.7` (VersionCode: `8`) |
+| **Mevcut Sürüm** | `1.0.10` (VersionCode: `10`) |
 | **Fiyatlandırma Modeli** | Ücretsiz (İçerisinde reklam veya zorunlu abonelik barındırmaz) |
 | **İnternet Gereksinimi** | Çevrimdışı (Offline-first) / İsteğe bağlı Google Sheets yedekleme |
 | **Desteklenen Diller** | Türkçe, İngilizce, İspanyolca, Fransızca, Çince, Hintçe (6 Dil) |
@@ -348,23 +348,33 @@ Google Play Console'un en sık red sebebi yanlış doldurulan Veri Güvenliği a
 
 Google Play Console'da her güncellemede girilen sürüm notları (Maksimum 500 karakter):
 
-### 🇹🇷 Türkçe (v1.0.7):
+### 🇹🇷 Türkçe (v1.0.10):
 ```text
-Yenilikler (v1.0.7):
-• 🔙 Gelişmiş Geri Tuşu: Pencereler sırayla kapanır, sekmeler arası geri dönüş kesintisiz hale getirildi.
-• 🛡️ Yanlışlıkla Çıkış Koruması: Ana ekrandan çıkış için çift basış güvenliği eklendi.
-• ⚡ Akıcı Gezinme: Raporlar ve İşlem Geçmişi için performans optimizasyonları yapıldı.
-• 💳 Cüzdan ve Nakit Akışı İyileştirmeleri: Kasa ve kart bakiyesi hesaplamaları hızlandırıldı.
+Cebim Muhasebe v1.0.10 Yenilikleri:
+• 🌍 Çoklu Dil Desteği: Türkçe, İngilizce, İspanyolca, Fransızca, Çince ve Hintçe tam yerelleştirme sağlandı.
+• 🔙 Gelişmiş Geri Tuşu: Pencereler sırayla kapanır; ana ekranda yanlışlıkla çıkışı önleyen çift basış koruması eklendi.
+• 💳 Kasa ve Nakit Akışı: Gelir-gider ve cüzdan bakiye hesaplamalarında performans iyileştirmeleri yapıldı.
+• ⚡ Kararlılık ve Hata Düzeltmeleri: Arayüz geçişleri hızlandırıldı ve küçük hatalar giderildi.
 ```
 
-### 🇬🇧 English (v1.0.7):
+### 🇬🇧 English (v1.0.10):
 ```text
-What's New (v1.0.7):
-• 🔙 Back Button Navigation: Modals now close gracefully and tab history is preserved.
-• 🛡️ Accidental Exit Protection: Double-tap confirmation added on home screen before closing.
-• ⚡ Smooth Scrolling: Enhanced performance and lazy loading in Reports & Transactions.
-• 💳 Wallet & Cashflow Optimizations: Faster balance calculations across cards and cash.
+What's New in Cebim Muhasebe v1.0.10:
+• 🌍 Multi-Language Support: Full localization for Turkish, English, Spanish, French, Chinese, and Hindi.
+• 🔙 Advanced Back Navigation: Modal closing hierarchy and double-tap accidental exit prevention on home screen.
+• 💳 Wallet & Cashflow: Enhanced calculation speed and performance for cash flow and credit cards.
+• ⚡ Stability & Fixes: Smoother transitions and general bug fixes.
 ```
+
+<details>
+<summary>Önceki Sürümler</summary>
+
+#### v1.0.7:
+- Gelişmiş Geri Tuşu & Navigasyon Geçmişi
+- Çift dokunuşla çıkış güvenliği
+- Raporlar ve İşlem Geçmişi optimizasyonları
+
+</details>
 
 ---
 

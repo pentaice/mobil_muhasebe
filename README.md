@@ -165,6 +165,12 @@ mobil_muhasebe/
 
 ## 📌 Sürüm Geçmişi (Changelog)
 
+### v1.0.10 (Build 10)
+- **🌍 Kapsamlı Çoklu Dil Desteği (i18n):** Türkçe, İngilizce, İspanyolca, Fransızca, Çince ve Hintçe tam yerelleştirme sağlandı; tüm arayüz, bildirimler ve ayarlar eksiksiz çevrildi.
+- **🔙 Gelişmiş Geri Tuşu Yönetimi:** Donanım geri tuşu modal ve sekme hiyerarşisiyle tam uyumlu hale getirildi, çift basış ile çıkış koruması eklendi.
+- **💳 Kasa & Cüzdan Akışı:** Gelir-gider, bakiye hesaplamaları ve kredi kartı döngülerinde hız ve kararlılık optimizasyonları yapıldı.
+- **⚡ Performans & Hata Düzeltmeleri:** Arayüz geçişleri hızlandırıldı ve küçük hatalar giderildi.
+
 ### v1.0.7 (Build 8)
 - **🔙 Gelişmiş Geri Tuşu Yönetimi (Android Back Navigation):**
   - Donanımsal geri tuşuna veya geri kaydırma hareketine basıldığında uygulamanın doğrudan kapanması engellendi.

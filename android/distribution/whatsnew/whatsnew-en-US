@@ -1,5 +1,5 @@
-Cebim Muhasebe v1.0.6 What's New:
-• Performance & Smooth Scrolling: Added Lazy Loading & Infinite Scrolling for transaction history and reports lists; eliminating UI stutters.
-• Google Sheets Backup: Investment transactions are now fully backed up via automatic and manual cloud sync.
-• Wallet & Cash Flow: Cash flow analytics drawer and performance improvements.
-• General UI polishing and stability fixes.
+What's New in Cebim Muhasebe v1.0.10:
+• 🌍 Multi-Language Support: Full localization for Turkish, English, Spanish, French, Chinese, and Hindi.
+• 🔙 Advanced Back Navigation: Modal closing hierarchy and double-tap accidental exit prevention on home screen.
+• 💳 Wallet & Cashflow: Enhanced calculation speed and performance for cash flow and credit cards.
+• ⚡ Stability & Fixes: Smoother transitions and general bug fixes.
