@@ -1,5 +1,4 @@
-What's New in Cebim Muhasebe v1.0.10:
-• 🌍 Multi-Language Support: Full localization for Turkish, English, Spanish, French, Chinese, and Hindi.
-• 🔙 Advanced Back Navigation: Modal closing hierarchy and double-tap accidental exit prevention on home screen.
-• 💳 Wallet & Cashflow: Enhanced calculation speed and performance for cash flow and credit cards.
-• ⚡ Stability & Fixes: Smoother transitions and general bug fixes.
+What's New in Cebim Muhasebe v1.0.11:
+• 💳 Credit Card Payment Editing: Credit card payments and all transactions can now be easily edited.
+• 📊 Reports & Cashflow: Clarified credit card payments in report balance and transaction history.
+• ⚡ Stability & Fixes: Improved balance synchronization and general bug fixes.

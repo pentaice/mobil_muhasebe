@@ -604,6 +604,7 @@ export default function App() {
         {/* Top Header */}
         <Header
           transactions={transactions}
+          cards={cards}
           activeTab={activeTab}
           onOpenHistory={() => navigateToTab('history')}
           onExportData={handleExportData}
@@ -658,6 +659,7 @@ export default function App() {
                 <InvestmentsView
                   assets={investmentAssets}
                   transactions={transactions}
+                  initialCashBalance={initialCashBalance}
                   onAddAsset={handleAddInvestmentAsset}
                   onUpdateAsset={handleUpdateInvestmentAsset}
                   onDeleteAsset={handleDeleteInvestmentAsset}

@@ -165,6 +165,11 @@ mobil_muhasebe/
 
 ## 📌 Sürüm Geçmişi (Changelog)
 
+### v1.0.11 (Build 11)
+- **💳 Kredi Kartı Ödemeleri Düzenleme:** İşlem geçmişinden kredi kartı ödemeleri (tutar, tarih, açıklama ve kart seçimi) eksiksiz düzenlenebilir hale getirildi.
+- **📊 Raporlar ve Nakit Akışı Netleştirmesi:** Kredi kartı ödemeleri raporlar ve işlem geçmişinde net nakit çıkışı olarak gösterildi; gelir-gider dengesi paneline kredi kartı ödeme satırı eklendi.
+- **⚡ Bakiye Senkronizasyonu & Hata Düzeltmeleri:** Gelir, yatırım ve kart düzenleme modalları senkronize edildi; başlık ve kart ekranlarındaki reaktif güncellemeler iyileştirildi.
+
 ### v1.0.10 (Build 10)
 - **🌍 Kapsamlı Çoklu Dil Desteği (i18n):** Türkçe, İngilizce, İspanyolca, Fransızca, Çince ve Hintçe tam yerelleştirme sağlandı; tüm arayüz, bildirimler ve ayarlar eksiksiz çevrildi.
 - **🔙 Gelişmiş Geri Tuşu Yönetimi:** Donanım geri tuşu modal ve sekme hiyerarşisiyle tam uyumlu hale getirildi, çift basış ile çıkış koruması eklendi.

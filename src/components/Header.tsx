@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Transaction } from '../types';
+import { Transaction, CreditCard } from '../types';
 import { useI18n } from '../i18n/I18nContext';
 import { useBackHandler } from '../utils/backButton';
 import {
@@ -37,6 +37,7 @@ import {
 
 interface HeaderProps {
   transactions: Transaction[];
+  cards?: CreditCard[];
   activeTab?: string;
   onOpenHistory?: () => void;
   onExportData: () => void;
@@ -47,6 +48,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   transactions,
+  cards,
   activeTab,
   onOpenHistory,
   onExportData,
@@ -111,11 +113,10 @@ export const Header: React.FC<HeaderProps> = ({
     })
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
-  // Calculate total unpaid debt across all cards
-  const cards = loadCards();
-  const allTransactions = loadTransactions();
-  const totalUnpaidDebt = cards.reduce((sum, card) => {
-    const info = calculateCardCycleInfo(card, allTransactions);
+  // Calculate total unpaid debt across all cards using active props
+  const currentCards = cards && cards.length > 0 ? cards : loadCards();
+  const totalUnpaidDebt = currentCards.reduce((sum, card) => {
+    const info = calculateCardCycleInfo(card, transactions);
     return sum + (info.totalUnpaidDebt ?? 0);
   }, 0);
 

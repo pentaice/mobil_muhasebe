@@ -1,5 +1,4 @@
-Cebim Muhasebe v1.0.10 Yenilikleri:
-• 🌍 Çoklu Dil Desteği: Türkçe, İngilizce, İspanyolca, Fransızca, Çince ve Hintçe tam yerelleştirme sağlandı.
-• 🔙 Gelişmiş Geri Tuşu: Pencereler sırayla kapanır; ana ekranda yanlışlıkla çıkışı önleyen çift basış koruması eklendi.
-• 💳 Kasa ve Nakit Akışı: Gelir-gider ve cüzdan bakiye hesaplamalarında performans iyileştirmeleri yapıldı.
-• ⚡ Kararlılık ve Hata Düzeltmeleri: Arayüz geçişleri hızlandırıldı ve küçük hatalar giderildi.
+Cebim Muhasebe v1.0.11 Yenilikleri:
+• 💳 Kredi Kartı Ödemeleri Düzenleme: Yapılan kart ödemeleri ve tüm finansal işlemler artık kolayca düzenlenebilir.
+• 📊 Raporlar ve Nakit Akışı: Kredi kartı ödemelerinin rapor dengesi ve işlem geçmişi gösterimleri netleştirildi.
+• ⚡ Kararlılık ve Hata Düzeltmeleri: Bakiye senkronizasyonu güçlendirildi ve kullanıcı deneyimi iyileştirildi.

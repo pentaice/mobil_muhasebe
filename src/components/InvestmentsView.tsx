@@ -33,6 +33,7 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 interface InvestmentsViewProps {
   assets: InvestmentAsset[];
   transactions: Transaction[];
+  initialCashBalance?: number;
   onAddAsset: (asset: Omit<InvestmentAsset, 'id' | 'createdAt' | 'updatedAt'>) => void;
   onUpdateAsset: (asset: InvestmentAsset) => void;
   onDeleteAsset: (id: string) => void;
@@ -53,6 +54,7 @@ const CATEGORY_LABELS: Record<InvestmentCategory, { label: string; icon: any; co
 export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
   assets,
   transactions,
+  initialCashBalance = 0,
   onAddAsset,
   onUpdateAsset,
   onDeleteAsset,
@@ -125,7 +127,7 @@ export const InvestmentsView: React.FC<InvestmentsViewProps> = ({
 
   // Stats Calculations
   const stats = useMemo(() => calculateInvestmentStats(assets, transactions), [assets, transactions]);
-  const availableCash = useMemo(() => calculateLiquidCashBalance(transactions), [transactions]);
+  const availableCash = useMemo(() => calculateLiquidCashBalance(transactions, initialCashBalance), [transactions, initialCashBalance]);
 
   // Chart data for asset allocation
   const pieData = useMemo(() => {

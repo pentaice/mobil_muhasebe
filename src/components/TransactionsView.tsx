@@ -70,6 +70,8 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   const [editCategoryId, setEditCategoryId] = useState<string>('');
   const [editSourceType, setEditSourceType] = useState<'credit_card' | 'cash_bank'>('credit_card');
   const [editCardId, setEditCardId] = useState<string>('');
+  const [editAssetId, setEditAssetId] = useState<string>('');
+  const [editProfitOrLoss, setEditProfitOrLoss] = useState<string>('');
   const [editDate, setEditDate] = useState<string>('');
   const [editTime, setEditTime] = useState<string>('');
 
@@ -77,9 +79,11 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     setEditingTx(tx);
     setEditAmount(tx.amount.toString());
     setEditNote(tx.note || '');
-    setEditCategoryId(tx.categoryId);
-    setEditSourceType(tx.sourceType);
-    setEditCardId(tx.creditCardId || '');
+    setEditCategoryId(tx.categoryId || '');
+    setEditSourceType(tx.sourceType || 'cash_bank');
+    setEditCardId(tx.creditCardId || (cards[0]?.id || ''));
+    setEditAssetId(tx.investmentAssetId || (invAssets[0]?.id || ''));
+    setEditProfitOrLoss(tx.profitOrLoss !== undefined && tx.profitOrLoss !== null ? tx.profitOrLoss.toString() : '');
     const d = new Date(tx.date);
     // Format for date input (YYYY-MM-DD)
     const year = d.getFullYear();
@@ -102,13 +106,38 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     const [hours, minutes] = editTime.split(':').map(Number);
     const newDate = new Date(year, month - 1, day, hours, minutes);
 
+    const isExp = editingTx.type === 'expense';
+    const isInc = editingTx.type === 'income';
+    const isCardPay = editingTx.type === 'card_payment';
+    const isInv = editingTx.type === 'investment_deposit' || editingTx.type === 'investment_withdraw';
+
+    let parsedPL: number | undefined = undefined;
+    if (editProfitOrLoss.trim() !== '') {
+      const plNum = parseFloat(editProfitOrLoss);
+      if (!isNaN(plNum)) parsedPL = plNum;
+    }
+
     const updatedTx: Transaction = {
       ...editingTx,
       amount: parsedAmount,
-      note: editNote || undefined,
-      categoryId: editCategoryId,
-      sourceType: editSourceType,
-      creditCardId: editingTx.type === 'card_payment' ? editingTx.creditCardId : (editSourceType === 'credit_card' ? editCardId : undefined),
+      note: editNote.trim() || undefined,
+      categoryId: isCardPay
+        ? (editingTx.categoryId || 'cat-diger')
+        : isInv
+        ? (editingTx.categoryId || 'investment')
+        : editCategoryId,
+      sourceType: isExp
+        ? editSourceType
+        : 'cash_bank',
+      creditCardId: isCardPay
+        ? (editCardId || undefined)
+        : isExp && editSourceType === 'credit_card'
+        ? (editCardId || undefined)
+        : undefined,
+      investmentAssetId: isInv
+        ? (editAssetId || undefined)
+        : undefined,
+      profitOrLoss: editingTx.type === 'investment_withdraw' ? parsedPL : editingTx.profitOrLoss,
       date: newDate.toISOString(),
     };
 
@@ -299,8 +328,8 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                   )}
 
                   {isCardPayment && (
-                    <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 font-bold border border-emerald-100 dark:border-emerald-900/60">
-                      <ArrowDownLeft className="w-5 h-5" />
+                    <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 font-bold border border-blue-100 dark:border-blue-900/60 shadow-2xs">
+                      <CardIcon className="w-5 h-5" />
                     </div>
                   )}
 
@@ -374,11 +403,11 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                           : isInvDeposit
                           ? 'text-indigo-600 dark:text-indigo-400 font-black'
                           : isCardPayment
-                          ? 'text-emerald-600 dark:text-emerald-400 font-black'
+                          ? 'text-blue-600 dark:text-blue-400 font-black'
                           : 'text-gray-900 dark:text-slate-100'
                       }`}
                     >
-                      {isIncome || isInvWithdraw ? '+' : isCardPayment ? '' : '-'}
+                      {isIncome || isInvWithdraw ? '+' : '-'}
                       {formatCurrency(t.amount)}
                     </p>
                     <span className="text-[10px] text-gray-400 dark:text-slate-500 block font-medium">
@@ -394,16 +423,14 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                     </span>
                   </div>
 
-                  {/* Edit Button (For regular expenses and incomes) */}
-                  {(isExpense || isIncome) && (
-                    <button
-                      onClick={() => openEditModal(t)}
-                      title={i18n.editTransaction}
-                      className="text-gray-300 dark:text-slate-600 hover:text-blue-600 dark:hover:text-blue-400 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors cursor-pointer"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                  )}
+                  {/* Edit Button (For ALL transactions!) */}
+                  <button
+                    onClick={() => openEditModal(t)}
+                    title={i18n.editTransaction}
+                    className="text-gray-300 dark:text-slate-600 hover:text-blue-600 dark:hover:text-blue-400 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors cursor-pointer"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
 
                   {/* Delete Button */}
                   <button
@@ -552,39 +579,133 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 />
               </div>
 
-              {/* Category */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                  {i18n.category}
-                </label>
-                <div className="grid grid-cols-4 gap-2 max-h-32 overflow-y-auto">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setEditCategoryId(cat.id)}
-                      className={`flex flex-col items-center gap-1 p-2 rounded-2xl border-2 transition-all cursor-pointer ${
-                        editCategoryId === cat.id
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40 scale-105 shadow-md'
-                          : 'border-gray-100 dark:border-slate-700 hover:border-gray-200 dark:hover:border-slate-600'
-                      }`}
-                    >
-                      <div
-                        className="w-8 h-8 rounded-xl flex items-center justify-center text-white shadow-xs"
-                        style={{ backgroundColor: cat.color }}
+              {/* Category / Asset / Card Selection depending on transaction type */}
+              {editingTx.type === 'expense' && (
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
+                    {i18n.category}
+                  </label>
+                  <div className="grid grid-cols-4 gap-2 max-h-32 overflow-y-auto">
+                    {categories.map((cat) => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setEditCategoryId(cat.id)}
+                        className={`flex flex-col items-center gap-1 p-2 rounded-2xl border-2 transition-all cursor-pointer ${
+                          editCategoryId === cat.id
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40 scale-105 shadow-md'
+                            : 'border-gray-100 dark:border-slate-700 hover:border-gray-200 dark:hover:border-slate-600'
+                        }`}
                       >
-                        <CategoryIcon name={cat.icon} size={16} />
-                      </div>
-                      <span className="text-[9px] text-gray-600 dark:text-slate-300 font-medium leading-tight text-center line-clamp-2">
-                        {cat.name}
-                      </span>
-                    </button>
-                  ))}
+                        <div
+                          className="w-8 h-8 rounded-xl flex items-center justify-center text-white shadow-xs"
+                          style={{ backgroundColor: cat.color }}
+                        >
+                          <CategoryIcon name={cat.icon} size={16} />
+                        </div>
+                        <span className="text-[9px] text-gray-600 dark:text-slate-300 font-medium leading-tight text-center line-clamp-2">
+                          {cat.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Payment Source */}
-              {editingTx.type !== 'card_payment' && (
+              {editingTx.type === 'income' && (
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
+                    {i18n.category}
+                  </label>
+                  <div className="grid grid-cols-3 gap-2 max-h-32 overflow-y-auto">
+                    {incomeCats.map((cat) => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setEditCategoryId(cat.id)}
+                        className={`flex flex-col items-center gap-1 p-2 rounded-2xl border-2 transition-all cursor-pointer ${
+                          editCategoryId === cat.id
+                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 scale-105 shadow-md'
+                            : 'border-gray-100 dark:border-slate-700 hover:border-gray-200 dark:hover:border-slate-600'
+                        }`}
+                      >
+                        <div
+                          className="w-8 h-8 rounded-xl flex items-center justify-center text-white shadow-xs"
+                          style={{ backgroundColor: cat.color }}
+                        >
+                          <CategoryIcon name={cat.icon} size={16} />
+                        </div>
+                        <span className="text-[9px] text-gray-600 dark:text-slate-300 font-medium leading-tight text-center line-clamp-2">
+                          {cat.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {editingTx.type === 'card_payment' && (
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <CardIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                    {i18n.creditCard}
+                  </label>
+                  <select
+                    value={editCardId}
+                    onChange={(e) => setEditCardId(e.target.value)}
+                    className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl py-2.5 px-3 text-xs text-gray-700 dark:text-slate-200 font-medium focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="">{i18n.selectCard}</option>
+                    {cards.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} (•••• {c.last4})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {(editingTx.type === 'investment_deposit' || editingTx.type === 'investment_withdraw') && (
+                <div className="space-y-2">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <TrendingUp className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                      {i18n.investments}
+                    </label>
+                    <select
+                      value={editAssetId}
+                      onChange={(e) => setEditAssetId(e.target.value)}
+                      className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl py-2.5 px-3 text-xs text-gray-700 dark:text-slate-200 font-medium focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="">{i18n.investments}</option>
+                      {invAssets.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {editingTx.type === 'investment_withdraw' && (
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
+                        {i18n.realizedPL} ({currency.symbol})
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={editProfitOrLoss}
+                        onChange={(e) => setEditProfitOrLoss(e.target.value)}
+                        placeholder="0.00"
+                        className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl py-2.5 px-3 text-xs text-gray-800 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Payment Source (Only for Expenses) */}
+              {editingTx.type === 'expense' && (
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                     {i18n.paymentSource}

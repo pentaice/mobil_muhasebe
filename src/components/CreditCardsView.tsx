@@ -278,7 +278,7 @@ export const CreditCardsView: React.FC<CreditCardsViewProps> = ({
       {cardToDelete && (
         <DeleteCardConfirmModal
           card={cardToDelete}
-          transactionCount={transactions.filter(t => t.cardId === cardToDelete.id).length}
+          transactionCount={transactions.filter(t => t.creditCardId === cardToDelete.id).length}
           onClose={() => setCardToDelete(null)}
           onConfirm={(action) => {
             onDeleteCard(cardToDelete.id, action);

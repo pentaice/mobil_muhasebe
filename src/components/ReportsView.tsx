@@ -444,6 +444,19 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
           </div>
         )}
 
+        {/* Card Payments summary if any made in this period */}
+        {totalCardPayments > 0 && (
+          <div className="p-2.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 flex items-center justify-between text-xs">
+            <span className="text-gray-600 dark:text-slate-300 font-medium flex items-center gap-1.5">
+              <CardIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <span>{i18n.totalCardPaymentsReport}:</span>
+            </span>
+            <span className="font-bold text-blue-600 dark:text-blue-400 font-mono">
+              -{formatCurrency(totalCardPayments)}
+            </span>
+          </div>
+        )}
+
         {/* Realized Profit / Loss Banner if present */}
         {realizedProfitLoss !== 0 && (
           <div className="p-2.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 flex items-center justify-between text-xs">
@@ -682,23 +695,67 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
             ) : (
               <>
                 {sortedFilteredTransactions.slice(0, visibleHistoryCount).map((t) => {
-                  const cat = categories.find(c => c.id === t.categoryId) || { name: i18n.unknown, color: '#9ca3af', icon: 'HelpCircle' };
+                  const isExp = t.type === 'expense';
+                  const isInc = t.type === 'income';
+                  const isCardPay = t.type === 'card_payment';
+                  const isInvDep = t.type === 'investment_deposit';
+                  const isInvWith = t.type === 'investment_withdraw';
+
+                  const cat = categories.find((c) => c.id === t.categoryId);
+                  const incCats = incomeCategories && incomeCategories.length > 0 ? incomeCategories : loadIncomeCategories();
+                  const incCat = incCats.find((c) => c.id === t.categoryId);
+                  const card = cards.find((c) => c.id === t.creditCardId);
+
+                  const displayName = isExp
+                    ? (cat?.name || i18n.expense)
+                    : isInc
+                    ? (incCat?.name || i18n.income)
+                    : isCardPay
+                    ? (card ? `${card.name} (${i18n.cardPayment})` : i18n.cardPayment)
+                    : isInvDep
+                    ? i18n.investmentInflow
+                    : i18n.investmentOutflow;
+
+                  const displayColor = isExp
+                    ? (cat?.color || '#9ca3af')
+                    : isInc
+                    ? (incCat?.color || '#10b981')
+                    : isCardPay
+                    ? '#3b82f6'
+                    : '#8b5cf6';
+
+                  const displayIcon = isExp
+                    ? (cat?.icon || 'HelpCircle')
+                    : isInc
+                    ? (incCat?.icon || 'ArrowUpRight')
+                    : isCardPay
+                    ? 'CreditCard'
+                    : 'TrendingUp';
+
+                  const isPositive = isInc || isInvWith;
+
                   return (
                     <div key={t.id} className="flex items-center justify-between bg-gray-50 dark:bg-slate-800/70 p-3 rounded-2xl border border-gray-100 dark:border-slate-750">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white" style={{ backgroundColor: cat.color }}>
-                          <CategoryIcon name={cat.icon} size={16} />
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white" style={{ backgroundColor: displayColor }}>
+                          <CategoryIcon name={displayIcon} size={16} />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-gray-900 dark:text-slate-100">{cat.name}</p>
+                          <p className="text-xs font-bold text-gray-900 dark:text-slate-100">{displayName}</p>
                           <p className="text-[10px] text-gray-500 dark:text-slate-400">{formatShortDate(t.date)}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className={`text-xs font-bold ${t.type === 'expense' ? 'text-gray-900 dark:text-slate-100' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                          {t.type === 'expense' ? '-' : '+'}{formatCurrency(t.amount)}
+                        <p className={`text-xs font-bold ${
+                          isPositive
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : isCardPay
+                            ? 'text-blue-600 dark:text-blue-400'
+                            : 'text-gray-900 dark:text-slate-100'
+                        }`}>
+                          {isPositive ? '+' : '-'}{formatCurrency(t.amount)}
                         </p>
-                        {t.description && <p className="text-[10px] text-gray-400 dark:text-slate-500 truncate w-20">{t.description}</p>}
+                        {t.note && <p className="text-[10px] text-gray-400 dark:text-slate-500 truncate w-24">{t.note}</p>}
                       </div>
                     </div>
                   );
