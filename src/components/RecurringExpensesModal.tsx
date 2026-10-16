@@ -20,6 +20,7 @@ import {
   Zap,
   Info,
   SlidersHorizontal,
+  Minus,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -693,7 +694,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                       }`}
                     >
                       <Wallet className="w-3.5 h-3.5" />
-                      <span>Nakit / Banka</span>
+                      <span>{i18n.cashBank}</span>
                     </button>
                   </div>
 
@@ -721,48 +722,83 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
                   )}
                 </div>
 
-                {/* Day of Month Slider / Selector */}
-                <div className="space-y-1.5 bg-gray-50 dark:bg-slate-800/60 p-3 rounded-2xl border border-gray-200/70 dark:border-slate-750">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider">
-                      {i18n.whichDayOfMonth}
-                    </label>
-                    <span className="text-sm font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-lg">
-                      {i18n.everyMonthDay.replace('{day}', String(formDayOfMonth))}
-                    </span>
-                  </div>
+                {/* Tek Satırlık Gün Sayacı (Single-Line Day Counter Stepper) */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider block">
+                    {i18n.whichDayOfMonth}
+                  </label>
 
-                  <input
-                    type="range"
-                    min="1"
-                    max="31"
-                    value={formDayOfMonth}
-                    onChange={(e) => setFormDayOfMonth(Number(e.target.value))}
-                    className="w-full accent-blue-600 cursor-pointer"
-                  />
+                  <div className="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl">
+                    <div className="flex items-center gap-2 pl-1">
+                      <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                      <span className="text-xs font-bold text-gray-800 dark:text-slate-200">
+                        Her Ayın
+                      </span>
+                    </div>
 
-                  {/* Common Day Quick Buttons */}
-                  <div className="flex items-center justify-between gap-1 pt-1">
-                    {[1, 5, 10, 15, 20, 25, 31].map((day) => (
+                    <div className="flex items-center gap-2">
+                      {/* 1 Gün Azalt */}
                       <button
-                        key={day}
                         type="button"
-                        onClick={() => setFormDayOfMonth(day)}
-                        className={`text-[10px] font-bold py-1 px-2 rounded-lg border transition-all cursor-pointer ${
-                          formDayOfMonth === day
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-400 border-gray-200 dark:border-slate-700'
-                        }`}
+                        onClick={() => setFormDayOfMonth((prev) => (prev <= 1 ? 31 : prev - 1))}
+                        className="w-8 h-8 rounded-xl bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-650 flex items-center justify-center font-bold active:scale-90 transition-all cursor-pointer shadow-2xs"
+                        title="1 gün azalt"
                       >
-                        {day === 31 ? i18n.lastDay : `${day}`}
+                        <Minus className="w-4 h-4" />
                       </button>
-                    ))}
-                  </div>
 
-                  <p className="text-[10.5px] text-gray-500 dark:text-slate-400 pt-1 flex items-center gap-1">
-                    <Info className="w-3 h-3 text-blue-500 shrink-0" />
-                    <span>{i18n.recurringNotice}</span>
-                  </p>
+                      {/* Gün Numarası ve Kutusu */}
+                      <div className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-blue-500/50 rounded-xl px-2.5 py-1 shadow-2xs">
+                        <input
+                          type="number"
+                          min="1"
+                          max="31"
+                          value={formDayOfMonth}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val)) {
+                              setFormDayOfMonth(Math.max(1, Math.min(31, val)));
+                            }
+                          }}
+                          className="w-7 text-center font-black text-sm text-blue-600 dark:text-blue-400 bg-transparent focus:outline-none"
+                        />
+                        <span className="text-xs font-bold text-gray-700 dark:text-slate-300">
+                          . günü
+                        </span>
+                      </div>
+
+                      {/* 1 Gün Artır */}
+                      <button
+                        type="button"
+                        onClick={() => setFormDayOfMonth((prev) => (prev >= 31 ? 1 : prev + 1))}
+                        className="w-8 h-8 rounded-xl bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-650 flex items-center justify-center font-bold active:scale-90 transition-all cursor-pointer shadow-2xs"
+                        title="1 gün artır"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Akıllı Rozet */}
+                    <div className="pr-1 text-right">
+                      {formDayOfMonth === 31 ? (
+                        <span className="text-[10px] bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-md font-bold">
+                          Son Gün
+                        </span>
+                      ) : formDayOfMonth === 1 ? (
+                        <span className="text-[10px] bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-md font-bold">
+                          İlk Gün
+                        </span>
+                      ) : formDayOfMonth === 15 ? (
+                        <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-md font-bold">
+                          Ay Ortası
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-gray-400 dark:text-slate-500 font-medium">
+                          (1-31)
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Submit & Cancel Buttons */}

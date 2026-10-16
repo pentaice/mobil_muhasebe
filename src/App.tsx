@@ -389,6 +389,11 @@ export default function App() {
     showToast(i18n.toastExpenseUpdated, 'success');
   };
 
+  const handleBatchUpdateTransactions = (updater: (prev: Transaction[]) => Transaction[]) => {
+    setTransactions((prev) => updater(prev));
+    showToast('Taksit planı güncellendi', 'success');
+  };
+
   const handleAddCategory = (catData: Omit<Category, 'id' | 'isCustom'>) => {
     const newCat: Category = {
       ...catData,
@@ -687,6 +692,7 @@ export default function App() {
                   transactions={transactions}
                   onDeleteTransaction={handleDeleteTransaction}
                   onUpdateTransaction={handleUpdateTransaction}
+                  onBatchUpdateTransactions={handleBatchUpdateTransactions}
                 />
               )}
 

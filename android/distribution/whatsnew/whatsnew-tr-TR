@@ -1,4 +1,4 @@
-Cebim Muhasebe v1.0.11 Yenilikleri:
-• 💳 Kredi Kartı Ödemeleri Düzenleme: Yapılan kart ödemeleri ve tüm finansal işlemler artık kolayca düzenlenebilir.
-• 📊 Raporlar ve Nakit Akışı: Kredi kartı ödemelerinin rapor dengesi ve işlem geçmişi gösterimleri netleştirildi.
-• ⚡ Kararlılık ve Hata Düzeltmeleri: Bakiye senkronizasyonu güçlendirildi ve kullanıcı deneyimi iyileştirildi.
+Cebim Muhasebe v1.0.12 Yenilikleri:
+• 💳 Harcamaları Taksitlendirme: Geçmiş harcamalarınızı dilediğiniz aya taksitlendirebilir, aylık bütçe açığını ve gelecek borç taahhütlerini anlık takip edebilirsiniz.
+• ⚡ Pratik Gün Sayacı: Düzenli giderlerde ayın gününü zahmetsizce ayarlayabileceğiniz kompakt gün sayacı.
+• 🚀 R8 Performans Optimizasyonu: Uygulama boyutu %40 küçültüldü, açılış hızı ve bellek performansı en üst düzeye çıkarıldı.

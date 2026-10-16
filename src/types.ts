@@ -46,6 +46,10 @@ export interface Transaction {
   date: string; // ISO string e.g. "2026-08-08T14:30:00.000Z"
   note?: string;
   createdAt: string;
+  installmentGroupId?: string; // Taksit grubunun ortak benzersiz ID'si
+  installmentNumber?: number; // Kaçıncı taksit (örn. 1, 2, 3...)
+  installmentTotal?: number; // Toplam taksit sayısı (örn. 6)
+  originalTransactionAmount?: number; // Taksitlendirilmeden önceki ana harcama tutarı
 }
 
 export type InvestmentCategory = 'gold' | 'forex' | 'stock' | 'fund' | 'crypto' | 'deposit' | 'other';

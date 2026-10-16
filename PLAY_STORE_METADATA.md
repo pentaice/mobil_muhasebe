@@ -31,7 +31,7 @@ Bu doküman, **Cebim Muhasebe (com.cebim.muhasebe)** uygulamasının Google Play
 | :--- | :--- |
 | **Uygulama Adı (Default)** | Cebim Muhasebe |
 | **Paket Adı (Package Name)** | `com.cebim.muhasebe` |
-| **Mevcut Sürüm** | `1.0.11` (VersionCode: `11`) |
+| **Mevcut Sürüm** | `1.0.12` (VersionCode: `12`) |
 | **Fiyatlandırma Modeli** | Ücretsiz (İçerisinde reklam veya zorunlu abonelik barındırmaz) |
 | **İnternet Gereksinimi** | Çevrimdışı (Offline-first) / İsteğe bağlı Google Sheets yedekleme |
 | **Desteklenen Diller** | Türkçe, İngilizce, İspanyolca, Fransızca, Çince, Hintçe (6 Dil) |
@@ -348,24 +348,31 @@ Google Play Console'un en sık red sebebi yanlış doldurulan Veri Güvenliği a
 
 Google Play Console'da her güncellemede girilen sürüm notları (Maksimum 500 karakter):
 
-### 🇹🇷 Türkçe (v1.0.11):
+### 🇹🇷 Türkçe (v1.0.12):
 ```text
-Cebim Muhasebe v1.0.11 Yenilikleri:
-• 💳 Kredi Kartı Ödemeleri Düzenleme: Yapılan kart ödemeleri ve tüm finansal işlemler artık kolayca düzenlenebilir.
-• 📊 Raporlar ve Nakit Akışı: Kredi kartı ödemelerinin rapor dengesi ve işlem geçmişi gösterimleri netleştirildi.
-• ⚡ Kararlılık ve Hata Düzeltmeleri: Bakiye senkronizasyonu güçlendirildi ve kullanıcı deneyimi iyileştirildi.
+Cebim Muhasebe v1.0.12 Yenilikleri:
+• 💳 Harcamaları Taksitlendirme: Geçmiş harcamalarınızı dilediğiniz aya taksitlendirebilir, aylık bütçe açığını ve gelecek borç taahhütlerini anlık takip edebilirsiniz.
+• ⚡ Pratik Gün Sayacı: Düzenli giderlerde ayın gününü zahmetsizce ayarlayabileceğiniz kompakt gün sayacı.
+• 🚀 R8 Performans Optimizasyonu: Uygulama boyutu %40 küçültüldü, açılış hızı ve bellek performansı en üst düzeye çıkarıldı.
 ```
 
-### 🇬🇧 English (v1.0.11):
+### 🇬🇧 English (v1.0.12):
 ```text
-What's New in Cebim Muhasebe v1.0.11:
-• 💳 Credit Card Payment Editing: Credit card payments and all transactions can now be easily edited.
-• 📊 Reports & Cashflow: Clarified credit card payments in report balance and transaction history.
-• ⚡ Stability & Fixes: Improved balance synchronization and general bug fixes.
+What's New in Cebim Muhasebe v1.0.12:
+• 💳 Expense Installments: Convert past expenses into monthly installments, track budget relief and future debt commitments.
+• ⚡ Single-Line Day Stepper: Clean and fast day counter for recurring expenses.
+• 🚀 R8 Performance Optimization: Reduced app size by ~40%, boosted startup speed and memory efficiency.
 ```
 
 <details>
 <summary>Önceki Sürümler</summary>
+
+#### v1.0.11:
+```text
+• 💳 Kredi Kartı Ödemeleri Düzenleme: Yapılan kart ödemeleri ve tüm finansal işlemler artık kolayca düzenlenebilir.
+• 📊 Raporlar ve Nakit Akışı: Kredi kartı ödemelerinin rapor dengesi ve işlem geçmişi gösterimleri netleştirildi.
+• ⚡ Kararlılık ve Hata Düzeltmeleri: Bakiye senkronizasyonu güçlendirildi.
+```
 
 #### v1.0.10:
 - Çoklu Dil Desteği (6 Dil)

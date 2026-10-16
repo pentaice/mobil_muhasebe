@@ -20,8 +20,11 @@ import {
   TrendingUp,
   Coins,
   Sparkles,
+  CalendarClock,
+  Layers,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { InstallmentModal } from './InstallmentModal';
 
 interface TransactionsViewProps {
   categories: Category[];
@@ -31,6 +34,7 @@ interface TransactionsViewProps {
   transactions: Transaction[];
   onDeleteTransaction: (id: string) => void;
   onUpdateTransaction: (updatedTx: Transaction) => void;
+  onBatchUpdateTransactions?: (updater: (prev: Transaction[]) => Transaction[]) => void;
 }
 
 export const TransactionsView: React.FC<TransactionsViewProps> = ({
@@ -41,6 +45,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   transactions,
   onDeleteTransaction,
   onUpdateTransaction,
+  onBatchUpdateTransactions,
 }) => {
   const { t: i18n, formatCurrency, currency } = useI18n();
   const [search, setSearch] = useState<string>('');
@@ -48,8 +53,13 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>('all');
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [installmentTargetTx, setInstallmentTargetTx] = useState<Transaction | null>(null);
 
   useBackHandler(() => {
+    if (installmentTargetTx) {
+      setInstallmentTargetTx(null);
+      return;
+    }
     if (deleteConfirmId) {
       setDeleteConfirmId(null);
       return;
@@ -58,7 +68,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       setEditingTx(null);
       return;
     }
-  }, Boolean(deleteConfirmId || editingTx), 15);
+  }, Boolean(deleteConfirmId || editingTx || installmentTargetTx), 15);
 
   // Lazy loading / Pagination state
   const [visibleCount, setVisibleCount] = useState<number>(25);
@@ -148,6 +158,30 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   const handleConfirmDelete = (id: string) => {
     onDeleteTransaction(id);
     setDeleteConfirmId(null);
+  };
+
+  const handleApplyInstallments = (originalTxId: string, newTransactions: Transaction[]) => {
+    if (onBatchUpdateTransactions) {
+      onBatchUpdateTransactions((prev) => {
+        const remaining = prev.filter((t) => t.id !== originalTxId);
+        return [...newTransactions, ...remaining];
+      });
+    } else {
+      onDeleteTransaction(originalTxId);
+      newTransactions.forEach(onUpdateTransaction);
+    }
+  };
+
+  const handleRevertInstallmentPlan = (groupId: string, singleTx: Transaction, removedIds: string[]) => {
+    if (onBatchUpdateTransactions) {
+      onBatchUpdateTransactions((prev) => {
+        const removedSet = new Set(removedIds);
+        return [singleTx, ...prev.filter((t) => !removedSet.has(t.id) && t.id !== singleTx.id)];
+      });
+    } else {
+      removedIds.forEach(onDeleteTransaction);
+      onUpdateTransaction(singleTx);
+    }
   };
 
   const incomeCats = useMemo(
@@ -379,6 +413,20 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                           💳 {card.name}
                         </span>
                       )}
+                      {t.installmentGroupId && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setInstallmentTargetTx(t);
+                          }}
+                          className="bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded font-bold border border-indigo-200/60 dark:border-indigo-800/60 flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+                          title="Taksit Planı Detayları"
+                        >
+                          <CalendarClock className="w-3 h-3 text-indigo-500 dark:text-indigo-400" />
+                          <span>{t.installmentNumber}/{t.installmentTotal} Taksit</span>
+                        </button>
+                      )}
                       {isIncome && (
                         <span className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded font-semibold border border-emerald-200/60 dark:border-emerald-900/40 truncate shrink">
                           {i18n.income}
@@ -422,6 +470,21 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                         : i18n.investmentOutflow}
                     </span>
                   </div>
+
+                  {/* Taksitlendir / Taksit Planı Button (For expenses!) */}
+                  {isExpense && (
+                    <button
+                      onClick={() => setInstallmentTargetTx(t)}
+                      title={t.installmentGroupId ? 'Taksit Planı Detayları' : 'Harcamayı Taksitlendir'}
+                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                        t.installmentGroupId
+                          ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60'
+                          : 'text-gray-300 dark:text-slate-600 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40'
+                      }`}
+                    >
+                      <CalendarClock className="w-4 h-4" />
+                    </button>
+                  )}
 
                   {/* Edit Button (For ALL transactions!) */}
                   <button
@@ -545,6 +608,40 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                   <X className="w-5 h-5" />
                 </button>
               </div>
+
+              {/* Taksitlendir Banner (For Expense transactions in Edit modal) */}
+              {editingTx.type === 'expense' && (
+                <div className="p-3 rounded-2xl bg-gradient-to-r from-indigo-50/90 to-purple-50/90 dark:from-indigo-950/50 dark:to-purple-950/50 border border-indigo-100 dark:border-indigo-900/60 flex items-center justify-between gap-2 shadow-2xs">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold shrink-0 shadow-xs">
+                      <CalendarClock className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-indigo-950 dark:text-indigo-200 truncate">
+                        {editingTx.installmentGroupId
+                          ? `Taksit Planı Aktif (${editingTx.installmentNumber}/${editingTx.installmentTotal})`
+                          : 'Harcamayı Taksitlendir'}
+                      </p>
+                      <p className="text-[10px] text-indigo-700/80 dark:text-indigo-300/80 truncate">
+                        {editingTx.installmentGroupId
+                          ? 'Tüm taksitleri inceleyin veya iptal edin'
+                          : 'Aylık açığı hafifletmek için aylara bölün'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = editingTx;
+                      setEditingTx(null);
+                      setInstallmentTargetTx(target);
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
+                  >
+                    {editingTx.installmentGroupId ? 'Planı Gör' : 'Taksitlendir'}
+                  </button>
+                </div>
+              )}
 
               {/* Amount */}
               <div className="space-y-1.5">
@@ -798,6 +895,18 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Installment Modal (Interactive Monthly Deficit & Debt Simulation) */}
+      <InstallmentModal
+        transaction={installmentTargetTx}
+        allTransactions={transactions}
+        categories={categories}
+        cards={cards}
+        isOpen={Boolean(installmentTargetTx)}
+        onClose={() => setInstallmentTargetTx(null)}
+        onApplyInstallments={handleApplyInstallments}
+        onRevertInstallmentPlan={handleRevertInstallmentPlan}
+      />
     </div>
   );
 };
