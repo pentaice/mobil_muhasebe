@@ -142,6 +142,112 @@ export function saveAutoSaveSettings(settings: AutoSaveSettings) {
 
 // --- Storage Loaders ---
 
+let isLegacyMigrated = false;
+
+/**
+ * Scans older storage keys (v1, v2, v3, v4 and unversioned) for data that might have been
+ * stranded during prior version jumps, and safely merges them into the current v5 keys.
+ */
+export function migrateLegacyStorageData(): number {
+  try {
+    const LEGACY_TX_KEYS = [
+      'cebim_transactions_v4',
+      'cebim_transactions_v3',
+      'cebim_transactions_v2',
+      'cebim_transactions_v1',
+      'cebim_transactions',
+    ];
+
+    const currentV5Raw = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
+    let currentV5Txs: Transaction[] = [];
+    if (currentV5Raw) {
+      try {
+        const parsed = JSON.parse(currentV5Raw);
+        if (Array.isArray(parsed)) currentV5Txs = parsed;
+      } catch (e) {
+        currentV5Txs = [];
+      }
+    }
+
+    const existingIds = new Set(currentV5Txs.map((t) => t.id));
+    const existingFingerprints = new Set(
+      currentV5Txs.map((t) => `${t.date}_${t.amount}_${t.categoryId}_${t.note || ''}`)
+    );
+
+    let recoveredCount = 0;
+    const recoveredTxs: Transaction[] = [];
+
+    for (const key of LEGACY_TX_KEYS) {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      try {
+        const legacyList = JSON.parse(raw);
+        if (Array.isArray(legacyList)) {
+          for (const item of legacyList) {
+            if (!item || typeof item !== 'object') continue;
+            const fp = `${item.date}_${item.amount}_${item.categoryId}_${item.note || ''}`;
+            if (!existingIds.has(item.id) && !existingFingerprints.has(fp)) {
+              existingIds.add(item.id);
+              existingFingerprints.add(fp);
+              recoveredTxs.push(item);
+              recoveredCount++;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn(`Failed to parse legacy key ${key}:`, e);
+      }
+    }
+
+    if (recoveredCount > 0) {
+      const merged = [...recoveredTxs, ...currentV5Txs].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+      localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(merged));
+      console.log(`[Storage Migration] Successfully recovered ${recoveredCount} legacy transactions into v5!`);
+    }
+
+    // Also migrate cards if v5 has none or missing cards
+    const LEGACY_CARD_KEYS = ['cebim_cards_v3', 'cebim_cards_v2', 'cebim_cards_v1', 'cebim_cards'];
+    const currentCardsRaw = localStorage.getItem(STORAGE_KEYS.CARDS);
+    let currentCards: CreditCard[] = [];
+    if (currentCardsRaw) {
+      try {
+        const p = JSON.parse(currentCardsRaw);
+        if (Array.isArray(p)) currentCards = p;
+      } catch (e) {}
+    }
+    const cardIds = new Set(currentCards.map((c) => c.id));
+    let cardsRecovered = 0;
+    for (const key of LEGACY_CARD_KEYS) {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      try {
+        const legacyCards = JSON.parse(raw);
+        if (Array.isArray(legacyCards)) {
+          for (const c of legacyCards) {
+            if (c && c.id && !cardIds.has(c.id)) {
+              cardIds.add(c.id);
+              currentCards.push(c);
+              cardsRecovered++;
+            }
+          }
+        }
+      } catch (e) {}
+    }
+    if (cardsRecovered > 0) {
+      localStorage.setItem(STORAGE_KEYS.CARDS, JSON.stringify(currentCards));
+      console.log(`[Storage Migration] Successfully recovered ${cardsRecovered} legacy credit cards into v5!`);
+    }
+
+    isLegacyMigrated = true;
+    return recoveredCount;
+  } catch (err) {
+    console.error('Error during legacy storage migration:', err);
+    return 0;
+  }
+}
+
 export function loadCategories(): Category[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
@@ -184,6 +290,9 @@ export function saveCards(cards: CreditCard[]) {
 
 export function loadTransactions(): Transaction[] {
   try {
+    if (!isLegacyMigrated) {
+      migrateLegacyStorageData();
+    }
     const raw = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
     if (!raw) return INITIAL_TRANSACTIONS;
     const parsed = JSON.parse(raw);

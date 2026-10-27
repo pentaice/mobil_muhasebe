@@ -459,7 +459,7 @@ export default function App() {
   const handleDeleteCard = (cardId: string, action: 'keep_records' | 'delete_all') => {
     setCards((prev) => prev.filter((c) => c.id !== cardId));
     if (action === 'delete_all') {
-      setTransactions((prev) => prev.filter((t) => t.cardId !== cardId));
+      setTransactions((prev) => prev.filter((t) => t.creditCardId !== cardId));
       showToast(i18n.toastCardDeletedAll, 'info');
     } else {
       showToast(i18n.toastCardDeleted, 'info');

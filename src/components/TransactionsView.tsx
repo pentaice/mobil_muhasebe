@@ -22,6 +22,8 @@ import {
   Sparkles,
   CalendarClock,
   Layers,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { InstallmentModal } from './InstallmentModal';
@@ -54,6 +56,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [installmentTargetTx, setInstallmentTargetTx] = useState<Transaction | null>(null);
+  const [isFutureAccordionOpen, setIsFutureAccordionOpen] = useState<boolean>(false);
 
   useBackHandler(() => {
     if (installmentTargetTx) {
@@ -245,6 +248,25 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     cards,
   ]);
 
+  // Split into future installments vs past & current transactions
+  const futureInstallments = useMemo(() => {
+    const now = Date.now();
+    return filteredTransactions
+      .filter((t) => t.installmentGroupId && new Date(t.date).getTime() > now)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [filteredTransactions]);
+
+  const pastAndCurrentTransactions = useMemo(() => {
+    const now = Date.now();
+    return filteredTransactions.filter(
+      (t) => !(t.installmentGroupId && new Date(t.date).getTime() > now)
+    );
+  }, [filteredTransactions]);
+
+  const totalFutureCommitment = useMemo(() => {
+    return futureInstallments.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+  }, [futureInstallments]);
+
   // Reset pagination on filter / search / data change
   useEffect(() => {
     setVisibleCount(25);
@@ -255,7 +277,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          setVisibleCount((prev) => Math.min(prev + 25, filteredTransactions.length));
+          setVisibleCount((prev) => Math.min(prev + 25, pastAndCurrentTransactions.length));
         }
       },
       { rootMargin: '200px' }
@@ -265,7 +287,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       observer.observe(loadMoreRef.current);
     }
     return () => observer.disconnect();
-  }, [filteredTransactions.length]);
+  }, [pastAndCurrentTransactions.length]);
 
   return (
     <div className="w-full max-w-lg mx-auto space-y-4 pb-8">
@@ -314,17 +336,140 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
         </div>
       </div>
 
+      {/* Gelecek Taksitler Akordiyon Paneli */}
+      {futureInstallments.length > 0 && (
+        <div className="bg-white dark:bg-slate-850 border border-indigo-100 dark:border-indigo-950/70 rounded-3xl overflow-hidden shadow-xs transition-all">
+          <button
+            type="button"
+            onClick={() => setIsFutureAccordionOpen((prev) => !prev)}
+            className="w-full p-4 flex items-center justify-between gap-3 text-left hover:bg-indigo-50/40 dark:hover:bg-indigo-950/30 transition-colors cursor-pointer select-none"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-900/60 shadow-2xs">
+                <CalendarClock className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-bold text-xs text-gray-900 dark:text-slate-100">
+                    Gelecek Taksitler
+                  </h4>
+                  <span className="bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-indigo-200/60 dark:border-indigo-800/60">
+                    {futureInstallments.length} Taksit
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-500 dark:text-slate-400 truncate">
+                  Gelecek aylara devreden taksit taahhütleri
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="text-right">
+                <span className="text-[9px] uppercase font-bold tracking-wider text-gray-400 dark:text-slate-500 block">
+                  Toplam
+                </span>
+                <span className="font-extrabold text-xs text-indigo-600 dark:text-indigo-400">
+                  {formatCurrency(totalFutureCommitment)}
+                </span>
+              </div>
+              <div className="w-7 h-7 rounded-xl bg-gray-50 dark:bg-slate-800 text-gray-400 dark:text-slate-400 flex items-center justify-center">
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-200 ${
+                    isFutureAccordionOpen ? 'rotate-180' : ''
+                  }`}
+                />
+              </div>
+            </div>
+          </button>
+
+          {/* Expanded Accordion Body */}
+          <AnimatePresence>
+            {isFutureAccordionOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden border-t border-indigo-50 dark:border-indigo-950/50 bg-indigo-50/20 dark:bg-indigo-950/10"
+              >
+                <div className="p-3 space-y-2 max-h-72 overflow-y-auto custom-scrollbar">
+                  {futureInstallments.map((t) => {
+                    const cat = categories.find((c) => c.id === t.categoryId);
+                    const card = cards.find((c) => c.id === t.creditCardId);
+
+                    return (
+                      <div
+                        key={t.id}
+                        onClick={() => setInstallmentTargetTx(t)}
+                        className="bg-white dark:bg-slate-850/90 border border-gray-100 dark:border-slate-800/80 hover:border-indigo-200 dark:hover:border-indigo-800/60 rounded-2xl p-3 flex items-center justify-between shadow-2xs transition-all cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div
+                            className="w-8 h-8 rounded-xl flex items-center justify-center text-white shrink-0 shadow-2xs"
+                            style={{ backgroundColor: cat?.color || '#6366f1' }}
+                          >
+                            <CategoryIcon name={cat?.icon || 'Coins'} size={15} />
+                          </div>
+                          <div className="min-w-0 space-y-0.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <p className="font-bold text-xs text-gray-900 dark:text-slate-100 truncate">
+                                {t.note || cat?.name || i18n.expense}
+                              </p>
+                              <span className="bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 text-[9px] font-bold px-1.5 py-0.5 rounded border border-indigo-100 dark:border-indigo-900/40">
+                                {t.installmentNumber}/{t.installmentTotal} Taksit
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[10px] text-gray-400 dark:text-slate-500">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3 text-indigo-500 dark:text-indigo-400" />
+                                {formatShortDate(t.date)}
+                              </span>
+                              {card && (
+                                <span className="text-gray-500 dark:text-slate-400 truncate">
+                                  💳 {card.name}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0 pl-2">
+                          <p className="font-extrabold text-xs text-gray-900 dark:text-slate-100">
+                            {formatCurrency(t.amount)}
+                          </p>
+                          <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold group-hover:translate-x-0.5 transition-transform">
+                            <ChevronRight className="w-4 h-4" />
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
       {/* Transactions List */}
       <div className="space-y-2.5">
-        {filteredTransactions.length === 0 ? (
+        {pastAndCurrentTransactions.length === 0 ? (
           <div className="bg-white dark:bg-slate-850 border border-gray-100 dark:border-slate-750/80 rounded-3xl p-8 text-center space-y-2 shadow-xs transition-colors">
             <FileText className="w-8 h-8 text-gray-300 dark:text-slate-600 mx-auto" />
-            <p className="text-gray-800 dark:text-slate-200 font-medium text-sm">{i18n.noTransactionFound}</p>
-            <p className="text-gray-400 dark:text-slate-500 text-xs">{i18n.tryChangingSearch}</p>
+            <p className="text-gray-800 dark:text-slate-200 font-medium text-sm">
+              {futureInstallments.length > 0
+                ? 'Geçmişe ait işlem bulunmuyor'
+                : i18n.noTransactionFound}
+            </p>
+            <p className="text-gray-400 dark:text-slate-500 text-xs">
+              {futureInstallments.length > 0
+                ? 'Gelecek aylara ait taksitler yukarıdaki "Gelecek Taksitler" panelinde yer almaktadır.'
+                : i18n.tryChangingSearch}
+            </p>
           </div>
         ) : (
           <>
-            {filteredTransactions.slice(0, visibleCount).map((t) => {
+            {pastAndCurrentTransactions.slice(0, visibleCount).map((t) => {
               const isExpense = t.type === 'expense';
             const isIncome = t.type === 'income';
             const isCardPayment = t.type === 'card_payment';
@@ -471,21 +616,6 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                     </span>
                   </div>
 
-                  {/* Taksitlendir / Taksit Planı Button (For expenses!) */}
-                  {isExpense && (
-                    <button
-                      onClick={() => setInstallmentTargetTx(t)}
-                      title={t.installmentGroupId ? 'Taksit Planı Detayları' : 'Harcamayı Taksitlendir'}
-                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                        t.installmentGroupId
-                          ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60'
-                          : 'text-gray-300 dark:text-slate-600 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40'
-                      }`}
-                    >
-                      <CalendarClock className="w-4 h-4" />
-                    </button>
-                  )}
-
                   {/* Edit Button (For ALL transactions!) */}
                   <button
                     onClick={() => openEditModal(t)}
@@ -509,19 +639,19 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
           })}
 
           {/* Lazy Load Sentinel & Load More Button */}
-          {filteredTransactions.length > visibleCount && (
+          {pastAndCurrentTransactions.length > visibleCount && (
             <div ref={loadMoreRef} className="pt-2 pb-3">
               <button
                 type="button"
                 onClick={() =>
                   setVisibleCount((prev) =>
-                    Math.min(prev + 25, filteredTransactions.length)
+                    Math.min(prev + 25, pastAndCurrentTransactions.length)
                   )
                 }
                 className="w-full py-2.5 px-4 rounded-2xl bg-gray-50 dark:bg-slate-800/80 hover:bg-gray-100 dark:hover:bg-slate-800 border border-gray-200/80 dark:border-slate-700 text-xs font-bold text-gray-700 dark:text-slate-300 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98"
               >
                 <span>
-                  {i18n.showMore} ({filteredTransactions.length - visibleCount} {i18n.remainingTransactions})
+                  {i18n.showMore} ({pastAndCurrentTransactions.length - visibleCount} {i18n.remainingTransactions})
                 </span>
               </button>
             </div>

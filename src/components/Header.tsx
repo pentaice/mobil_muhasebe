@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   Settings,
   History,
+  RefreshCw,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -33,6 +34,7 @@ import {
   loadAppsScriptUrl,
   saveAppsScriptUrl,
   loadAutoSaveSettings,
+  formatShortDate,
 } from '../utils/storage';
 
 interface HeaderProps {
@@ -66,6 +68,56 @@ export const Header: React.FC<HeaderProps> = ({
   const [activeSettingsPanel, setActiveSettingsPanel] = useState<'main' | 'restore' | 'sheets_settings'>('main');
   const [showJsonInfo, setShowJsonInfo] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  interface CloudVerification {
+    verified: boolean;
+    transactionCount?: number;
+    trashCount?: number;
+    exportedAt?: string;
+    isChecking?: boolean;
+    error?: string;
+  }
+
+  const [cloudVerification, setCloudVerification] = useState<CloudVerification | null>(null);
+
+  const handleVerifyCloudStatus = async (customUrl?: string) => {
+    const targetUrl = (customUrl ?? appsScriptUrl).trim();
+    if (!targetUrl || !targetUrl.startsWith('https://script.google.com/')) return;
+
+    setCloudVerification((prev) => ({ ...(prev || { verified: false }), isChecking: true, error: undefined }));
+    try {
+      const sep = targetUrl.includes('?') ? '&' : '?';
+      const res = await fetch(`${targetUrl}${sep}action=status`);
+      const data = await res.json();
+      if (data && data.status === 'ok') {
+        setCloudVerification({
+          verified: true,
+          transactionCount: data.transactionCount ?? 0,
+          trashCount: data.trashCount ?? 0,
+          exportedAt: data.exportedAt || data.serverTime,
+          isChecking: false,
+        });
+      } else {
+        setCloudVerification({
+          verified: false,
+          isChecking: false,
+          error: data?.message || 'Yanıt doğrulanamadı',
+        });
+      }
+    } catch (e) {
+      setCloudVerification({
+        verified: false,
+        isChecking: false,
+        error: 'Bağlantı kurulamadı',
+      });
+    }
+  };
+
+  React.useEffect(() => {
+    if (activeSettingsPanel === 'sheets_settings' && appsScriptUrl.trim().startsWith('https://script.google.com/')) {
+      handleVerifyCloudStatus();
+    }
+  }, [activeSettingsPanel]);
 
   useBackHandler(() => {
     if (showSheetsHelpModal) {
@@ -198,6 +250,9 @@ export const Header: React.FC<HeaderProps> = ({
       });
 
       onShowToast(i18n.toastSyncSuccess, 'success');
+      setTimeout(() => {
+        handleVerifyCloudStatus();
+      }, 1500);
     } catch (err) {
       console.error(err);
       onShowToast(i18n.toastCloudSyncError, 'error');
@@ -574,6 +629,55 @@ export const Header: React.FC<HeaderProps> = ({
                         }}
                         className="w-full bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 rounded-xl p-3 text-base md:text-sm font-mono text-gray-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all shadow-inner"
                       />
+
+                      {/* Live Cloud Status Verification Card */}
+                      {cloudVerification?.isChecking ? (
+                        <div className="flex items-center gap-2 p-2.5 rounded-xl bg-indigo-100/50 dark:bg-indigo-950/50 text-[11px] text-indigo-700 dark:text-indigo-300 font-medium">
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin text-indigo-600 dark:text-indigo-400" />
+                          <span>Google Sheets durumu doğrulanıyor...</span>
+                        </div>
+                      ) : cloudVerification?.verified ? (
+                        <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300 font-bold text-xs">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                              <span>Bulutta Doğrulandı: {cloudVerification.transactionCount} İşlem</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleVerifyCloudStatus()}
+                              className="p-1 rounded-lg text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer"
+                              title="Yeniden Doğrula"
+                            >
+                              <RefreshCw className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <div className="flex items-center justify-between text-[10px] text-emerald-700/80 dark:text-emerald-400/80">
+                            <span>
+                              {cloudVerification.exportedAt ? `Son Yedek: ${formatShortDate(cloudVerification.exportedAt)}` : 'Aktif'}
+                            </span>
+                            {cloudVerification.trashCount !== undefined && cloudVerification.trashCount > 0 && (
+                              <span className="font-semibold text-amber-700 dark:text-amber-400">
+                                🗑️ {cloudVerification.trashCount} silinen arşivde
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ) : appsScriptUrl.trim().startsWith('https://script.google.com/') ? (
+                        <div className="flex items-center justify-between p-2 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700">
+                          <span className="text-[11px] text-gray-500 dark:text-slate-400">
+                            {cloudVerification?.error || 'Durum doğrulanmadı'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleVerifyCloudStatus()}
+                            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors cursor-pointer"
+                          >
+                            <RefreshCw className="w-3 h-3" />
+                            <span>Doğrula</span>
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
 
                     <button
@@ -646,7 +750,200 @@ export const Header: React.FC<HeaderProps> = ({
                           </p>
                           <button 
                             onClick={() => {
-                              const code = `function doPost(e) {\n  var d = JSON.parse(e.postData.contents);\n  var ss = SpreadsheetApp.getActiveSpreadsheet();\n  \n  // 1. JSON Full Backup Sheet (For Restore)\n  var s1 = ss.getSheetByName("Backup");\n  if (!s1) { s1 = ss.insertSheet("Backup"); }\n  s1.clear();\n  s1.getRange(1, 1).setValue(JSON.stringify(d));\n  \n  // Name Dictionaries (Map IDs to readable names)\n  var catMap = {};\n  if (d.categories) { d.categories.forEach(function(c) { catMap[c.id] = c.name; }); }\n  if (d.incomeCategories) { d.incomeCategories.forEach(function(c) { catMap[c.id] = c.name; }); }\n  var assetMap = {};\n  if (d.investmentAssets) { d.investmentAssets.forEach(function(a) { assetMap[a.id] = a.name; }); }\n  var cardMap = {};\n  if (d.cards) { d.cards.forEach(function(c) { cardMap[c.id] = c.name; }); }\n  \n  // 2. All Financial Transactions (Expenses, Income, Investments)\n  var s2 = ss.getSheetByName("Transactions");\n  if (!s2) { s2 = ss.insertSheet("Transactions"); }\n  s2.clear();\n  s2.appendRow(["Date", "Type", "Amount", "Category / Asset", "Payment Source", "Note / P&L"]);\n  s2.getRange("A1:F1").setFontWeight("bold").setBackground("#d0e0e3");\n  \n  if (d.transactions && d.transactions.length > 0) {\n    var typeLabels = {\n      "expense": "Expense",\n      "income": "Income",\n      "card_payment": "Card Payment",\n      "investment_deposit": "Investment Inflow",\n      "investment_withdraw": "Investment Outflow"\n    };\n    var rows = d.transactions.map(function(t) {\n      var typeStr = typeLabels[t.type] || t.type;\n      var noteStr = t.note || "";\n      if (t.profitOrLoss !== undefined && t.profitOrLoss !== null) {\n        noteStr += " (P/L: " + t.profitOrLoss + ")";\n      }\n      var targetName = "";\n      if (t.investmentAssetId && assetMap[t.investmentAssetId]) {\n        targetName = assetMap[t.investmentAssetId];\n      } else if (t.categoryId && catMap[t.categoryId]) {\n        targetName = catMap[t.categoryId];\n      } else {\n        targetName = t.categoryId || t.investmentAssetId || "";\n      }\n      var sourceStr = "";\n      if (t.sourceType === "credit_card") {\n        sourceStr = (t.creditCardId && cardMap[t.creditCardId]) ? cardMap[t.creditCardId] : "Credit Card";\n      } else if (t.sourceType === "cash_bank") {\n        sourceStr = "Cash / Bank";\n      } else if (t.cardId && cardMap[t.cardId]) {\n        sourceStr = cardMap[t.cardId];\n      } else {\n        sourceStr = t.sourceType || "";\n      }\n      return [\n        t.date ? t.date.slice(0, 10) : "",\n        typeStr,\n        t.amount,\n        targetName,\n        sourceStr,\n        noteStr\n      ];\n    });\n    s2.getRange(2, 1, rows.length, 6).setValues(rows);\n  }\n  \n  // 3. Portfolio & Investments Sheet\n  if (d.investmentAssets && d.investmentAssets.length > 0) {\n    var s3 = ss.getSheetByName("Yatırımlar");\n    if (!s3) { s3 = ss.insertSheet("Yatırımlar"); }\n    s3.clear();\n    s3.appendRow(["Varlık Adı", "Kategori", "Yatırılan Anapara", "Güncel Piyasa Değeri", "Net Kâr / Zarar", "Son Güncelleme"]);\n    s3.getRange("A1:F1").setFontWeight("bold").setBackground("#d9ead3");\n    \n    var invRows = d.investmentAssets.map(function(a) {\n      var invested = Number(a.investedAmount) || 0;\n      var current = Number(a.currentValue) || 0;\n      var pL = current - invested;\n      return [\n        a.name,\n        a.category || "",\n        invested,\n        current,\n        pL,\n        a.updatedAt ? a.updatedAt.slice(0, 10) : ""\n      ];\n    });\n    s3.getRange(2, 1, invRows.length, 6).setValues(invRows);\n  }\n  \n  return ContentService.createTextOutput("OK");\n}\n\nfunction doGet(e) {\n  var ss = SpreadsheetApp.getActiveSpreadsheet();\n  var s1 = ss.getSheetByName("Backup");\n  var data = s1 ? s1.getRange(1, 1).getValue() : "{}";\n  return ContentService.createTextOutput(data).setMimeType(ContentService.MimeType.JSON);\n}`;
+                              const code = `function doPost(e) {
+  try {
+    var d = JSON.parse(e.postData.contents);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    // 1. GUVENLIK: Bos Veri / Kazara Ezme Korumasi (Anti-Poisoning)
+    var s1 = ss.getSheetByName("Backup");
+    var prevData = null;
+    if (s1) {
+      try {
+        var rawVal = s1.getRange(1, 1).getValue();
+        if (rawVal) prevData = JSON.parse(rawVal);
+      } catch (err) {}
+    }
+
+    if (prevData && prevData.transactions && prevData.transactions.length > 5 && (!d.transactions || d.transactions.length === 0)) {
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "blocked",
+        message: "Guvenlik: Tabloda kayitli " + prevData.transactions.length + " islem varken bos veri gonderilemez!"
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 2. SOFT-DELETE: Silinen Harcamalari Cop Kutusuna (Silinenler) Arsivle
+    if (prevData && prevData.transactions && d.transactions) {
+      var newIds = {};
+      d.transactions.forEach(function(t) { if (t.id) newIds[t.id] = true; });
+      var deletedTxs = prevData.transactions.filter(function(t) { return t.id && !newIds[t.id]; });
+
+      if (deletedTxs.length > 0) {
+        var sTrash = ss.getSheetByName("Silinenler");
+        if (!sTrash) {
+          sTrash = ss.insertSheet("Silinenler");
+          sTrash.appendRow(["Silinme Zamani", "Islem Tarihi", "Tur", "Tutar", "Kategori / Varlik", "Odeme Kaynagi", "Not", "Islem ID"]);
+          sTrash.getRange("A1:H1").setFontWeight("bold").setBackground("#f4cccc");
+        }
+        var nowStr = new Date().toISOString().slice(0, 19).replace("T", " ");
+        var trashRows = deletedTxs.map(function(t) {
+          return [
+            nowStr,
+            t.date ? t.date.slice(0, 10) : "",
+            t.type || "",
+            t.amount || 0,
+            t.categoryId || t.investmentAssetId || "",
+            t.sourceType || "",
+            t.note || "",
+            t.id || ""
+          ];
+        });
+        sTrash.getRange(sTrash.getLastRow() + 1, 1, trashRows.length, 8).setValues(trashRows);
+      }
+    }
+
+    // 3. YEDEK GECMISI / LOG (Snapshot History)
+    var sLog = ss.getSheetByName("Yedek_Gecmisi");
+    if (!sLog) {
+      sLog = ss.insertSheet("Yedek_Gecmisi");
+      sLog.appendRow(["Yedek Zamani", "Toplam Islem", "Kart Sayisi", "Kategori Sayisi", "Varlik Sayisi", "Cuzdan Bakiyesi"]);
+      sLog.getRange("A1:F1").setFontWeight("bold").setBackground("#cfe2f3");
+    }
+    sLog.appendRow([
+      new Date().toISOString().slice(0, 19).replace("T", " "),
+      d.transactions ? d.transactions.length : 0,
+      d.cards ? d.cards.length : 0,
+      d.categories ? d.categories.length : 0,
+      d.investmentAssets ? d.investmentAssets.length : 0,
+      d.initialCashBalance || 0
+    ]);
+    if (sLog.getLastRow() > 105) {
+      sLog.deleteRows(2, sLog.getLastRow() - 101);
+    }
+
+    // 4. JSON Full Backup Sheet (Geri Yukleme Icin)
+    if (!s1) { s1 = ss.insertSheet("Backup"); }
+    s1.clear();
+    s1.getRange(1, 1).setValue(JSON.stringify(d));
+
+    // Sozlukler
+    var catMap = {};
+    if (d.categories) { d.categories.forEach(function(c) { catMap[c.id] = c.name; }); }
+    if (d.incomeCategories) { d.incomeCategories.forEach(function(c) { catMap[c.id] = c.name; }); }
+    var assetMap = {};
+    if (d.investmentAssets) { d.investmentAssets.forEach(function(a) { assetMap[a.id] = a.name; }); }
+    var cardMap = {};
+    if (d.cards) { d.cards.forEach(function(c) { cardMap[c.id] = c.name; }); }
+
+    // 5. Okunabilir Transactions Tablosu
+    var s2 = ss.getSheetByName("Transactions");
+    if (!s2) { s2 = ss.insertSheet("Transactions"); }
+    s2.clear();
+    s2.appendRow(["Tarih", "Tur", "Tutar", "Kategori / Varlik", "Odeme Kaynagi", "Not / K-Z"]);
+    s2.getRange("A1:F1").setFontWeight("bold").setBackground("#d0e0e3");
+
+    if (d.transactions && d.transactions.length > 0) {
+      var typeLabels = {
+        "expense": "Gider",
+        "income": "Gelir",
+        "card_payment": "Kart Odemesi",
+        "investment_deposit": "Varlik Girisi",
+        "investment_withdraw": "Varlik Satisi"
+      };
+      var rows = d.transactions.map(function(t) {
+        var typeStr = typeLabels[t.type] || t.type;
+        var noteStr = t.note || "";
+        if (t.profitOrLoss !== undefined && t.profitOrLoss !== null) {
+          noteStr += " (K/Z: " + t.profitOrLoss + ")";
+        }
+        var targetName = "";
+        if (t.investmentAssetId && assetMap[t.investmentAssetId]) {
+          targetName = assetMap[t.investmentAssetId];
+        } else if (t.categoryId && catMap[t.categoryId]) {
+          targetName = catMap[t.categoryId];
+        } else {
+          targetName = t.categoryId || t.investmentAssetId || "";
+        }
+        var sourceStr = "";
+        if (t.sourceType === "credit_card") {
+          sourceStr = (t.creditCardId && cardMap[t.creditCardId]) ? cardMap[t.creditCardId] : "Kredi Karti";
+        } else if (t.sourceType === "cash_bank") {
+          sourceStr = "Nakit / Banka";
+        } else if (t.cardId && cardMap[t.cardId]) {
+          sourceStr = cardMap[t.cardId];
+        } else {
+          sourceStr = t.sourceType || "";
+        }
+        return [
+          t.date ? t.date.slice(0, 10) : "",
+          typeStr,
+          t.amount,
+          targetName,
+          sourceStr,
+          noteStr
+        ];
+      });
+      s2.getRange(2, 1, rows.length, 6).setValues(rows);
+    }
+
+    // 6. Portfoy & Yatirimlar Tablosu
+    if (d.investmentAssets && d.investmentAssets.length > 0) {
+      var s3 = ss.getSheetByName("Yatırımlar");
+      if (!s3) { s3 = ss.insertSheet("Yatırımlar"); }
+      s3.clear();
+      s3.appendRow(["Varlik Adi", "Kategori", "Yatirilan Anapara", "Guncel Piyasa Degeri", "Net Kar / Zarar", "Son Guncelleme"]);
+      s3.getRange("A1:F1").setFontWeight("bold").setBackground("#d9ead3");
+
+      var invRows = d.investmentAssets.map(function(a) {
+        var invested = Number(a.investedAmount) || 0;
+        var current = Number(a.currentValue) || 0;
+        var pL = current - invested;
+        return [
+          a.name,
+          a.category || "",
+          invested,
+          current,
+          pL,
+          a.updatedAt ? a.updatedAt.slice(0, 10) : ""
+        ];
+      });
+      s3.getRange(2, 1, invRows.length, 6).setValues(invRows);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ status: "ok" })).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // Handshake / Teyit Istegi (?action=status)
+  if (e && e.parameter && e.parameter.action === "status") {
+    var s1 = ss.getSheetByName("Backup");
+    var raw = s1 ? s1.getRange(1, 1).getValue() : "{}";
+    var parsed = {};
+    try { parsed = JSON.parse(raw); } catch(err) {}
+    var txCount = (parsed.transactions && parsed.transactions.length) || 0;
+    var exportedAt = parsed.exportedAt || null;
+    var sTrash = ss.getSheetByName("Silinenler");
+    var trashCount = sTrash ? Math.max(0, sTrash.getLastRow() - 1) : 0;
+
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "ok",
+      transactionCount: txCount,
+      trashCount: trashCount,
+      exportedAt: exportedAt,
+      serverTime: new Date().toISOString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // Normal Geri Yukleme Istegi (Full Backup JSON)
+  var s1 = ss.getSheetByName("Backup");
+  var data = s1 ? s1.getRange(1, 1).getValue() : "{}";
+  return ContentService.createTextOutput(data).setMimeType(ContentService.MimeType.JSON);
+}`;
                               navigator.clipboard.writeText(code);
                               onShowToast(i18n.toastCodeCopied, 'success');
                             }}

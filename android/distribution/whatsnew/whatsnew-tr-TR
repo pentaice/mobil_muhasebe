@@ -1,4 +1,4 @@
-Cebim Muhasebe v1.0.12 Yenilikleri:
-• 💳 Harcamaları Taksitlendirme: Geçmiş harcamalarınızı dilediğiniz aya taksitlendirebilir, aylık bütçe açığını ve gelecek borç taahhütlerini anlık takip edebilirsiniz.
-• ⚡ Pratik Gün Sayacı: Düzenli giderlerde ayın gününü zahmetsizce ayarlayabileceğiniz kompakt gün sayacı.
-• 🚀 R8 Performans Optimizasyonu: Uygulama boyutu %40 küçültüldü, açılış hızı ve bellek performansı en üst düzeye çıkarıldı.
+Cebim Muhasebe v1.0.13 Yenilikleri:
+• 🗂️ Gelecek Taksitler Paneli: Geçmiş işlem listenizi kalabalıktan arındıran, katlanabilir Gelecek Taksitler akordiyon paneli eklendi.
+• 💳 Pratik Taksitlendirme: Taksit butonları düzenleme penceresi içine taşınarak kart bilgileri ve işlem detayları için ferah alan açıldı.
+• ☁️ Güvenli Google Sheets Senkronizasyonu: Çöp kutusu, yedek geçmişi günlüğü, kazara ezilme koruması ve anlık bulut doğrulama desteği getirildi.

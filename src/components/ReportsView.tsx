@@ -64,9 +64,14 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
     }
   }, showCustomDateModal, 15);
 
-  // Custom date range state (Defaults to earliest and latest transaction date or current month)
-  const [customStartDate, setCustomStartDate] = useState<string>('2026-04-08');
-  const [customEndDate, setCustomEndDate] = useState<string>('2026-08-08');
+  // Custom date range state (Defaults to beginning of current year and today)
+  const [customStartDate, setCustomStartDate] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-01-01`;
+  });
+  const [customEndDate, setCustomEndDate] = useState<string>(() => {
+    return new Date().toISOString().slice(0, 10);
+  });
 
   // Filter transactions based on chosen period
   const filteredTransactions = useMemo(() => {

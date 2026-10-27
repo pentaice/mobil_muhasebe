@@ -1,4 +1,4 @@
-What's New in Cebim Muhasebe v1.0.12:
-• 💳 Expense Installments: Convert past expenses into monthly installments, track budget relief and future debt commitments.
-• ⚡ Single-Line Day Stepper: Clean and fast day counter for recurring expenses.
-• 🚀 R8 Performance Optimization: Reduced app size by ~40%, boosted startup speed and memory efficiency.
+What's New in Cebim Muhasebe v1.0.13:
+• 🗂️ Upcoming Installments Panel: Clean collapsible accordion panel keeping your transaction history uncluttered.
+• 💳 Streamlined Installments: Installment action moved cleanly inside the Edit modal to free up card detail visibility.
+• ☁️ Rock-Solid Google Sheets Sync: Trash archive, snapshot history log, zero-data protection, and real-time cloud verification.
