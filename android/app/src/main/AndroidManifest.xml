@@ -58,4 +58,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+    <!-- Features: Set optional so Google Play doesn't filter out devices without mic/hardware -->
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
 </manifest>
