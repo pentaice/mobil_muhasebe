@@ -48,6 +48,311 @@ html.dark body {
   color: #f8fafc;
 }
 
+/* ==========================================================================
+   CUSTOM DESIGN THEMES (Gerçekten Özen Gösterilmiş UI Stilleri)
+   ========================================================================== */
+
+/* 1. AURORA GLASSMORPHISM (Buzlu Cam & Kuzey Işıkları) */
+body[data-theme="aurora"], [data-theme="aurora"] body {
+  background: 
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.16) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.13) 0px, transparent 50%),
+    radial-gradient(at 50% 50%, rgba(56, 189, 248, 0.14) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(139, 92, 246, 0.16) 0px, transparent 50%),
+    #f1f5f9 !important;
+  background-attachment: fixed !important;
+}
+html.dark body[data-theme="aurora"], html.dark[data-theme="aurora"] body, [data-theme="aurora"].dark body {
+  background: 
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.28) 0px, transparent 55%),
+    radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.22) 0px, transparent 50%),
+    radial-gradient(at 50% 50%, rgba(14, 165, 233, 0.18) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(139, 92, 246, 0.25) 0px, transparent 55%),
+    #090d16 !important;
+  background-attachment: fixed !important;
+}
+[data-theme="aurora"] .bg-white:not(.toggle-knob),
+[data-theme="aurora"] .dark\:bg-slate-850 {
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  box-shadow: 0 12px 36px rgba(99, 102, 241, 0.07) !important;
+}
+html.dark [data-theme="aurora"] .bg-white:not(.toggle-knob),
+html.dark [data-theme="aurora"] .dark\:bg-slate-850,
+[data-theme="aurora"].dark .bg-white:not(.toggle-knob),
+[data-theme="aurora"].dark .dark\:bg-slate-850,
+html.dark[data-theme="aurora"] .dark\:bg-slate-850,
+html.dark[data-theme="aurora"] .bg-white:not(.toggle-knob) {
+  background: rgba(15, 23, 42, 0.68) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(99, 102, 241, 0.08) !important;
+}
+[data-theme="aurora"] .bg-blue-600 {
+  background: linear-gradient(135deg, #6366f1, #a855f7) !important;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35) !important;
+}
+[data-theme="aurora"] .fixed.bottom-0 {
+  background: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.5) !important;
+}
+[data-theme="aurora"] header {
+  background: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5) !important;
+}
+html.dark [data-theme="aurora"] .fixed.bottom-0,
+[data-theme="aurora"].dark .fixed.bottom-0,
+html.dark[data-theme="aurora"] .fixed.bottom-0 {
+  background: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+html.dark [data-theme="aurora"] header,
+[data-theme="aurora"].dark header,
+html.dark[data-theme="aurora"] header {
+  background: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+/* 2. CYBER NEON (Fütüristik Siberpunk & HUD Matrix) */
+body[data-theme="cyber"], [data-theme="cyber"] body {
+  background-color: #f0f9ff !important;
+  background-image: 
+    linear-gradient(rgba(14, 165, 233, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14, 165, 233, 0.08) 1px, transparent 1px) !important;
+  background-size: 28px 28px !important;
+}
+html.dark body[data-theme="cyber"], html.dark[data-theme="cyber"] body, [data-theme="cyber"].dark body {
+  background-color: #030712 !important;
+  background-image: 
+    linear-gradient(rgba(0, 240, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.05) 1px, transparent 1px) !important;
+  background-size: 28px 28px !important;
+}
+[data-theme="cyber"] .bg-white:not(.toggle-knob),
+[data-theme="cyber"] .dark\:bg-slate-850 {
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+  box-shadow: 0 4px 20px rgba(2, 132, 199, 0.1) !important;
+}
+html.dark [data-theme="cyber"] .bg-white:not(.toggle-knob),
+html.dark [data-theme="cyber"] .dark\:bg-slate-850,
+[data-theme="cyber"].dark .dark\:bg-slate-850,
+html.dark[data-theme="cyber"] .dark\:bg-slate-850 {
+  background-color: rgba(6, 11, 26, 0.94) !important;
+  border: 1px solid rgba(0, 240, 255, 0.35) !important;
+  box-shadow: 0 0 24px rgba(0, 240, 255, 0.1), inset 0 0 12px rgba(0, 240, 255, 0.02) !important;
+}
+[data-theme="cyber"] .bg-blue-600 {
+  background: linear-gradient(135deg, #00f0ff, #0284c7) !important;
+  color: #020617 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.45) !important;
+}
+[data-theme="cyber"] .fixed.bottom-0 {
+  border-top: 1px solid rgba(0, 240, 255, 0.3) !important;
+  box-shadow: 0 -4px 20px rgba(0, 240, 255, 0.1) !important;
+}
+[data-theme="cyber"] header {
+  border-bottom: 1px solid rgba(0, 240, 255, 0.3) !important;
+  box-shadow: 0 4px 20px rgba(0, 240, 255, 0.1) !important;
+}
+html.dark[data-theme="cyber"] .fixed.bottom-0,
+[data-theme="cyber"].dark .fixed.bottom-0 {
+  background: rgba(4, 7, 17, 0.95) !important;
+}
+html.dark[data-theme="cyber"] header,
+[data-theme="cyber"].dark header {
+  background: rgba(4, 7, 17, 0.95) !important;
+}
+
+/* 3. NEO-BRUTALIST (Kalın Siyah Çizgiler & Retro Pop) */
+body[data-theme="brutalist"], [data-theme="brutalist"] body {
+  background-color: #fef08a !important; /* Pastel energetic pop canvas */
+}
+html.dark body[data-theme="brutalist"], html.dark[data-theme="brutalist"] body, [data-theme="brutalist"].dark body {
+  background-color: #0b1120 !important;
+}
+[data-theme="brutalist"] .bg-white:not(.toggle-knob),
+[data-theme="brutalist"] .dark\:bg-slate-850 {
+  background-color: #ffffff !important;
+  border: 2.5px solid #0f172a !important;
+  box-shadow: 4px 4px 0px 0px #0f172a !important;
+  border-radius: 18px !important;
+}
+html.dark [data-theme="brutalist"] .bg-white:not(.toggle-knob),
+html.dark [data-theme="brutalist"] .dark\:bg-slate-850,
+[data-theme="brutalist"].dark .dark\:bg-slate-850,
+html.dark[data-theme="brutalist"] .dark\:bg-slate-850 {
+  background-color: #111827 !important;
+  border: 2.5px solid #38bdf8 !important;
+  box-shadow: 4px 4px 0px 0px #38bdf8 !important;
+  border-radius: 18px !important;
+}
+[data-theme="brutalist"] .bg-blue-600:not([class*="h-8"]) {
+  background-color: #2563eb !important;
+  border: 2px solid #0f172a !important;
+  box-shadow: 3px 3px 0px 0px #0f172a !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+html.dark [data-theme="brutalist"] .bg-blue-600:not([class*="h-8"]),
+html.dark[data-theme="brutalist"] .bg-blue-600:not([class*="h-8"]) {
+  border: 2px solid #38bdf8 !important;
+  box-shadow: 3px 3px 0px 0px #38bdf8 !important;
+}
+[data-theme="brutalist"] .fixed.bottom-0 {
+  border-top: 2.5px solid #0f172a !important;
+}
+[data-theme="brutalist"] header {
+  border-bottom: 2.5px solid #0f172a !important;
+}
+html.dark[data-theme="brutalist"] .fixed.bottom-0,
+[data-theme="brutalist"].dark .fixed.bottom-0 {
+  border-top: 2.5px solid #38bdf8 !important;
+}
+html.dark[data-theme="brutalist"] header,
+[data-theme="brutalist"].dark header {
+  border-bottom: 2.5px solid #38bdf8 !important;
+}
+
+/* Universal Toggle Knob Protection across ALL Themes */
+[data-theme] .toggle-knob,
+html.dark [data-theme] .toggle-knob,
+[data-theme].dark .toggle-knob,
+html.dark[data-theme] .toggle-knob,
+[data-theme] button[class*="rounded-full"] > div.rounded-full,
+html.dark [data-theme] button[class*="rounded-full"] > div.rounded-full,
+[data-theme].dark button[class*="rounded-full"] > div.rounded-full {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  backdrop-filter: none !important;
+}
+
+/* Neo-Brutalist Toggle Track & Knob styling */
+[data-theme="brutalist"] button[class*="w-14"][class*="h-8"],
+html.dark [data-theme="brutalist"] button[class*="w-14"][class*="h-8"],
+[data-theme="brutalist"].dark button[class*="w-14"][class*="h-8"] {
+  border: 2px solid #0f172a !important;
+  box-shadow: 2px 2px 0px 0px #0f172a !important;
+  border-radius: 9999px !important;
+}
+
+html.dark [data-theme="brutalist"] button[class*="w-14"][class*="h-8"],
+[data-theme="brutalist"].dark button[class*="w-14"][class*="h-8"] {
+  border: 2px solid #38bdf8 !important;
+  box-shadow: 2px 2px 0px 0px #38bdf8 !important;
+}
+
+[data-theme="brutalist"] .toggle-knob,
+html.dark [data-theme="brutalist"] .toggle-knob,
+[data-theme="brutalist"].dark .toggle-knob {
+  background-color: #ffffff !important;
+  border: 1.5px solid #0f172a !important;
+  box-shadow: 1px 1px 0px 0px #0f172a !important;
+  border-radius: 9999px !important;
+}
+
+html.dark [data-theme="brutalist"] .toggle-knob,
+[data-theme="brutalist"].dark .toggle-knob {
+  background-color: #ffffff !important;
+  border: 1.5px solid #38bdf8 !important;
+  box-shadow: 1px 1px 0px 0px #38bdf8 !important;
+  border-radius: 9999px !important;
+}
+
+/* 4. EMERALD LUXURY & GOLD (Zümrüt Yeşili & Lüks Altın) */
+body[data-theme="emerald"], [data-theme="emerald"] body {
+  background-color: #f0fdf4 !important;
+  background-image: radial-gradient(rgba(16, 185, 129, 0.08) 1px, transparent 1px) !important;
+  background-size: 20px 20px !important;
+}
+html.dark body[data-theme="emerald"], html.dark[data-theme="emerald"] body, [data-theme="emerald"].dark body {
+  background: radial-gradient(ellipse at top, #062b21 0%, #02140e 100%) !important;
+}
+[data-theme="emerald"] .bg-white:not(.toggle-knob),
+[data-theme="emerald"] .dark\:bg-slate-850 {
+  border: 1px solid rgba(234, 179, 8, 0.4) !important;
+  box-shadow: 0 8px 30px rgba(16, 185, 129, 0.08) !important;
+}
+html.dark [data-theme="emerald"] .bg-white:not(.toggle-knob),
+html.dark [data-theme="emerald"] .dark\:bg-slate-850,
+[data-theme="emerald"].dark .dark\:bg-slate-850,
+html.dark[data-theme="emerald"] .dark\:bg-slate-850 {
+  background-color: rgba(4, 34, 25, 0.9) !important;
+  border: 1px solid rgba(234, 179, 8, 0.45) !important;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5), 0 0 16px rgba(234, 179, 8, 0.08) !important;
+}
+[data-theme="emerald"] .bg-blue-600 {
+  background: linear-gradient(135deg, #f59e0b, #d97706, #b45309) !important;
+  color: #022016 !important;
+  font-weight: 900 !important;
+  box-shadow: 0 6px 25px rgba(234, 179, 8, 0.4) !important;
+}
+[data-theme="emerald"] .fixed.bottom-0 {
+  border-top: 1px solid rgba(234, 179, 8, 0.35) !important;
+}
+[data-theme="emerald"] header {
+  border-bottom: 1px solid rgba(234, 179, 8, 0.35) !important;
+}
+html.dark[data-theme="emerald"] .fixed.bottom-0,
+[data-theme="emerald"].dark .fixed.bottom-0 {
+  background: rgba(2, 20, 14, 0.95) !important;
+}
+html.dark[data-theme="emerald"] header,
+[data-theme="emerald"].dark header {
+  background: rgba(2, 20, 14, 0.95) !important;
+}
+
+/* 5. SUNSET HORIZON (Pastel Günbatımı & Sıcak Akşam) */
+body[data-theme="sunset"], [data-theme="sunset"] body {
+  background: linear-gradient(180deg, #fff1f2 0%, #fdf2f8 50%, #f5f3ff 100%) !important;
+  background-attachment: fixed !important;
+}
+html.dark body[data-theme="sunset"], html.dark[data-theme="sunset"] body, [data-theme="sunset"].dark body {
+  background: linear-gradient(180deg, #1c0b24 0%, #150821 50%, #0c0514 100%) !important;
+  background-attachment: fixed !important;
+}
+[data-theme="sunset"] .bg-white:not(.toggle-knob),
+[data-theme="sunset"] .dark\:bg-slate-850 {
+  border: 1px solid rgba(244, 63, 94, 0.25) !important;
+  box-shadow: 0 10px 30px rgba(244, 63, 94, 0.08) !important;
+}
+html.dark [data-theme="sunset"] .bg-white:not(.toggle-knob),
+html.dark [data-theme="sunset"] .dark\:bg-slate-850,
+[data-theme="sunset"].dark .dark\:bg-slate-850,
+html.dark[data-theme="sunset"] .dark\:bg-slate-850 {
+  background-color: rgba(28, 14, 38, 0.88) !important;
+  border: 1px solid rgba(244, 63, 94, 0.3) !important;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(244, 63, 94, 0.1) !important;
+}
+[data-theme="sunset"] .bg-blue-600 {
+  background: linear-gradient(135deg, #f43f5e, #8b5cf6) !important;
+  box-shadow: 0 6px 25px rgba(244, 63, 94, 0.4) !important;
+}
+[data-theme="sunset"] .fixed.bottom-0 {
+  border-top: 1px solid rgba(244, 63, 94, 0.25) !important;
+}
+[data-theme="sunset"] header {
+  border-bottom: 1px solid rgba(244, 63, 94, 0.25) !important;
+}
+html.dark[data-theme="sunset"] .fixed.bottom-0,
+[data-theme="sunset"].dark .fixed.bottom-0 {
+  background: rgba(20, 9, 28, 0.95) !important;
+}
+html.dark[data-theme="sunset"] header,
+[data-theme="sunset"].dark header {
+  background: rgba(20, 9, 28, 0.95) !important;
+}
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;

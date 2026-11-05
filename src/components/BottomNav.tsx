@@ -1,5 +1,5 @@
-import React from 'react';
-import { Zap, CreditCard, PieChart, Settings } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Zap, CreditCard, PieChart, Settings, Mic } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useI18n } from '../i18n/I18nContext';
 
@@ -8,17 +8,64 @@ export type ActiveTab = 'add' | 'cards' | 'investments' | 'reports' | 'history' 
 interface BottomNavProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
+  isScrolledOnAdd?: boolean;
+  onVoiceTrigger?: () => void;
+  onQuickAddDoubleClick?: () => void;
 }
 
-export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab }) => {
+export const BottomNav: React.FC<BottomNavProps> = ({
+  activeTab,
+  setActiveTab,
+  isScrolledOnAdd = false,
+  onVoiceTrigger,
+  onQuickAddDoubleClick,
+}) => {
   const { t: i18n } = useI18n();
+  const clickCountRef = useRef<number>(0);
+  const clickTimerRef = useRef<any>(null);
+
+  // Scroll yapıldığında Hızlı Ekle butonu yeni mikrofon butonu olur
+  const isMicMode = activeTab === 'add' && isScrolledOnAdd;
 
   const tabs = [
-    { id: 'add', label: i18n.navQuickAdd, icon: Zap, isAccent: true },
+    {
+      id: 'add',
+      label: i18n.navQuickAdd,
+      icon: isMicMode ? Mic : Zap,
+      isAccent: true,
+    },
     { id: 'cards', label: i18n.navCards, icon: CreditCard },
     { id: 'reports', label: i18n.navReports, icon: PieChart },
     { id: 'categories', label: i18n.navCategories, icon: Settings },
   ];
+
+  const handleAccentClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    clickCountRef.current += 1;
+
+    if (clickCountRef.current === 1) {
+      clickTimerRef.current = setTimeout(() => {
+        // Tek tıklama: Sadece sekmeyi açar veya scroll durumundaysa sesi başlatır. Kesinlikle klavye açmaz!
+        clickCountRef.current = 0;
+        if (isMicMode) {
+          onVoiceTrigger?.();
+        } else {
+          setActiveTab('add');
+        }
+      }, 250);
+    } else if (clickCountRef.current >= 2) {
+      // Çift tıklama: Klavyeyi açması için tetikler
+      if (clickTimerRef.current) {
+        clearTimeout(clickTimerRef.current);
+        clickTimerRef.current = null;
+      }
+      clickCountRef.current = 0;
+      if (activeTab !== 'add') {
+        setActiveTab('add');
+      }
+      onQuickAddDoubleClick?.();
+    }
+  };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-gray-100 dark:border-slate-800 px-1 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] max-w-md mx-auto shadow-sm transition-colors">
@@ -31,7 +78,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as ActiveTab)}
+                onClick={handleAccentClick}
                 className={`relative flex flex-col items-center justify-center -mt-5 transition-transform active:scale-95 cursor-pointer ${
                   isActive ? 'scale-105' : ''
                 }`}
@@ -43,7 +90,11 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, setActiveTab })
                       : 'bg-blue-600 text-white shadow-blue-200 dark:shadow-blue-950'
                   }`}
                 >
-                  <Icon className="w-6 h-6 fill-current" />
+                  {isMicMode ? (
+                    <Mic className="w-6 h-6 stroke-[2.2] fill-none text-white" />
+                  ) : (
+                    <Zap className="w-6 h-6 fill-current text-white" />
+                  )}
                 </div>
                 <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 mt-1">
                   {tab.label}

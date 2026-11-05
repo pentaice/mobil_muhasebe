@@ -1,4 +1,4 @@
-import { Category, CreditCard, Transaction, RecurringExpense, IncomeCategory, InvestmentAsset, InvestmentTransaction } from '../types';
+import { Category, CreditCard, Transaction, RecurringExpense, IncomeCategory, InvestmentAsset, InvestmentTransaction, CustomThemeId, LocalSnapshot, LocalBackupSettings } from '../types';
 import {
   DEFAULT_CATEGORIES,
   DEFAULT_CREDIT_CARDS,
@@ -21,9 +21,32 @@ const STORAGE_KEYS = {
   INVESTMENT_ASSETS: 'cebim_investment_assets_v5',
   INVESTMENT_TRANSACTIONS: 'cebim_investment_transactions_v5',
   INITIAL_CASH_BALANCE: 'cebim_initial_cash_balance_v5',
+  CUSTOM_THEME: 'cebim_custom_ui_theme_v5',
+  LOCAL_SNAPSHOTS: 'cebim_local_snapshots_v1',
+  LOCAL_BACKUP_SETTINGS: 'cebim_local_backup_settings_v1',
 };
 
 export const DEFAULT_QUICK_AMOUNTS = [10, 50, 100, 250, 500, 1000];
+
+export function loadCustomTheme(): CustomThemeId {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.CUSTOM_THEME);
+    if (saved && ['default', 'aurora', 'cyber', 'brutalist', 'emerald', 'sunset'].includes(saved)) {
+      return saved as CustomThemeId;
+    }
+    return 'default';
+  } catch (e) {
+    return 'default';
+  }
+}
+
+export function saveCustomTheme(theme: CustomThemeId) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_THEME, theme);
+  } catch (e) {
+    console.error('Error saving custom theme:', e);
+  }
+}
 
 export function loadTheme(): 'light' | 'dark' {
   try {
@@ -638,3 +661,145 @@ export function formatFullDate(dateString: string): string {
     year: 'numeric',
   }).format(d);
 }
+
+// --- Local Snapshots & Periodic Rolling Backups ---
+
+export const DEFAULT_LOCAL_BACKUP_SETTINGS: LocalBackupSettings = {
+  autoBackupEnabled: true,
+  intervalDays: 3,
+  overwriteMode: 'rolling', // 'rolling' (üstüne yaz) | 'keep_all' (yeni kayıt aç)
+  maxRollingSlots: 5,
+};
+
+export function loadLocalBackupSettings(): LocalBackupSettings {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.LOCAL_BACKUP_SETTINGS);
+    if (!raw) return DEFAULT_LOCAL_BACKUP_SETTINGS;
+    return { ...DEFAULT_LOCAL_BACKUP_SETTINGS, ...JSON.parse(raw) };
+  } catch (e) {
+    return DEFAULT_LOCAL_BACKUP_SETTINGS;
+  }
+}
+
+export function saveLocalBackupSettings(settings: LocalBackupSettings) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.LOCAL_BACKUP_SETTINGS, JSON.stringify(settings));
+  } catch (e) {
+    console.error('Error saving local backup settings:', e);
+  }
+}
+
+export function loadLocalSnapshots(): LocalSnapshot[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.LOCAL_SNAPSHOTS);
+    if (!raw) return [];
+    const list = JSON.parse(raw);
+    if (!Array.isArray(list)) return [];
+    return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  } catch (e) {
+    return [];
+  }
+}
+
+export function saveLocalSnapshots(snapshots: LocalSnapshot[]) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.LOCAL_SNAPSHOTS, JSON.stringify(snapshots));
+  } catch (e) {
+    console.error('Error saving local snapshots:', e);
+  }
+}
+
+export function createLocalSnapshot(
+  title?: string,
+  type: 'auto_3day' | 'manual' = 'manual'
+): LocalSnapshot {
+  const categories = loadCategories();
+  const incomeCategories = loadIncomeCategories();
+  const investmentAssets = loadInvestmentAssets();
+  const investmentTransactions = loadInvestmentTransactions();
+  const cards = loadCards();
+  const transactions = loadTransactions();
+  const recurringExpenses = loadRecurringExpenses();
+  const initialCashBalance = loadInitialCashBalance();
+  const now = new Date();
+
+  const formattedDate = now.toLocaleDateString('tr-TR', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  const autoTitle = type === 'auto_3day' 
+    ? 'Otomatik Döngü (3 Günlük)' 
+    : (title?.trim() || `Manuel Yedek (${formattedDate})`);
+
+  const snapshot: LocalSnapshot = {
+    id: `snap_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    createdAt: now.toISOString(),
+    title: autoTitle,
+    type,
+    meta: {
+      transactionCount: transactions.length,
+      cardCount: cards.length,
+      categoryCount: categories.length + incomeCategories.length,
+      cashBalance: initialCashBalance,
+    },
+    data: {
+      categories,
+      incomeCategories,
+      investmentAssets,
+      investmentTransactions,
+      cards,
+      transactions,
+      recurringExpenses,
+      initialCashBalance,
+      exportedAt: now.toISOString(),
+    },
+  };
+
+  const currentList = loadLocalSnapshots();
+  const settings = loadLocalBackupSettings();
+
+  let updatedList = [snapshot, ...currentList];
+
+  // If this is an auto_3day snapshot and overwriteMode is 'rolling', keep at most maxRollingSlots auto snapshots
+  if (type === 'auto_3day' && settings.overwriteMode === 'rolling') {
+    const autoSnaps = updatedList.filter((s) => s.type === 'auto_3day');
+    const manualSnaps = updatedList.filter((s) => s.type !== 'auto_3day');
+    const trimmedAuto = autoSnaps.slice(0, settings.maxRollingSlots || 5);
+    updatedList = [...manualSnaps, ...trimmedAuto].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  saveLocalSnapshots(updatedList);
+  return snapshot;
+}
+
+export function deleteLocalSnapshot(id: string): LocalSnapshot[] {
+  const current = loadLocalSnapshots();
+  const filtered = current.filter((s) => s.id !== id);
+  saveLocalSnapshots(filtered);
+  return filtered;
+}
+
+export function checkAndRunAutoLocalBackup(): LocalSnapshot | null {
+  const settings = loadLocalBackupSettings();
+  if (!settings.autoBackupEnabled) return null;
+
+  const now = new Date();
+  if (settings.lastAutoBackupDate) {
+    const lastDate = new Date(settings.lastAutoBackupDate);
+    const diffDays = (now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24);
+    if (diffDays < (settings.intervalDays || 3)) {
+      return null;
+    }
+  }
+
+  const snapshot = createLocalSnapshot('Otomatik Döngü (3 Günlük)', 'auto_3day');
+  settings.lastAutoBackupDate = now.toISOString();
+  saveLocalBackupSettings(settings);
+  return snapshot;
+}
+

@@ -571,6 +571,19 @@ export type TranslationKeys = {
   recurringExpensePrefix: string;
   categoryOther: string;
   savings: string;
+  makeRecurring: string;
+  recurringExpenseBadge: string;
+  recurringExpensesAccordionDesc: string;
+  voiceRecordTitle: string;
+  voiceListening: string;
+  voiceTapToStart: string;
+  voiceTranscriptHint: string;
+  voiceNotSupported: string;
+  voicePermissionError: string;
+  voiceCancel: string;
+  voiceSave: string;
+  voiceDetectedDetails: string;
+  voiceEditHint: string;
   // End
 };
 
@@ -1113,7 +1126,21 @@ const translations: Record<LanguageCode, TranslationKeys> = {
 
   
     categoryOther: "Diğer",
-    savings: "Birikim",},
+    savings: "Birikim",
+    makeRecurring: 'Düzenli Gider Yap',
+    recurringExpenseBadge: 'Düzenli',
+    recurringExpensesAccordionDesc: 'Aylık sabit veya abonelik giderleriniz',
+    voiceRecordTitle: 'Sesli Hızlı Ekle',
+    voiceListening: 'Dinleniyor... Konuşun',
+    voiceTapToStart: 'Konuşmak için mikrofona dokunun',
+    voiceTranscriptHint: 'Örn: "Yemekte 150 lira harcadım" veya "Maaşım 45 bin yattı"',
+    voiceNotSupported: 'Cihazınız veya tarayıcınız ses tanımayı desteklemiyor.',
+    voicePermissionError: 'Mikrofon izni verilmedi. Lütfen mikrofon iznini etkinleştirin.',
+    voiceCancel: 'İptal',
+    voiceSave: 'Kaydet',
+    voiceDetectedDetails: 'Algılanan Bilgiler',
+    voiceEditHint: 'Bilgileri değiştirmek için dokunabilirsiniz',
+  },
 
   en: {
     appName: 'My Budget',
@@ -1636,7 +1663,21 @@ const translations: Record<LanguageCode, TranslationKeys> = {
 
   
     categoryOther: "Other",
-    savings: "Savings",},
+    savings: "Savings",
+    makeRecurring: 'Make Recurring',
+    recurringExpenseBadge: 'Recurring',
+    recurringExpensesAccordionDesc: 'Your monthly fixed or subscription expenses',
+    voiceRecordTitle: 'Voice Quick Add',
+    voiceListening: 'Listening... Speak now',
+    voiceTapToStart: 'Tap microphone to speak',
+    voiceTranscriptHint: 'e.g. "Spent 50 on dinner" or "Salary 4000 deposited"',
+    voiceNotSupported: 'Voice recognition is not supported on your device or browser.',
+    voicePermissionError: 'Microphone permission denied. Please allow microphone access.',
+    voiceCancel: 'Cancel',
+    voiceSave: 'Save',
+    voiceDetectedDetails: 'Detected Information',
+    voiceEditHint: 'You can tap any field to adjust it',
+  },
 
   es: {
     appName: 'Mi Presupuesto',
@@ -2159,7 +2200,21 @@ const translations: Record<LanguageCode, TranslationKeys> = {
 
   
     categoryOther: "Otros",
-    savings: "Ahorro",},
+    savings: "Ahorro",
+    makeRecurring: 'Hacer recurrente',
+    recurringExpenseBadge: 'Recurrente',
+    recurringExpensesAccordionDesc: 'Sus gastos fijos o suscripciones mensuales',
+    voiceRecordTitle: 'Añadir por voz',
+    voiceListening: 'Escuchando... Hable ahora',
+    voiceTapToStart: 'Toque el micrófono para hablar',
+    voiceTranscriptHint: 'ej. "Gasté 50 en comida" o "Ingresó mi salario"',
+    voiceNotSupported: 'El reconocimiento de voz no es compatible en su dispositivo.',
+    voicePermissionError: 'Permiso de micrófono denegado.',
+    voiceCancel: 'Cancelar',
+    voiceSave: 'Guardar',
+    voiceDetectedDetails: 'Información detectada',
+    voiceEditHint: 'Toque para modificar los datos',
+  },
 
   fr: {
     appName: 'Mon Budget',
@@ -2682,7 +2737,21 @@ const translations: Record<LanguageCode, TranslationKeys> = {
 
   
     categoryOther: "Autre",
-    savings: "Épargne",},
+    savings: "Épargne",
+    makeRecurring: 'Rendre récurrent',
+    recurringExpenseBadge: 'Récurrent',
+    recurringExpensesAccordionDesc: 'Vos dépenses fixes ou abonnements mensuels',
+    voiceRecordTitle: 'Ajout vocal rapide',
+    voiceListening: 'Écoute en cours... Parlez',
+    voiceTapToStart: 'Appuyez sur le micro pour parler',
+    voiceTranscriptHint: 'ex. "50 euros de courses" ou "Salaire reçu"',
+    voiceNotSupported: 'La reconnaissance vocale n\'est pas prise en charge.',
+    voicePermissionError: 'Permission de micro refusée.',
+    voiceCancel: 'Annuler',
+    voiceSave: 'Enregistrer',
+    voiceDetectedDetails: 'Informations détectées',
+    voiceEditHint: 'Touchez pour modifier les champs',
+  },
 
   zh: {
     appName: '我的预算',
@@ -3205,7 +3274,21 @@ const translations: Record<LanguageCode, TranslationKeys> = {
 
   
     categoryOther: "其他",
-    savings: "储蓄",},
+    savings: "储蓄",
+    makeRecurring: '设为定期支出',
+    recurringExpenseBadge: '定期',
+    recurringExpensesAccordionDesc: '您的每月固定支出或订阅',
+    voiceRecordTitle: '语音快速记账',
+    voiceListening: '正在聆听... 请说话',
+    voiceTapToStart: '点击麦克风开始说话',
+    voiceTranscriptHint: '例如：“吃饭花了150元”或“工资到账1万元”',
+    voiceNotSupported: '您的设备或浏览器不支持语音识别。',
+    voicePermissionError: '未授予麦克风权限。',
+    voiceCancel: '取消',
+    voiceSave: '保存',
+    voiceDetectedDetails: '识别到的信息',
+    voiceEditHint: '可直接点击修改内容',
+  },
 
   hi: {
     appName: 'मेरा बजट',
@@ -3728,7 +3811,21 @@ const translations: Record<LanguageCode, TranslationKeys> = {
 
   
     categoryOther: "अन्य",
-    savings: "बचत",},
+    savings: "बचत",
+    makeRecurring: 'आवर्ती बनाएं',
+    recurringExpenseBadge: 'आवर्ती',
+    recurringExpensesAccordionDesc: 'आपके मासिक निश्चित या सदस्यता खर्च',
+    voiceRecordTitle: 'वॉइस क्विक जोड़ें',
+    voiceListening: 'सुन रहे हैं... बोलिए',
+    voiceTapToStart: 'बोलने के लिए माइक दबाएं',
+    voiceTranscriptHint: 'उदा: "खाने पर 500 रुपये खर्च किए" या "वेतन मिला"',
+    voiceNotSupported: 'आपके डिवाइस पर वॉइस पहचान समर्थित नहीं है।',
+    voicePermissionError: 'माइक अनुमति अस्वीकृत।',
+    voiceCancel: 'रद्द करें',
+    voiceSave: 'सहेजें',
+    voiceDetectedDetails: 'पहचानी गई जानकारी',
+    voiceEditHint: 'बदलने के लिए किसी भी फ़ील्ड पर टैप करें',
+  },
 };
 
 export function t(lang: LanguageCode, key: keyof TranslationKeys): string {

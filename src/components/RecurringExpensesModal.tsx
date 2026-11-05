@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { RecurringExpense, Category, CreditCard, PaymentSourceType } from '../types';
 import { useI18n } from '../i18n/I18nContext';
 import { useBackHandler } from '../utils/backButton';
@@ -33,6 +33,14 @@ interface RecurringExpensesModalProps {
   onAddRecurringExpense: (expense: Omit<RecurringExpense, 'id' | 'createdAt'>) => void;
   onUpdateRecurringExpense: (expense: RecurringExpense) => void;
   onDeleteRecurringExpense: (id: string) => void;
+  initialData?: {
+    title?: string;
+    amount?: number;
+    categoryId?: string;
+    sourceType?: PaymentSourceType;
+    cardId?: string;
+    dayOfMonth?: number;
+  } | null;
 }
 
 // Quick templates definition
@@ -57,6 +65,7 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
   onAddRecurringExpense,
   onUpdateRecurringExpense,
   onDeleteRecurringExpense,
+  initialData,
 }) => {
   const { t: i18n, formatCurrency, currency } = useI18n();
 
@@ -81,6 +90,22 @@ export const RecurringExpensesModal: React.FC<RecurringExpensesModalProps> = ({
 
   // Delete Confirmation State
   const [itemToDelete, setItemToDelete] = useState<RecurringExpense | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        setFormTitle(initialData.title || '');
+        setFormAmountStr(initialData.amount ? String(initialData.amount) : '');
+        setFormCategoryId(initialData.categoryId || categories[0]?.id || 'cat-fatura');
+        setFormSourceType(initialData.sourceType || (cards.length > 0 ? 'credit_card' : 'cash_bank'));
+        setFormCardId(initialData.cardId || cards[0]?.id || '');
+        setFormDayOfMonth(initialData.dayOfMonth || Math.min(28, Math.max(1, new Date().getDate())));
+        setFormMode('new');
+      } else {
+        setFormMode(null);
+      }
+    }
+  }, [isOpen, initialData, categories, cards]);
 
   useBackHandler(() => {
     if (itemToDelete) {

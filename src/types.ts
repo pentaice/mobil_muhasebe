@@ -7,6 +7,8 @@ export type TransactionType =
 
 export type PaymentSourceType = 'cash_bank' | 'credit_card';
 
+export type CustomThemeId = 'default' | 'aurora' | 'cyber' | 'brutalist' | 'emerald' | 'sunset';
+
 export interface Category {
   id: string;
   name: string;
@@ -50,6 +52,8 @@ export interface Transaction {
   installmentNumber?: number; // Kaçıncı taksit (örn. 1, 2, 3...)
   installmentTotal?: number; // Toplam taksit sayısı (örn. 6)
   originalTransactionAmount?: number; // Taksitlendirilmeden önceki ana harcama tutarı
+  recurringExpenseId?: string; // İlgili düzenli giderin referans ID'si
+  isRecurring?: boolean; // Düzenli gider işlemi mi
 }
 
 export type InvestmentCategory = 'gold' | 'forex' | 'stock' | 'fund' | 'crypto' | 'deposit' | 'other';
@@ -102,5 +106,37 @@ export interface RecurringExpense {
   lastProcessedMonth?: string; // YYYY-MM
   isActive: boolean;
   createdAt: string;
+}
+
+export interface LocalSnapshot {
+  id: string;
+  createdAt: string;
+  title: string;
+  type: 'auto_3day' | 'manual';
+  meta: {
+    transactionCount: number;
+    cardCount: number;
+    categoryCount: number;
+    cashBalance: number;
+  };
+  data: {
+    categories: Category[];
+    incomeCategories: IncomeCategory[];
+    investmentAssets: InvestmentAsset[];
+    investmentTransactions: InvestmentTransaction[];
+    cards: CreditCard[];
+    transactions: Transaction[];
+    recurringExpenses: RecurringExpense[];
+    initialCashBalance: number;
+    exportedAt: string;
+  };
+}
+
+export interface LocalBackupSettings {
+  autoBackupEnabled: boolean;
+  intervalDays: number;
+  overwriteMode: 'rolling' | 'keep_all';
+  maxRollingSlots: number;
+  lastAutoBackupDate?: string;
 }
 

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Category, CreditCard, Transaction, IncomeCategory, InvestmentAsset } from '../types';
+import { Category, CreditCard, Transaction, IncomeCategory, InvestmentAsset, RecurringExpense } from '../types';
 import { CategoryIcon } from './CategoryIcon';
 import { formatShortDate, loadIncomeCategories, loadInvestmentAssets } from '../utils/storage';
 import { useI18n } from '../i18n/I18nContext';
@@ -37,6 +37,7 @@ interface TransactionsViewProps {
   onDeleteTransaction: (id: string) => void;
   onUpdateTransaction: (updatedTx: Transaction) => void;
   onBatchUpdateTransactions?: (updater: (prev: Transaction[]) => Transaction[]) => void;
+  recurringExpenses?: RecurringExpense[];
 }
 
 export const TransactionsView: React.FC<TransactionsViewProps> = ({
@@ -48,6 +49,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   onDeleteTransaction,
   onUpdateTransaction,
   onBatchUpdateTransactions,
+  recurringExpenses,
 }) => {
   const { t: i18n, formatCurrency, currency } = useI18n();
   const [search, setSearch] = useState<string>('');
@@ -196,12 +198,24 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     [investmentAssets]
   );
 
+  const isTransactionRecurring = (t: Transaction) => {
+    if (t.isRecurring || t.recurringExpenseId) return true;
+    if (!recurringExpenses || recurringExpenses.length === 0) return false;
+    const note = (t.note || '').trim().toLowerCase();
+    if (!note) return false;
+    return recurringExpenses.some((r) => r.title.trim().toLowerCase() === note);
+  };
+
   const filteredTransactions = useMemo(() => {
     return transactions
       .filter((t) => {
         // Type filter
         if (selectedTypeFilter !== 'all') {
-          if (selectedTypeFilter === 'investment') {
+          if (selectedTypeFilter === 'recurring') {
+            if (!isTransactionRecurring(t)) {
+              return false;
+            }
+          } else if (selectedTypeFilter === 'investment') {
             if (t.type !== 'investment_deposit' && t.type !== 'investment_withdraw') {
               return false;
             }
@@ -246,6 +260,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     incomeCats,
     invAssets,
     cards,
+    recurringExpenses,
   ]);
 
   // Split into future installments vs past & current transactions
@@ -315,6 +330,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
           >
             <option value="all">{i18n.allTransactionTypes}</option>
             <option value="expense">{i18n.onlyExpenses}</option>
+            <option value="recurring">{i18n.recurringExpenses}</option>
             <option value="income">{i18n.income}</option>
             <option value="card_payment">{i18n.onlyCardPayments}</option>
             <option value="investment">{i18n.investments}</option>

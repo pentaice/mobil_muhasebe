@@ -5,6 +5,7 @@ import { formatTL, loadQuickAmounts, saveQuickAmounts, DEFAULT_QUICK_AMOUNTS } f
 import { useI18n } from '../i18n/I18nContext';
 import { RecurringExpensesModal } from './RecurringExpensesModal';
 import { useBackHandler } from '../utils/backButton';
+import { parseVoiceExpense, getSpeechRecognitionLocale, ParsedVoiceResult } from '../utils/voiceParser';
 import {
   Zap,
   CreditCard as CardIcon,
@@ -23,6 +24,7 @@ import {
   TrendingUp,
   ArrowUpRight,
   ArrowDownLeft,
+  Mic,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -39,7 +41,9 @@ interface QuickAddExpenseProps {
   onOpenInvestments?: () => void;
   totalInvestmentsValue?: number;
   liquidCashBalance?: number;
-  focusTrigger?: number;
+  isScrolled?: boolean;
+  doubleTapKeyboardTrigger?: number;
+  onRegisterVoiceTrigger?: (fn: () => void) => void;
 }
 
 export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
@@ -55,9 +59,11 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
   onOpenInvestments,
   totalInvestmentsValue = 0,
   liquidCashBalance,
-  focusTrigger,
+  isScrolled = false,
+  doubleTapKeyboardTrigger,
+  onRegisterVoiceTrigger,
 }) => {
-  const { t: i18n, formatCurrency, currency } = useI18n();
+  const { t: i18n, formatCurrency, currency, lang } = useI18n();
   const [entryType, setEntryType] = useState<'expense' | 'income'>('expense');
   const [showRecurringModal, setShowRecurringModal] = useState<boolean>(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(categories[0]?.id || 'cat-yemek');
@@ -77,7 +83,196 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
   const [showQuickAmountModal, setShowQuickAmountModal] = useState<boolean>(false);
   const [newQuickAmountInput, setNewQuickAmountInput] = useState<string>('');
 
+  // Voice Recording & Parsing State
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState<boolean>(false);
+  const [isListening, setIsListening] = useState<boolean>(false);
+  const [voiceTranscript, setVoiceTranscript] = useState<string>('');
+  const [voiceParsed, setVoiceParsed] = useState<ParsedVoiceResult | null>(null);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const recognitionRef = useRef<any>(null);
+
+  // Register voice trigger function for BottomNav when in scrolled mic mode
+  useEffect(() => {
+    onRegisterVoiceTrigger?.(() => {
+      handleToggleVoice();
+    });
+  }, [isVoiceModalOpen, isListening]);
+
+  // Handle double-tap on Hızlı Ekle: opens mobile keyboard without hiding mic!
+  useEffect(() => {
+    if (!doubleTapKeyboardTrigger || doubleTapKeyboardTrigger === 0) return;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      amountInputRef.current?.focus();
+    }, 100);
+  }, [doubleTapKeyboardTrigger]);
+
+  const startListening = () => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setVoiceError(i18n.voiceNotSupported || 'Bu tarayıcıda Web Speech API desteği bulunamadı. Lütfen Google Chrome veya Edge kullanın.');
+      return;
+    }
+
+    if (window.isSecureContext === false && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      setVoiceError('Güvenlik Uyarısı: Tarayıcılar ses ve mikrofon özelliğine yalnızca "http://localhost" veya "https://" üzerinden izin verir.');
+      return;
+    }
+
+    try {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch (e) { /* ignore */ }
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false; // Tekil ve kararlı cümle tanıma
+      recognition.interimResults = true;
+      recognition.lang = getSpeechRecognitionLocale(lang);
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        setVoiceError(null);
+      };
+
+      recognition.onresult = (event: any) => {
+        let fullTranscript = '';
+        for (let i = 0; i < event.results.length; i++) {
+          fullTranscript += event.results[i][0].transcript + ' ';
+        }
+        const cleanTranscript = fullTranscript.trim();
+        setVoiceTranscript(cleanTranscript);
+
+        const parsed = parseVoiceExpense(
+          cleanTranscript,
+          categories,
+          incomeCategories,
+          cards,
+          lang
+        );
+        setVoiceParsed(parsed);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.warn('SpeechRecognition error:', event.error, event);
+        if (event.error === 'not-allowed') {
+          setVoiceError('Mikrofon erişimi engellendi. Lütfen tarayıcı adres çubuğundaki kilit simgesine tıklayıp mikrofona "İzin Ver" seçeneğini işaretleyin.');
+        } else if (event.error === 'network') {
+          setVoiceError('Ses tanıma servisine ulaşılamadı. İnternet bağlantınızı kontrol edin.');
+        } else if (event.error === 'audio-capture') {
+          setVoiceError('Mikrofon algılanamadı veya bağlı değil.');
+        } else if (event.error === 'no-speech') {
+          setVoiceError('Ses duyulmadı. Lütfen mikrofona yakın konuşarak tekrar deneyin.');
+        } else {
+          setVoiceError(`Ses uyarısı: ${event.error}`);
+        }
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start(); // SYNCHRONOUS IN DIRECT USER CLICK!
+    } catch (err: any) {
+      console.error('SpeechRecognition start error:', err);
+      setVoiceError(err?.message || 'Mikrofon başlatılamadı.');
+      setIsListening(false);
+    }
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) { /* ignore */ }
+      recognitionRef.current = null;
+    }
+    setIsListening(false);
+  };
+
+  // Cleanup speech recognition on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch (e) { /* ignore */ }
+      }
+    };
+  }, []);
+
+  const handleStartVoice = () => {
+    setVoiceTranscript('');
+    setVoiceParsed(null);
+    setVoiceError(null);
+    setIsVoiceModalOpen(true);
+    startListening();
+  };
+
+  const handleCancelVoice = () => {
+    stopListening();
+    setIsVoiceModalOpen(false);
+    setVoiceTranscript('');
+    setVoiceParsed(null);
+    setVoiceError(null);
+  };
+
+  const handleToggleVoice = () => {
+    if (!isVoiceModalOpen) {
+      handleStartVoice();
+    } else if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
+
+  const handleSaveVoice = () => {
+    if (!voiceParsed || voiceParsed.amount <= 0) return;
+    stopListening();
+
+    const txDate = new Date().toISOString();
+
+    if (voiceParsed.type === 'income') {
+      onAddTransaction({
+        type: 'income',
+        amount: voiceParsed.amount,
+        categoryId: voiceParsed.categoryId || incomeCategories[0]?.id || 'inc-maas',
+        sourceType: 'cash_bank',
+        date: txDate,
+        note: voiceParsed.note.trim() || undefined,
+      });
+    } else {
+      onAddTransaction({
+        type: 'expense',
+        amount: voiceParsed.amount,
+        categoryId: voiceParsed.categoryId || categories[0]?.id || 'cat-diger',
+        sourceType: cards.length > 0 ? voiceParsed.sourceType : 'cash_bank',
+        creditCardId:
+          voiceParsed.sourceType === 'credit_card' && cards.length > 0
+            ? voiceParsed.creditCardId || cards[0]?.id
+            : undefined,
+        date: txDate,
+        note: voiceParsed.note.trim() || undefined,
+      });
+    }
+
+    setIsVoiceModalOpen(false);
+    setVoiceTranscript('');
+    setVoiceParsed(null);
+    setVoiceError(null);
+  };
+
   useBackHandler(() => {
+    if (isVoiceModalOpen) {
+      handleCancelVoice();
+      return;
+    }
     if (showQuickAmountModal) {
       setShowQuickAmountModal(false);
       return;
@@ -86,27 +281,12 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
       setShowRecurringModal(false);
       return;
     }
-  }, showQuickAmountModal || showRecurringModal);
+  }, isVoiceModalOpen || showQuickAmountModal || showRecurringModal);
 
   const amountInputRef = useRef<HTMLInputElement>(null);
   const amountNumber = parseFloat(amountStr) || 0;
 
-  // Android klavyesi için mount'ta input'a focus
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      amountInputRef.current?.focus();
-    }, 150);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // 'Hızlı Ekle' butonuna her basıldığında (zaten açık olsa bile) klavyeyi aç
-  useEffect(() => {
-    if (focusTrigger === undefined || focusTrigger === 0) return;
-    const timer = setTimeout(() => {
-      amountInputRef.current?.focus();
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [focusTrigger]);
+  // NOT: Otomatik klavye açma kaldırıldı. Klavye sadece tutar alanına dokunulduğunda açılacaktır.
 
   const handleQuickAddAmount = (addValue: number) => {
     const current = parseFloat(amountStr) || 0;
@@ -518,7 +698,6 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
         type="button"
         onClick={() => {
           setEntryType('income');
-          setTimeout(() => amountInputRef.current?.focus(), 50);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
         className="w-full mt-3.5 p-4 min-h-[66px] bg-white dark:bg-slate-850 hover:bg-emerald-50/50 dark:hover:bg-slate-800/90 border border-gray-100 dark:border-slate-750/80 rounded-3xl flex items-center justify-between transition-all cursor-pointer shadow-sm group active:scale-[0.99] text-gray-900 dark:text-slate-100"
@@ -734,6 +913,339 @@ export const QuickAddExpense: React.FC<QuickAddExpenseProps> = ({
         onUpdateRecurringExpense={onUpdateRecurringExpense}
         onDeleteRecurringExpense={onDeleteRecurringExpense}
       />
+
+      {/* FLOATING ACTION CLUSTER (MIC IN FIXED COLUMN 0, ÇARPI & OK IMMEDIATELY NEXT TO IT) */}
+      {(isVoiceModalOpen || !isScrolled) && (
+        <div className="fixed bottom-[calc(5.75rem+env(safe-area-inset-bottom))] left-0 right-0 max-w-md mx-auto pointer-events-none z-50 px-1">
+          <div className="grid grid-cols-4 items-center">
+            {/* Column 0: Mikrofon Butonu (Konumu hiç değişmez, aynı yerde sabit kalır) */}
+            <div className="flex justify-center pointer-events-auto">
+              <button
+                type="button"
+                onClick={handleToggleVoice}
+                className={`w-12 h-12 rounded-full text-white shadow-lg flex items-center justify-center transition-all cursor-pointer relative shrink-0 active:scale-95 ${
+                  isListening
+                    ? 'bg-blue-600 ring-4 ring-blue-400/60 shadow-blue-500/50 scale-105'
+                    : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/30'
+                }`}
+                title={isListening ? 'Dinlemeyi Durdur' : i18n.voiceRecordTitle}
+              >
+                {/* Konuşma Esnasında Ses Dalgası ve Titreşim Animasyonları */}
+                {isListening && (
+                  <>
+                    <span className="absolute -inset-3 rounded-full bg-blue-500/25 animate-ping pointer-events-none" />
+                    <span className="absolute -inset-1.5 rounded-full border-2 border-blue-400 animate-pulse pointer-events-none" />
+                    <span className="absolute -inset-4 rounded-full border border-blue-400/40 animate-ping [animation-duration:2s] pointer-events-none" />
+                  </>
+                )}
+                <Mic className={`w-6 h-6 stroke-[2.2] fill-none ${isListening ? 'animate-bounce [animation-duration:1s]' : ''}`} />
+              </button>
+            </div>
+
+            {/* Column 1: Kırmızı Çarpı Butonu (Mikrofonun hemen sağında açılır) */}
+            <div className="flex justify-center pointer-events-auto">
+              <AnimatePresence>
+                {isVoiceModalOpen && (
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.5, x: -15 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.5, x: -15 }}
+                    transition={{ duration: 0.18 }}
+                    type="button"
+                    onClick={handleCancelVoice}
+                    className="w-12 h-12 rounded-full bg-rose-600 hover:bg-rose-700 active:scale-95 text-white shadow-lg shadow-rose-600/40 flex items-center justify-center transition-all cursor-pointer shrink-0"
+                    title={i18n.voiceCancel}
+                  >
+                    <X className="w-6 h-6 stroke-[2.5]" />
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Column 2: Yeşil Ok Butonu (Çarpı'nın hemen sağında açılır) */}
+            <div className="flex justify-center pointer-events-auto">
+              <AnimatePresence>
+                {isVoiceModalOpen && (
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.5, x: -15 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.5, x: -15 }}
+                    transition={{ duration: 0.18 }}
+                    type="button"
+                    onClick={handleSaveVoice}
+                    disabled={!voiceParsed || voiceParsed.amount <= 0}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+                      voiceParsed && voiceParsed.amount > 0
+                        ? 'bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white shadow-lg shadow-emerald-600/40'
+                        : 'bg-emerald-950/70 text-emerald-600/40 cursor-not-allowed border border-emerald-800/40'
+                    }`}
+                    title={i18n.voiceSave}
+                  >
+                    <Check className="w-6 h-6 stroke-[3]" />
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Column 3: Boş (Hizalamayı korur) */}
+            <div />
+          </div>
+        </div>
+      )}
+
+      {/* VOICE RECORDING & LIVE PARSING MODAL (DIMMED OVERLAY) */}
+      <AnimatePresence>
+        {isVoiceModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-black/85 backdrop-blur-md flex flex-col justify-between pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(8.5rem+env(safe-area-inset-bottom))] px-4 text-white overflow-y-auto no-scrollbar"
+          >
+            {/* Top Header */}
+            <div className="flex items-center justify-between border-b border-white/10 pb-3 max-w-md mx-auto w-full">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    isListening ? 'bg-blue-600 text-white animate-pulse' : 'bg-white/10 text-white/70'
+                  }`}
+                >
+                  <Mic className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-white">{i18n.voiceRecordTitle}</h3>
+                  <p className="text-[11px] text-white/60">
+                    {isListening ? i18n.voiceListening : i18n.voiceTapToStart}
+                  </p>
+                </div>
+              </div>
+
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-white/80">
+                {lang.toUpperCase()}
+              </span>
+            </div>
+
+            {/* Middle Section: Speech Transcript & Parsed Transaction Cards */}
+            <div className="my-auto py-3 space-y-4 max-w-sm mx-auto w-full">
+              {/* Live White Transcript Display */}
+              <div className="min-h-[85px] flex flex-col items-center justify-center p-3.5 rounded-2xl bg-white/5 border border-white/10 text-center shadow-inner space-y-2">
+                {voiceTranscript ? (
+                  <p className="text-white text-lg sm:text-xl font-bold leading-snug">
+                    "{voiceTranscript}"
+                  </p>
+                ) : (
+                  <div className="space-y-1">
+                    <p className="text-white/80 text-sm font-semibold animate-pulse">
+                      {isListening ? i18n.voiceListening : i18n.voiceTapToStart}
+                    </p>
+                    <p className="text-white/40 text-[11px]">
+                      {i18n.voiceTranscriptHint}
+                    </p>
+                  </div>
+                )}
+
+                {/* Konuşma Esnasında Ses Dalgası / Equalizer Animasyonu */}
+                {isListening && (
+                  <div className="flex items-center justify-center gap-1.5 pt-1">
+                    <span className="w-1 h-3 bg-blue-400 rounded-full animate-pulse [animation-duration:0.6s] [animation-delay:0.1s]" />
+                    <span className="w-1 h-6 bg-blue-400 rounded-full animate-pulse [animation-duration:0.6s] [animation-delay:0.2s]" />
+                    <span className="w-1 h-8 bg-cyan-400 rounded-full animate-pulse [animation-duration:0.6s] [animation-delay:0.3s]" />
+                    <span className="w-1 h-6 bg-blue-400 rounded-full animate-pulse [animation-duration:0.6s] [animation-delay:0.4s]" />
+                    <span className="w-1 h-3 bg-blue-400 rounded-full animate-pulse [animation-duration:0.6s] [animation-delay:0.5s]" />
+                  </div>
+                )}
+              </div>
+
+              {/* Voice Error notice with retry button */}
+              {voiceError && (
+                <div className="p-3 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs text-center space-y-2">
+                  <p className="font-medium leading-relaxed">{voiceError}</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVoiceError(null);
+                      startListening();
+                    }}
+                    className="bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-[11px] font-bold px-3.5 py-1.5 rounded-xl cursor-pointer transition-all shadow-sm"
+                  >
+                    Mikrofonu Tekrar Başlat
+                  </button>
+                </div>
+              )}
+
+              {/* Parsed Selections Card */}
+              {voiceParsed && (
+                <div className="bg-slate-900/90 border border-white/15 rounded-3xl p-4 space-y-3.5 shadow-2xl backdrop-blur-md">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-white/10">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-white/70">
+                      {i18n.voiceDetectedDetails}
+                    </span>
+                    <span className="text-[10px] text-white/50">
+                      {i18n.voiceEditHint}
+                    </span>
+                  </div>
+
+                  {/* Amount & Currency */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-white/60 uppercase tracking-wider">
+                      {i18n.amount}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="any"
+                        inputMode="decimal"
+                        placeholder="0"
+                        value={voiceParsed.amount && voiceParsed.amount > 0 ? voiceParsed.amount : ''}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value) || 0;
+                          setVoiceParsed({ ...voiceParsed, amount: val });
+                        }}
+                        className="w-full bg-white/10 border-2 border-white/20 focus:border-blue-400 rounded-2xl py-2 pl-3.5 pr-12 text-2xl font-black text-white placeholder:text-white/30 focus:outline-none"
+                      />
+                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-lg font-bold text-blue-400">
+                        {currency.symbol}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Transaction Type (Expense vs Income) */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setVoiceParsed({ ...voiceParsed, type: 'expense' })}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
+                        voiceParsed.type === 'expense'
+                          ? 'bg-rose-500/30 border-rose-400 text-rose-200 shadow-sm'
+                          : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                      }`}
+                    >
+                      <ArrowDownLeft className="w-3.5 h-3.5 text-rose-400" />
+                      <span>{i18n.expense}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVoiceParsed({ ...voiceParsed, type: 'income', sourceType: 'cash_bank' })}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
+                        voiceParsed.type === 'income'
+                          ? 'bg-emerald-500/30 border-emerald-400 text-emerald-200 shadow-sm'
+                          : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                      }`}
+                    >
+                      <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>{i18n.incomeMode}</span>
+                    </button>
+                  </div>
+
+                  {/* Category Selection */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-white/60 uppercase tracking-wider">
+                      {i18n.category}
+                    </label>
+                    <div className="flex gap-1.5 overflow-x-auto py-1 no-scrollbar scrollbar-none">
+                      {(voiceParsed.type === 'income' ? incomeCategories : categories).map((cat) => {
+                        const isSel = voiceParsed.categoryId === cat.id;
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => setVoiceParsed({ ...voiceParsed, categoryId: cat.id })}
+                            className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1.5 whitespace-nowrap shrink-0 transition-all cursor-pointer ${
+                              isSel
+                                ? 'bg-blue-600 border-blue-400 text-white shadow-sm ring-2 ring-blue-400/40'
+                                : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
+                            }`}
+                          >
+                            <div
+                              className="w-4 h-4 rounded-md flex items-center justify-center text-white"
+                              style={{ backgroundColor: cat.color }}
+                            >
+                              <CategoryIcon name={cat.icon} size={10} />
+                            </div>
+                            <span>{cat.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Payment Source (if Expense) */}
+                  {voiceParsed.type === 'expense' && (
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-white/60 uppercase tracking-wider">
+                        {i18n.paymentSource}
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setVoiceParsed({
+                            ...voiceParsed,
+                            sourceType: 'credit_card',
+                            creditCardId: voiceParsed.creditCardId || cards[0]?.id
+                          })}
+                          className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                            voiceParsed.sourceType === 'credit_card'
+                              ? 'bg-blue-600/40 border-blue-400 text-blue-200'
+                              : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                          }`}
+                        >
+                          <CardIcon className="w-3.5 h-3.5 text-blue-400" />
+                          <span>{i18n.creditCard}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setVoiceParsed({
+                            ...voiceParsed,
+                            sourceType: 'cash_bank',
+                            creditCardId: undefined
+                          })}
+                          className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                            voiceParsed.sourceType === 'cash_bank'
+                              ? 'bg-emerald-600/40 border-emerald-400 text-emerald-200'
+                              : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                          }`}
+                        >
+                          <Wallet className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>{i18n.cashBank}</span>
+                        </button>
+                      </div>
+
+                      {/* Card dropdown if credit card selected */}
+                      {voiceParsed.sourceType === 'credit_card' && cards.length > 0 && (
+                        <select
+                          value={voiceParsed.creditCardId || cards[0]?.id}
+                          onChange={(e) => setVoiceParsed({ ...voiceParsed, creditCardId: e.target.value })}
+                          className="w-full bg-white/10 border border-white/20 rounded-xl py-2 px-2.5 text-xs text-white font-semibold focus:outline-none"
+                        >
+                          {cards.map((c) => (
+                            <option key={c.id} value={c.id} className="bg-slate-900 text-white">
+                              💳 {c.name} (*{c.last4})
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Note / Description */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-white/60 uppercase tracking-wider">
+                      {i18n.description}
+                    </label>
+                    <input
+                      type="text"
+                      value={voiceParsed.note}
+                      placeholder={i18n.notePlaceholder}
+                      onChange={(e) => setVoiceParsed({ ...voiceParsed, note: e.target.value })}
+                      className="w-full bg-white/10 border border-white/20 focus:border-blue-400 rounded-xl py-2 px-3 text-xs text-white placeholder:text-white/40 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

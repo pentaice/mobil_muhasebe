@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Category, Transaction } from '../types';
+import { Category, Transaction, CustomThemeId } from '../types';
 import { CategoryIcon, AVAILABLE_ICONS } from './CategoryIcon';
 import { formatTL } from '../utils/storage';
 import { useBackHandler } from '../utils/backButton';
@@ -23,7 +23,9 @@ import {
   Bell,
   BellOff,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  Palette,
+  Sparkles,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useI18n } from '../i18n/I18nContext';
@@ -48,6 +50,8 @@ interface CategoriesViewProps {
   ) => void;
   isDarkMode: boolean;
   onToggleTheme: () => void;
+  customTheme?: CustomThemeId;
+  onChangeCustomTheme?: (theme: CustomThemeId) => void;
 }
 
 const COLOR_PALETTE = [
@@ -76,9 +80,12 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
   onDeleteCategoryWithOptions,
   isDarkMode,
   onToggleTheme,
+  customTheme = 'default',
+  onChangeCustomTheme,
 }) => {
   const { t: i18n, formatCurrency, lang, setLang, currency, setCurrency } = useI18n();
   // Add modal state
+  const [showThemeBubble, setShowThemeBubble] = useState<boolean>(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState<boolean>(false);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState<boolean>(false);
@@ -108,6 +115,10 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
   const [selectedTargetCatId, setSelectedTargetCatId] = useState<string>('');
 
   useBackHandler(() => {
+    if (showThemeBubble) {
+      setShowThemeBubble(false);
+      return;
+    }
     if (categoryToDelete) {
       setCategoryToDelete(null);
       return;
@@ -300,6 +311,78 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
     saveAutoSaveSettings(newSettings);
   };
 
+  const THEME_OPTIONS: {
+    id: CustomThemeId;
+    name: string;
+    badge: string;
+    desc: string;
+    emoji: string;
+    previewBg: string;
+    previewBorder: string;
+    tagColor: string;
+  }[] = [
+    {
+      id: 'default',
+      name: 'Klasik Minimal',
+      badge: 'Standart',
+      desc: 'Hızlı, sade ve odaklanmış arayüz',
+      emoji: '⚡',
+      previewBg: 'bg-white dark:bg-slate-800',
+      previewBorder: 'border-blue-500/50',
+      tagColor: 'text-blue-600 bg-blue-50 dark:bg-blue-950/60 dark:text-blue-300',
+    },
+    {
+      id: 'aurora',
+      name: 'Aurora Glass',
+      badge: 'Buzlu Cam',
+      desc: 'Lüks şeffaf cam, kristal hatlar & kuzey ışıkları',
+      emoji: '🔮',
+      previewBg: 'bg-gradient-to-br from-indigo-500/25 via-purple-500/20 to-pink-500/25 backdrop-blur-md',
+      previewBorder: 'border-purple-400/60',
+      tagColor: 'text-purple-600 bg-purple-50 dark:bg-purple-950/60 dark:text-purple-300',
+    },
+    {
+      id: 'cyber',
+      name: 'Cyber Neon',
+      badge: 'Siberpunk',
+      desc: 'Fütüristik terminal, elektrik neon cyan & derin grid',
+      emoji: '🚀',
+      previewBg: 'bg-slate-950',
+      previewBorder: 'border-cyan-400 shadow-[0_0_10px_rgba(0,240,255,0.35)]',
+      tagColor: 'text-cyan-600 bg-cyan-50 dark:bg-cyan-950/60 dark:text-cyan-300',
+    },
+    {
+      id: 'brutalist',
+      name: 'Neo-Brutalist',
+      badge: 'Retro Pop',
+      desc: 'Kalın siyah konturlar, 90\'lar pop sarısı & sert gölge',
+      emoji: '🎨',
+      previewBg: 'bg-yellow-100 dark:bg-slate-900',
+      previewBorder: 'border-2 border-slate-900 dark:border-sky-400 shadow-[2px_2px_0px_#000]',
+      tagColor: 'text-amber-800 bg-yellow-200 dark:text-sky-300 dark:bg-sky-950/60',
+    },
+    {
+      id: 'emerald',
+      name: 'Zümrüt & Altın',
+      badge: 'Kraliyet',
+      desc: 'İmparatorluk kadife yeşili & ışıltılı altın varak',
+      emoji: '👑',
+      previewBg: 'bg-emerald-950',
+      previewBorder: 'border-amber-400/80 shadow-[0_0_10px_rgba(234,179,8,0.25)]',
+      tagColor: 'text-amber-700 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300',
+    },
+    {
+      id: 'sunset',
+      name: 'Sunset Horizon',
+      badge: 'Pastel',
+      desc: 'Sıcak mercan & lavanta akşamı dinlendirici tonlar',
+      emoji: '🌅',
+      previewBg: 'bg-gradient-to-br from-rose-500/20 via-pink-500/15 to-purple-600/20',
+      previewBorder: 'border-rose-400/60',
+      tagColor: 'text-rose-600 bg-rose-50 dark:bg-rose-950/60 dark:text-rose-300',
+    },
+  ];
+
   return (
     <div className="w-full max-w-lg mx-auto space-y-4 pb-8">
       {/* THEME & APPEARANCE CARD */}
@@ -317,31 +400,122 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
               <p className="font-bold text-sm text-gray-900 dark:text-slate-100">
                 {i18n.appTheme}
               </p>
-              <p className="text-xs text-gray-500 dark:text-slate-400">
-                {isDarkMode ? i18n.darkModeActive : i18n.lightModeActive}
-              </p>
             </div>
           </div>
 
-          {/* Toggle Switch */}
-          <button
-            type="button"
-            onClick={onToggleTheme}
-            className={`relative w-14 h-8 flex items-center rounded-full p-1 transition-colors duration-300 cursor-pointer shadow-inner ${
-              isDarkMode ? 'bg-indigo-600' : 'bg-gray-200'
-            }`}
-          >
-            <motion.div
-              layout
-              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-              className={`w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-[10px] ${
-                isDarkMode ? 'translate-x-6 text-indigo-900' : 'translate-x-0 text-amber-600'
+          {/* Theme Controls: (+) Button and Light/Dark Toggle */}
+          <div className="flex items-center gap-2">
+            {/* (+) Button for Special Theme Bubble */}
+            <button
+              type="button"
+              onClick={() => setShowThemeBubble((prev) => !prev)}
+              title="Özel Tasarım UI Temaları"
+              className={`relative w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-xs border ${
+                showThemeBubble
+                  ? 'bg-blue-600 text-white border-blue-500 ring-2 ring-blue-500/25 shadow-blue-500/30'
+                  : 'bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-gray-700 dark:text-slate-200 border-gray-200/90 dark:border-slate-700'
               }`}
             >
-              {isDarkMode ? <Moon className="w-3.5 h-3.5 fill-current" /> : <Sun className="w-3.5 h-3.5 fill-current" />}
-            </motion.div>
-          </button>
+              <Plus className={`w-4 h-4 transition-transform duration-200 ${showThemeBubble ? 'rotate-45' : ''}`} />
+            </button>
+
+            {/* Toggle Switch */}
+            <button
+              type="button"
+              onClick={onToggleTheme}
+              className={`relative w-14 h-8 flex items-center rounded-full p-1 transition-colors duration-300 cursor-pointer shadow-inner ${
+                isDarkMode ? 'bg-indigo-600' : 'bg-gray-200'
+              }`}
+            >
+              <motion.div
+                layout
+                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                className={`toggle-knob w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-[10px] ${
+                  isDarkMode ? 'translate-x-6 text-indigo-900' : 'translate-x-0 text-amber-600'
+                }`}
+              >
+                {isDarkMode ? <Moon className="w-3.5 h-3.5 fill-current" /> : <Sun className="w-3.5 h-3.5 fill-current" />}
+              </motion.div>
+            </button>
+          </div>
         </div>
+
+        {/* THEME BUBBLE (Açılan Bubble & Farklı UI Temaları) */}
+        <AnimatePresence>
+          {showThemeBubble && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, y: -8 }}
+              animate={{ opacity: 1, height: 'auto', y: 0 }}
+              exit={{ opacity: 0, height: 0, y: -8 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+              className="overflow-hidden"
+            >
+              <div className="mt-4 pt-3 border-t border-gray-100 dark:border-slate-750/80 relative">
+                {/* Speech Bubble Arrow pointing up to the (+) button */}
+                <div className="absolute -top-1.5 right-[74px] w-3 h-3 rotate-45 bg-white dark:bg-slate-850 border-t border-l border-gray-100 dark:border-slate-750/80 z-10" />
+
+                <div className="space-y-2">
+                  {/* Close button row */}
+                  <div className="flex items-center justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setShowThemeBubble(false)}
+                      className="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                      title="Kapat"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Grid of Theme Cards */}
+                  <div className="grid grid-cols-2 gap-2 p-1">
+                    {THEME_OPTIONS.map((theme) => {
+                      const isActive = customTheme === theme.id;
+
+                      return (
+                        <button
+                          key={theme.id}
+                          type="button"
+                          onClick={() => {
+                            onChangeCustomTheme?.(theme.id);
+                          }}
+                          className={`relative p-2.5 rounded-2xl text-left transition-all cursor-pointer flex flex-col justify-between group ${
+                            isActive
+                              ? 'border-2 border-blue-600 dark:border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 shadow-sm'
+                              : 'border border-gray-200/80 dark:border-slate-750 hover:border-gray-300 dark:hover:border-slate-650 bg-gray-50/70 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          {/* Mini Visual Preview Pill */}
+                          <div className="flex items-center justify-between w-full mb-1.5">
+                            <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold border ${theme.previewBg} ${theme.previewBorder}`}>
+                              <span className="text-xs">{theme.emoji}</span>
+                            </div>
+
+                            {isActive ? (
+                              <span className="w-4.5 h-4.5 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                                <Check className="w-3 h-3 stroke-[3]" />
+                              </span>
+                            ) : (
+                              <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-full ${theme.tagColor}`}>
+                                {theme.badge}
+                              </span>
+                            )}
+                          </div>
+
+                          <div>
+                            <p className="font-bold text-xs text-gray-900 dark:text-slate-100">
+                              {theme.name}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* NOTIFICATION SETTINGS CARD */}
@@ -367,7 +541,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
             <motion.div
               layout
               transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-              className={`w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-[10px] ${
+              className={`toggle-knob w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-[10px] ${
                 notificationSettings.enabled ? 'translate-x-6 text-emerald-600' : 'translate-x-0 text-gray-400'
               }`}
             >
@@ -465,7 +639,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
             <motion.div
               layout
               transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-              className={`w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-[10px] ${
+              className={`toggle-knob w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center text-[10px] ${
                 autoSaveSettings.enabled ? 'translate-x-6 text-blue-600' : 'translate-x-0 text-gray-400'
               }`}
             >

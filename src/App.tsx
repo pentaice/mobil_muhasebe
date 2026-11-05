@@ -9,6 +9,7 @@ import {
   IncomeCategory,
   InvestmentAsset,
   InvestmentTransaction,
+  CustomThemeId,
 } from './types';
 import {
   loadCategories,
@@ -20,6 +21,8 @@ import {
   resetAllData,
   loadTheme,
   saveTheme,
+  loadCustomTheme,
+  saveCustomTheme,
   loadNotificationSettings,
   saveNotificationSettings,
   loadAutoSaveSettings,
@@ -37,6 +40,7 @@ import {
   loadInitialCashBalance,
   saveInitialCashBalance,
   calculateLiquidCashBalance,
+  checkAndRunAutoLocalBackup,
 } from './utils/storage';
 import { processRecurringExpenses } from './utils/recurringExpenses';
 import { initNotificationChannel, syncNotificationSchedule } from './utils/notifications';
@@ -79,7 +83,22 @@ export default function App() {
   const lastBackPressTimeRef = useRef<number>(0);
   const [toast, setToast] = useState<ToastState | null>(null);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => loadTheme() === 'dark');
-  const [quickAddFocusTrigger, setQuickAddFocusTrigger] = useState<number>(0);
+  const [customTheme, setCustomTheme] = useState<CustomThemeId>(() => loadCustomTheme());
+  const [isScrolledOnAdd, setIsScrolledOnAdd] = useState<boolean>(false);
+  const [doubleTapKeyboardTrigger, setDoubleTapKeyboardTrigger] = useState<number>(0);
+  const quickAddVoiceTriggerRef = useRef<() => void>(() => {});
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (activeTab === 'add') {
+        setIsScrolledOnAdd(window.scrollY > 30);
+      } else {
+        setIsScrolledOnAdd(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [activeTab]);
 
   // Navigate between tabs and track navigation history
   const navigateToTab = (targetTab: ActiveTab) => {
@@ -99,9 +118,6 @@ export default function App() {
 
     setActiveTab(targetTab);
     activeTabRef.current = targetTab;
-    if (targetTab === 'add') {
-      setQuickAddFocusTrigger((n) => n + 1);
-    }
   };
 
   // Handle hardware / gesture back navigation
@@ -118,15 +134,11 @@ export default function App() {
         setTabHistory(nextHistory);
         setActiveTab(prevTab);
         activeTabRef.current = prevTab;
-        if (prevTab === 'add') {
-          setQuickAddFocusTrigger((n) => n + 1);
-        }
       } else {
         tabHistoryRef.current = ['add'];
         setTabHistory(['add']);
         setActiveTab('add');
         activeTabRef.current = 'add';
-        setQuickAddFocusTrigger((n) => n + 1);
       }
     } else {
       // On main page "Hızlı Ekle": require 2 back presses within 2 seconds to exit
@@ -167,6 +179,17 @@ export default function App() {
       }
     };
   }, [i18n]);
+
+  // Custom UI Theme Change
+  const handleChangeCustomTheme = (newTheme: CustomThemeId) => {
+    setCustomTheme(newTheme);
+    saveCustomTheme(newTheme);
+  };
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', customTheme);
+    document.body.setAttribute('data-theme', customTheme);
+  }, [customTheme]);
 
   // Toggle Dark Mode
   const handleToggleTheme = () => {
@@ -268,6 +291,18 @@ export default function App() {
     };
 
     checkAutoSave();
+  }, []);
+
+  // 3-Day Periodic Local Backup Snapshot (Offline Point-in-time Recovery)
+  useEffect(() => {
+    try {
+      const snap = checkAndRunAutoLocalBackup();
+      if (snap) {
+        console.log('[Local Backup] 3-Day periodic auto backup snapshot created:', snap.id);
+      }
+    } catch (err) {
+      console.warn('[Local Backup] Auto snapshot check failed:', err);
+    }
   }, []);
 
   // Initialize and synchronize OS-level Local Notifications
@@ -573,6 +608,10 @@ export default function App() {
     if (parsed.transactions && Array.isArray(parsed.transactions)) {
       setTransactions(parsed.transactions);
     }
+    if (parsed.recurringExpenses && Array.isArray(parsed.recurringExpenses)) {
+      setRecurringExpenses(parsed.recurringExpenses);
+      saveRecurringExpenses(parsed.recurringExpenses);
+    }
     if (parsed.initialCashBalance !== undefined && typeof parsed.initialCashBalance === 'number') {
       setInitialCashBalance(parsed.initialCashBalance);
       saveInitialCashBalance(parsed.initialCashBalance);
@@ -600,12 +639,21 @@ export default function App() {
   const liquidCashBalance = calculateLiquidCashBalance(transactions, initialCashBalance);
 
   return (
-    <div className={`min-h-screen transition-colors duration-200 ${isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-gray-100 text-gray-900'} font-sans selection:bg-blue-600 selection:text-white`}>
+    <div
+      data-theme={customTheme}
+      className={`min-h-screen transition-colors duration-200 ${
+        isDarkMode ? 'dark text-slate-100' : 'text-gray-900'
+      } ${
+        customTheme === 'default'
+          ? (isDarkMode ? 'bg-slate-950' : 'bg-gray-100')
+          : ''
+      } font-sans selection:bg-blue-600 selection:text-white`}
+    >
       {/* Floating 2-second Toast Popup Notification */}
       <Toast toast={toast} onClose={() => setToast(null)} isDarkMode={isDarkMode} />
 
       {/* Mobile Shell Wrapper */}
-      <div className="max-w-md mx-auto min-h-screen flex flex-col relative bg-gray-50 dark:bg-slate-900 border-x border-gray-200/80 dark:border-slate-800 shadow-2xl transition-colors">
+      <div className={`max-w-md mx-auto min-h-screen flex flex-col relative ${customTheme === 'default' ? 'bg-gray-50 dark:bg-slate-900' : 'bg-transparent'} border-x border-gray-200/80 dark:border-slate-800 shadow-2xl transition-colors`}>
         {/* Top Header */}
         <Header
           transactions={transactions}
@@ -642,7 +690,9 @@ export default function App() {
                   onOpenInvestments={() => navigateToTab('investments')}
                   totalInvestmentsValue={totalInvestmentsValuation}
                   liquidCashBalance={liquidCashBalance}
-                  focusTrigger={quickAddFocusTrigger}
+                  isScrolled={isScrolledOnAdd}
+                  doubleTapKeyboardTrigger={doubleTapKeyboardTrigger}
+                  onRegisterVoiceTrigger={(fn) => { quickAddVoiceTriggerRef.current = fn; }}
                 />
               )}
 
@@ -693,6 +743,7 @@ export default function App() {
                   onDeleteTransaction={handleDeleteTransaction}
                   onUpdateTransaction={handleUpdateTransaction}
                   onBatchUpdateTransactions={handleBatchUpdateTransactions}
+                  recurringExpenses={recurringExpenses}
                 />
               )}
 
@@ -706,6 +757,8 @@ export default function App() {
                   onDeleteCategoryWithOptions={handleDeleteCategoryWithOptions}
                   isDarkMode={isDarkMode}
                   onToggleTheme={handleToggleTheme}
+                  customTheme={customTheme}
+                  onChangeCustomTheme={handleChangeCustomTheme}
                 />
               )}
             </motion.div>
@@ -716,6 +769,9 @@ export default function App() {
         <BottomNav
           activeTab={activeTab}
           setActiveTab={(tab) => navigateToTab(tab)}
+          isScrolledOnAdd={isScrolledOnAdd}
+          onVoiceTrigger={() => quickAddVoiceTriggerRef.current?.()}
+          onQuickAddDoubleClick={() => setDoubleTapKeyboardTrigger((n) => n + 1)}
         />
       </div>
     </div>

@@ -302,7 +302,6 @@ export const WalletCard: React.FC<WalletCardProps> = ({
                     <span className="text-[10.5px] text-amber-200/80 font-bold block leading-tight">
                       {i18n.inflowAnalysis}
                     </span>
-                    <span className="text-[9px] text-emerald-400/80 font-medium">{i18n.viewChart}</span>
                   </div>
                 </div>
                 <span className="font-extrabold text-emerald-400 text-xs font-mono pl-1 shrink-0">
@@ -324,7 +323,6 @@ export const WalletCard: React.FC<WalletCardProps> = ({
                     <span className="text-[10.5px] text-amber-200/80 font-bold block leading-tight">
                       {i18n.outflowAnalysis}
                     </span>
-                    <span className="text-[9px] text-rose-400/80 font-medium">{i18n.viewChart}</span>
                   </div>
                 </div>
                 <span className="font-extrabold text-rose-400 text-xs font-mono pl-1 shrink-0">
